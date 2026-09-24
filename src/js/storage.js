@@ -3,7 +3,7 @@
  */
 
 const DB_NAME = 'bsi_gs_explorer_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance = null;
 
@@ -19,8 +19,9 @@ function openDatabase() {
         const catStore = db.createObjectStore('catalogs', { keyPath: 'id' });
         catStore.createIndex('importedAt', 'importedAt');
       }
-      if (!db.objectStoreNames.contains('threats')) {
-        db.createObjectStore('threats', { keyPath: 'id' });
+      // Version 2: gespeichertes Gefährdungs-Mapping wird nicht mehr verwendet
+      if (db.objectStoreNames.contains('threats')) {
+        db.deleteObjectStore('threats');
       }
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' });
@@ -86,43 +87,6 @@ export async function deleteCatalogRecord(id) {
   });
 }
 
-export async function saveThreatsMappingRecord(sourceName, mappingMap) {
-  const db = await openDatabase();
-  const data = Array.from(mappingMap.entries());
-  const record = {
-    id: 'elementare_gefaehrdungen',
-    importedAt: new Date().toISOString(),
-    sourceName,
-    mappingData: data,
-  };
-
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('threats', 'readwrite');
-    const store = tx.objectStore('threats');
-    const req = store.put(record);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function getThreatsMappingRecord() {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('threats', 'readonly');
-    const store = tx.objectStore('threats');
-    const req = store.get('elementare_gefaehrdungen');
-    req.onsuccess = () => {
-      const rec = req.result;
-      if (!rec || !rec.mappingData) {
-        resolve(null);
-      } else {
-        resolve(new Map(rec.mappingData));
-      }
-    };
-    req.onerror = () => reject(req.error);
-  });
-}
-
 export async function saveSetting(key, value) {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
@@ -150,9 +114,8 @@ export async function getSetting(key, defaultValue = undefined) {
 export async function clearAllData() {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(['catalogs', 'threats', 'settings'], 'readwrite');
+    const tx = db.transaction(['catalogs', 'settings'], 'readwrite');
     tx.objectStore('catalogs').clear();
-    tx.objectStore('threats').clear();
     tx.objectStore('settings').clear();
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);

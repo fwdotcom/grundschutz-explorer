@@ -2,7 +2,7 @@
  * Grundschutz++ Explorer SPA - Main Application (Pure JavaScript, Zero-Build)
  */
 
-import { parseOscalCatalog, parseMappingCollection, formatBsiThreat } from './oscalParser.js';
+import { parseOscalCatalog, formatBsiThreat } from './oscalParser.js';
 import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition } from './namespaces.js';
 import { compareCatalogs, computeWordDiff } from './diffEngine.js';
 import {
@@ -10,8 +10,6 @@ import {
   getCatalogRecord,
   getAllCatalogRecords,
   deleteCatalogRecord,
-  saveThreatsMappingRecord,
-  getThreatsMappingRecord,
   saveSetting,
   getSetting,
   clearAllData,
@@ -41,8 +39,6 @@ const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } 
 
 const PRESET_CATALOG_URL =
   'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Grundschutz%2B%2B/Grundschutz%2B%2B-resolved_catalog.json';
-const PRESET_MAPPING_URL =
-  'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Mappings/IT-GS2023-zu-GSpp/ITGS-to-GS++-mapping_collection.json';
 
 const APP_VERSION = '1.0.0';
 
@@ -53,7 +49,6 @@ const app = createApp({
     const activeRecordId = ref('');
     const comparisonCatalog = ref(null);
     const comparisonRecordId = ref('');
-    const threatsMap = ref(new Map());
     const diffSummary = ref(null);
     const storedCatalogs = ref([]);
     const selectedControlId = ref('');
@@ -804,32 +799,6 @@ const app = createApp({
       }
     );
 
-    // Helper: auto-load local mapping if threatsMap is empty
-    async function ensureThreatsLoaded() {
-      if (threatsMap.value.size > 0) return threatsMap.value;
-
-      const savedThreats = await getThreatsMappingRecord();
-      if (savedThreats && savedThreats.size > 0) {
-        threatsMap.value = savedThreats;
-        return savedThreats;
-      }
-
-      // Load local mapping collection
-      try {
-        const res = await fetch('data/ITGS-to-GS++-mapping_collection.json');
-        if (res.ok) {
-          const mapData = await res.json();
-          const parsed = parseMappingCollection(mapData);
-          threatsMap.value = parsed;
-          await saveThreatsMappingRecord('BSI IT-Grundschutz Mapping (Stand-der-Technik-Bibliothek)', parsed);
-          return parsed;
-        }
-      } catch (err) {
-        console.warn('Could not auto-load local mapping:', err);
-      }
-      return threatsMap.value;
-    }
-
     async function restorePersistedState() {
       try {
         const [savedFilterState, savedCollapseState] = await Promise.all([
@@ -894,7 +863,6 @@ const app = createApp({
       namespacesVersion.value++;
 
       await refreshStoredCatalogs();
-      await ensureThreatsLoaded();
 
       const restored = await restorePersistedState();
       const hasSavedCollapse = Boolean(restored?.savedCollapseState && Array.isArray(restored.savedCollapseState.expandedKeys));
@@ -907,10 +875,6 @@ const app = createApp({
       } else {
         // Auto-load bundle on very first visit so SPA works immediately!
         await loadOfficialBundle();
-      }
-
-      if (!hasSavedCollapse && (!expandedKeys.value || expandedKeys.value.size === 0)) {
-        expandAll();
       }
 
       if (activeCatalog.value && activeCatalog.value.allControls.length > 0) {
@@ -1007,16 +971,23 @@ const app = createApp({
       storedCatalogs.value = await getAllCatalogRecords();
     }
 
-    async function loadCatalogById(id, shouldExpandAll = true) {
+    // Nach dem Laden neuer Daten: Filter zurücksetzen, Filter-Abschnitte und Explorer einklappen
+    function resetViewForNewData() {
+      resetFilters();
+      collapseAllRail();
+      collapseAll();
+      detailScope.value = null;
+    }
+
+    // resetView: Ansicht für neue Daten zurücksetzen (siehe resetViewForNewData)
+    async function loadCatalogById(id, resetView = true) {
       const record = await getCatalogRecord(id);
       if (!record) return;
 
       activeRecordId.value = id;
       await saveSetting('last_active_catalog_id', id);
 
-      await ensureThreatsLoaded();
-
-      const parsed = parseOscalCatalog(record.catalogData, threatsMap.value);
+      const parsed = parseOscalCatalog(record.catalogData);
       activeCatalog.value = parsed;
 
       if (comparisonCatalog.value) {
@@ -1029,30 +1000,16 @@ const app = createApp({
         }
       }
 
-      if (shouldExpandAll) {
-        expandAll();
+      if (resetView) {
+        resetViewForNewData();
       }
     }
 
-    // 1-Click Bundle Loader (Fetches both catalog & mapping)
+    // 1-Click Loader für den offiziellen Katalog
     async function loadOfficialBundle() {
       isLoadingBundle.value = true;
       try {
-        // 1. Fetch Mapping collection (threats)
-        let mapData = null;
-        try {
-          const res = await fetch(PRESET_MAPPING_URL);
-          if (res.ok) mapData = await res.json();
-        } catch {}
-        if (!mapData) {
-          const res = await fetch('data/ITGS-to-GS++-mapping_collection.json');
-          mapData = await res.json();
-        }
-        const mapping = parseMappingCollection(mapData);
-        threatsMap.value = mapping;
-        await saveThreatsMappingRecord('BSI IT-Grundschutz Mapping (Stand-der-Technik-Bibliothek)', mapping);
-
-        // 2. Fetch Catalog
+        // Katalog laden (GitHub, sonst lokale Kopie)
         let catData = null;
         try {
           const res = await fetch(PRESET_CATALOG_URL);
@@ -1174,43 +1131,18 @@ const app = createApp({
     }
 
     async function processImportedJson(jsonData, sourceType, sourceName) {
-      const isThreatsMapping = Boolean(
-        jsonData?.['mapping-collection'] ||
-        jsonData?.mappings ||
-        (Array.isArray(jsonData) && jsonData[0]?.maps)
-      );
-
       const isCatalog = Boolean(
         jsonData?.catalog ||
         (jsonData?.groups && jsonData?.controls) ||
         jsonData?.metadata?.title
       );
 
-      if (!isThreatsMapping && !isCatalog) {
+      if (!isCatalog) {
         importError.value =
-          'Die Datei enthält weder einen gültigen OSCAL-Katalog ("catalog") noch eine OSCAL-Mapping-Collection ("mapping-collection"). Keine BSI-kompatible Struktur gefunden.';
+          'Die Datei enthält keinen gültigen OSCAL-Katalog ("catalog"). Keine BSI-kompatible Struktur gefunden.';
         importLoading.value = false;
         return;
       }
-
-      if (isThreatsMapping) {
-        const mapping = parseMappingCollection(jsonData);
-        threatsMap.value = mapping;
-        await saveThreatsMappingRecord(sourceName, mapping);
-        importSuccess.value = `Elementare Gefährdungen erfolgreich geladen (${sourceName})`;
-
-        if (activeRecordId.value) {
-          await loadCatalogById(activeRecordId.value);
-        }
-
-        setTimeout(() => {
-          isImportModalOpen.value = false;
-        }, 600);
-        return;
-      }
-
-      // Ensure threats mapping is loaded for catalog
-      await ensureThreatsLoaded();
 
       // Catalog
       const catObj = jsonData.catalog || jsonData;
@@ -1233,11 +1165,12 @@ const app = createApp({
 
       if (importIsDiff.value && activeCatalog.value) {
         comparisonRecordId.value = newId;
-        const parsedNew = parseOscalCatalog(jsonData, threatsMap.value);
+        const parsedNew = parseOscalCatalog(jsonData);
         diffSummary.value = compareCatalogs(activeCatalog.value, parsedNew);
         comparisonCatalog.value = activeCatalog.value;
         activeCatalog.value = parsedNew;
         activeRecordId.value = newId;
+        resetViewForNewData();
         importSuccess.value = `Vergleichsversion geladen. Differenzanalyse aktiv!`;
       } else {
         await loadCatalogById(newId);
@@ -1623,7 +1556,7 @@ const app = createApp({
       if (!record || !activeCatalog.value) return;
 
       comparisonRecordId.value = id;
-      const parsedComp = parseOscalCatalog(record.catalogData, threatsMap.value);
+      const parsedComp = parseOscalCatalog(record.catalogData);
       comparisonCatalog.value = parsedComp;
 
       diffSummary.value = compareCatalogs(parsedComp, activeCatalog.value);
@@ -1636,7 +1569,8 @@ const app = createApp({
       diffSummary.value = null;
 
       if (activeRecordId.value) {
-        loadCatalogById(activeRecordId.value);
+        // gleicher Katalog, nur der Vergleich endet: Aufklapp-Zustand beibehalten
+        loadCatalogById(activeRecordId.value, false);
       }
     }
 
@@ -1658,13 +1592,12 @@ const app = createApp({
     }
 
     async function clearAll() {
-      if (confirm('Möchten Sie wirklich alle lokal gespeicherten Kataloge und Mappings löschen?')) {
+      if (confirm('Möchten Sie wirklich alle lokal gespeicherten Kataloge löschen?')) {
         await clearAllData();
         activeCatalog.value = null;
         activeRecordId.value = '';
         comparisonCatalog.value = null;
         comparisonRecordId.value = '';
-        threatsMap.value = new Map();
         diffSummary.value = null;
         selectedControlId.value = '';
         expandedKeys.value = new Set();
@@ -1744,17 +1677,6 @@ const app = createApp({
       return safe.replace(new RegExp(`\\b(${modalVerb})\\b`, 'g'), `<mark class="${key}">$1</mark>`);
     }
 
-    function getThreatCategory(threatStr) {
-      const numMatch = splitThreat(threatStr).code.match(/G\s*0\.(\d+)/i);
-      if (!numMatch) return { name: 'Gefährdung', cls: 'cat-0' };
-      const num = parseInt(numMatch[1], 10);
-      if (num <= 7) return { name: 'Höhere Gewalt', cls: 'cat-1' };
-      if (num <= 13) return { name: 'Infrastruktur', cls: 'cat-2' };
-      if (num <= 24) return { name: 'Sicherheitsvorfall', cls: 'cat-3' };
-      if (num <= 31) return { name: 'Technik / Betrieb', cls: 'cat-4' };
-      return { name: 'Cyber-Angriff', cls: 'cat-5' };
-    }
-
     function splitThreat(threatStr) {
       if (!threatStr) return { code: '', title: '' };
       if (threatStr.includes(':')) {
@@ -1772,7 +1694,6 @@ const app = createApp({
       activeRecordId,
       comparisonCatalog,
       comparisonRecordId,
-      threatsMap,
       diffSummary,
       storedCatalogs,
       selectedControlId,
@@ -1809,7 +1730,6 @@ const app = createApp({
       importError,
       importSuccess,
       PRESET_CATALOG_URL,
-      PRESET_MAPPING_URL,
 
       // Filters & Tags
       filters,
@@ -1910,7 +1830,6 @@ const app = createApp({
       formatDate,
       formatVersion,
       highlightProse,
-      getThreatCategory,
       splitThreat,
       verbKey,
       diffLabel,

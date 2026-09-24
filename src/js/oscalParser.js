@@ -28,53 +28,6 @@ export function formatBsiThreat(raw) {
 }
 
 /**
- * Extracts and maps Elementare Gefährdungen from official BSI mapping collection.
- * Target control ID (e.g. 'GC.1.1' or 'ARCH.1.1.1') -> Array of unique Gefährdungen
- */
-export function parseMappingCollection(rawJson) {
-  const result = new Map();
-  const mappings = rawJson?.['mapping-collection']?.mappings || rawJson?.mappings || [];
-
-  for (const m of mappings) {
-    const maps = m.maps || [];
-    for (const entry of maps) {
-      // Find elementare Gefährdungen in props
-      const threatProps = (entry.props || []).filter(
-        (p) => p.name === 'elementare_gefaehrdung' && typeof p.value === 'string'
-      );
-      if (threatProps.length === 0) continue;
-
-      // Find target controls
-      const targets = entry.targets || [];
-      for (const target of targets) {
-        const targetId = target['id-ref'] || target.idRef;
-        if (!targetId) continue;
-
-        if (!result.has(targetId)) {
-          result.set(targetId, new Set());
-        }
-        const set = result.get(targetId);
-        for (const tp of threatProps) {
-          const formatted = formatBsiThreat(tp.value);
-          if (formatted) set.add(formatted);
-        }
-      }
-    }
-  }
-
-  // Convert Set to sorted Array
-  const finalMap = new Map();
-  result.forEach((val, key) => {
-    finalMap.set(
-      key,
-      Array.from(val).sort((a, b) => a.localeCompare(b, 'de', { numeric: true }))
-    );
-  });
-
-  return finalMap;
-}
-
-/**
  * Replaces parameter placeholders like {{ insert: param, gc.1.1-prm1 }} with resolved values
  */
 export function resolveParamsInProse(prose, params = []) {
@@ -96,7 +49,7 @@ export function resolveParamsInProse(prose, params = []) {
 /**
  * Recursively parses an OSCAL control, including subcontrols (ctrl.controls)
  */
-function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, threatsMap, parentControlId = null) {
+function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, parentControlId = null) {
   const props = ctrl.props || [];
   const params = ctrl.params || [];
   const parts = ctrl.parts || [];
@@ -135,17 +88,8 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, th
   const guidancePart = parts.find((p) => p.name === 'guidance');
   const guidanceProse = guidancePart?.prose || '';
 
-  // Associated threats from BOTH external BSI mapping and control's own 'threats' property
+  // Elementare Gefährdungen aus der OSCAL-Eigenschaft 'threats' der Anforderung
   const threatSet = new Set();
-
-  // 1. External mapping collection
-  const mappedThreats = threatsMap?.get(ctrl.id) || [];
-  for (const t of mappedThreats) {
-    const formatted = formatBsiThreat(t);
-    if (formatted) threatSet.add(formatted);
-  }
-
-  // 2. Direct OSCAL property on control
   const threatsProp = props.find((p) => p.name === 'threats')?.value;
   if (threatsProp) {
     const rawTokens = threatsProp.split(',').map((s) => s.trim()).filter(Boolean);
@@ -170,7 +114,6 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, th
           groupTitle,
           subgroupId,
           subgroupTitle,
-          threatsMap,
           ctrl.id
         )
       );
@@ -209,7 +152,7 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, th
   };
 }
 
-function parsePractice(group, threatsMap) {
+function parsePractice(group) {
   const practiceId = group.id;
   const practiceTitle = group.title;
   const labelProp = group.props?.find((p) => p.name === 'label');
@@ -221,7 +164,7 @@ function parsePractice(group, threatsMap) {
   // Direct controls under practice
   if (group.controls && group.controls.length > 0) {
     for (const c of group.controls) {
-      directControls.push(parseControl(c, [practiceId], practiceTitle, undefined, undefined, threatsMap, null));
+      directControls.push(parseControl(c, [practiceId], practiceTitle, undefined, undefined, null));
     }
   }
 
@@ -234,7 +177,7 @@ function parsePractice(group, threatsMap) {
       if (sub.controls && sub.controls.length > 0) {
         for (const c of sub.controls) {
           subControls.push(
-            parseControl(c, [practiceId, sub.id], practiceTitle, sub.id, sub.title, threatsMap, null)
+            parseControl(c, [practiceId, sub.id], practiceTitle, sub.id, sub.title, null)
           );
         }
       }
@@ -273,7 +216,7 @@ function parsePractice(group, threatsMap) {
   };
 }
 
-export function parseOscalCatalog(rawJson, threatsMap) {
+export function parseOscalCatalog(rawJson) {
   if (!rawJson) {
     throw new Error('Ungültige JSON-Datei: Die Datei ist leer oder nicht definiert.');
   }
@@ -295,7 +238,7 @@ export function parseOscalCatalog(rawJson, threatsMap) {
   const rawGroups = catalog.groups || [];
 
   for (const g of rawGroups) {
-    practices.push(parsePractice(g, threatsMap));
+    practices.push(parsePractice(g));
   }
 
   const allControls = [];
@@ -312,7 +255,7 @@ export function parseOscalCatalog(rawJson, threatsMap) {
   if (catalog.controls && catalog.controls.length > 0) {
     for (const c of catalog.controls) {
       if (!controlMap.has(c.id)) {
-        const parsed = parseControl(c, ['GENERAL'], 'Allgemein', undefined, undefined, threatsMap, null);
+        const parsed = parseControl(c, ['GENERAL'], 'Allgemein', undefined, undefined, null);
         allControls.push(parsed);
         controlMap.set(c.id, parsed);
         if (parsed.subcontrols && parsed.subcontrols.length > 0) {

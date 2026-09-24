@@ -654,10 +654,6 @@
             </div>
 
           </div>
-          <div class="rail-footer">
-            <div class="row-kv"><span>Anforderungen</span><span>{{ activeCatalog.allControls.length }}</span></div>
-            <div class="row-kv"><span>Gefährdungs-Mapping</span><span :class="{ 'status-on': threatsMap.size > 0 }">{{ threatsMap.size > 0 ? 'aktiv' : 'nicht geladen' }}</span></div>
-          </div>
         </aside>
 
         <div class="split" ref="splitEl">
@@ -1014,13 +1010,6 @@
 
                 <!-- Übersicht -->
                 <div v-if="detailActiveTab === 'overview'" class="stack">
-                  <button v-if="selectedControl.isSubcontrol && parentControl" class="parent-link" @click="selectControlById(parentControl.id)">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
-                    <span>Übergeordnet:</span>
-                    <span class="mono">{{ parentControl.id }}</span>
-                    <span class="grow">{{ parentControl.title }}</span>
-                  </button>
-
                   <div>
                     <div class="section-label">Anforderungstext</div>
                     <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
@@ -1180,7 +1169,6 @@
                         >
                           <span class="threat-code">{{ splitThreat(threat).code }}</span>
                           <span class="threat-title"><span class="threat-link">{{ splitThreat(threat).title || threat }}</span></span>
-                          <span class="tag" :class="getThreatCategory(threat).cls">{{ getThreatCategory(threat).name }}</span>
                         </button>
                       </li>
                     </ul>
@@ -1295,7 +1283,7 @@
         <div class="modal-head">
           <div style="flex:1">
             <h2>Daten laden</h2>
-            <p>OSCAL-Katalog oder Gefährdungs-Mapping importieren</p>
+            <p>OSCAL-Katalog importieren</p>
           </div>
           <button class="icon-btn" @click="isImportModalOpen = false" title="Schließen">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1323,16 +1311,6 @@
               </div>
               <button class="btn btn-primary" :disabled="importLoading" @click="fetchFromUrl(PRESET_CATALOG_URL, 'Grundschutz++ Anwenderkatalog', 'data/Grundschutz++-resolved_catalog.json')">Laden</button>
             </div>
-            <div class="option-card">
-              <div class="opt-icon tag-threat">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-              </div>
-              <div class="grow">
-                <h3>Elementare Gefährdungen</h3>
-                <p>Mapping G 0.1 – G 0.47 auf GS++-Anforderungen</p>
-              </div>
-              <button class="btn btn-secondary" :disabled="importLoading" @click="fetchFromUrl(PRESET_MAPPING_URL, 'Elementare Gefährdungen Mapping', 'data/ITGS-to-GS++-mapping_collection.json')">Laden</button>
-            </div>
           </div>
 
           <div v-else-if="importModalTab === 'url'">
@@ -1355,7 +1333,7 @@
               <input ref="uploadFileInput" type="file" accept=".json" style="display:none" @change="handleFileUpload" />
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
               <strong>JSON-Datei ablegen oder auswählen</strong>
-              <span>OSCAL-Kataloge und Mapping-Collections</span>
+              <span>OSCAL-Kataloge</span>
             </div>
           </div>
 
@@ -1523,7 +1501,7 @@
             <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
               <strong style="color:var(--text); display:block; margin-bottom:2px">3. Lokale Speicherung in Ihrem Browser (IndexedDB &amp; LocalStorage)</strong>
               <p style="margin:0">
-                Wenn Sie Kataloge importieren, Mappings laden oder Einstellungen (wie den Hell-/Dunkelmodus) anpassen, werden diese Informationen ausschließlich in der internen Speicherdatenbank Ihres eigenen Browsers (IndexedDB / LocalStorage) abgelegt. Diese Daten verlassen Ihr Endgerät zu keinem Zeitpunkt. Sie können diesen lokalen Speicher jederzeit über das Menü „Versionen“ per Klick auf „Gesamten Speicher leeren“ oder über Ihre Browser-Chronik vollständig löschen.
+                Wenn Sie Kataloge importieren oder Einstellungen (wie den Hell-/Dunkelmodus) anpassen, werden diese Informationen ausschließlich in der internen Speicherdatenbank Ihres eigenen Browsers (IndexedDB / LocalStorage) abgelegt. Diese Daten verlassen Ihr Endgerät zu keinem Zeitpunkt. Sie können diesen lokalen Speicher jederzeit über das Menü „Versionen“ per Klick auf „Gesamten Speicher leeren“ oder über Ihre Browser-Chronik vollständig löschen.
               </p>
             </div>
 

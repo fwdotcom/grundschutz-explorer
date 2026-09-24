@@ -18,13 +18,12 @@ gsexplorer/
 │   │   ├── app.js                          # Hauptanwendung (Vue 3, State, Komponentenlogik)
 │   │   ├── diffEngine.js                   # Differenzanalyse & Text-Diffing (Myers/LCS)
 │   │   ├── namespaces.js                   # Lädt die BSI-Namespace-Definitionen (CSV) aus data/namespaces/
-│   │   ├── oscalParser.js                  # BSI OSCAL Katalog- und Mapping-Parser
+│   │   ├── oscalParser.js                  # BSI OSCAL Katalog-Parser
 │   │   └── storage.js                      # IndexedDB-Persistenzschicht
 │   ├── vendor/
 │   │   └── vue.global.prod.js              # Lokale Vue 3 Runtime (100 % autark & offline-fähig)
 │   └── data/
 │       ├── Grundschutz++-resolved_catalog.json       # Offizieller BSI GS++ Katalog (652 Controls)
-│       ├── ITGS-to-GS++-mapping_collection.json      # Offizielles BSI Gefährdungs-Mapping
 │       └── namespaces/                               # BSI-Namespaces (Vokabulare & Definitionen), unverändert aus
 │                                                     # Stand-der-Technik-Bibliothek/documentation/namespaces
 ├── README.md
@@ -64,9 +63,9 @@ Geben Sie den Ordner `src` als Document Root an und rufen Sie `index.html` im Br
    * Die Daten basieren exakt auf dem offiziellen BSI OSCAL-Standard (`catalog.groups` $\to$ `subgroups` $\to$ `controls` $\to$ `parts`).
    * Übernahme aller amtlichen BSI-Namespaces und Properties (`sec_level`, `effort_level`, `modal_verb`, `action_word`, `result`, `documentation`, `alt-identifier`).
 
-3. **Stabile Quelle für Elementare Gefährdungen ($G\ 0.1$ bis $G\ 0.47$)**
-   * Automatische oder manuelle Einbindung der offiziellen BSI-Mapping-Collection ([`ITGS-to-GS++-mapping_collection.json`](https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Mappings/IT-GS2023-zu-GSpp/ITGS-to-GS++-mapping_collection.json)) aus dem GitHub-Repository der BSI Stand-der-Technik-Bibliothek.
-   * Direkte Zuordnung der Gefährdungen zu den GS++-Controls ohne synthetische Daten.
+3. **Elementare Gefährdungen ($G\ 0.1$ bis $G\ 0.47$)**
+   * Zuordnung ausschließlich aus der OSCAL-Eigenschaft `threats` der Grundschutz++-Anforderungen, wie vom BSI im Katalog gepflegt.
+   * Bezeichnungen und Definitionen aus dem BSI-Namespace `basethreats.csv`.
 
 4. **Hierarchisch klappbare Baumstruktur & Detailansicht (Split-Screen)**
    * **Linke Spalte**:
@@ -90,7 +89,7 @@ Geben Sie den Ordner `src` als Document Root an und rufen Sie `index.html` im Br
    * **Diff-Filter**: Schnellauswahl für *Alle Änderungen*, *Nur Neu*, *Nur Geändert*, *Nur Gelöscht*.
 
 6. **Browser-Persistenz (IndexedDB)**
-   * Gespeicherte Kataloge und Mappings bleiben auch nach dem Schließen des Browsers vollständig erhalten.
+   * Gespeicherte Kataloge bleiben auch nach dem Schließen des Browsers vollständig erhalten.
    * Keine 5-MB-Begrenzung (wie bei localStorage) – geeignet für Multi-Megabyte-Kataloge.
    * Versionsverwaltung: Wechseln zwischen mehreren Versionen und Festlegen von Basis- und Vergleichsversionen.
 
