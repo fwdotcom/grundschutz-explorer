@@ -1656,7 +1656,7 @@
         <div class="modal-foot">
           <button v-if="storedCatalogs.length" class="btn-danger-link" @click="clearAll">Gesamten Speicher leeren</button>
           <span class="spacer"></span>
-          <button class="btn btn-primary" @click="isVersionsModalOpen = false">Fertig</button>
+          <button class="btn btn-secondary" @click="isVersionsModalOpen = false">Fertig</button>
         </div>
       </div>
     </div>
@@ -1667,43 +1667,70 @@
         <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
           <div style="flex:1">
             <h2 id="impressum-title">Impressum</h2>
-            <p>Rechtliche Angaben und Hinweise zum Grundschutz++ Explorer</p>
+            <p>Anbieterkennzeichnung und rechtliche Hinweise</p>
           </div>
           <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
-        <div class="modal-body" style="gap:16px; font-size:calc(13.5px * var(--font-scale)); line-height:1.6; color:var(--text-2)">
+        <div class="modal-body legal-body">
           <div>
-            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Angaben gemäß § 5 TMG / § 18 MStV</h3>
+            <h3>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</h3>
             <p>
-              Ich betreibe diesen <strong>Grundschutz++ Explorer</strong> als privates, unabhängiges und nicht-kommerzielles Open-Source-Projekt unter der freien <strong>MIT-Lizenz</strong>. Die Bereitstellung erfolgt unentgeltlich und öffentlich via <strong>GitHub Pages</strong> mit dem Ziel, die Arbeit mit strukturierten Sicherheitsanforderungen und OSCAL-Katalogen im Webbrowser zu vereinfachen.
-            </p>
-          </div>
-
-          <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-            <strong style="color:var(--text); display:block; margin-bottom:4px">Verantwortlicher Betreiber:</strong>
-            <p style="margin:0">
-              Frank Winter<br>
-              E-Mail: <a href="mailto:studio@frankwinter.com" style="color:var(--accent-text); text-decoration:underline">studio@frankwinter.com</a>
+              <strong>Frank Winter</strong><br />
+              Wilhelmstr. 5A<br />
+              03046 Cottbus<br />
+              E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
             </p>
           </div>
 
           <div>
-            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
+            <h3>Haftung für Inhalte</h3>
             <p>
-              Der <strong>Grundschutz++ Explorer</strong> ist eine eigenständige Software und steht in <em>keiner offiziellen Verbindung</em> zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Die Benennung und Konzeption dieses Werkzeugs erfolgt unabhängig.
-            </p>
-            <p style="margin-top:8px">
-              Die in dieser Anwendung visualisierten Katalogdaten (Grundschutz++ Anwenderkatalog) sowie die Zuordnungen der Elementaren Gefährdungen (G 0.1 bis G 0.47) stammen aus öffentlich zugänglichen Repositorien der <strong>Stand-der-Technik-Bibliothek des BSI</strong> (Open Data, NIST OSCAL-Format). Sämtliche Urheber- und Markenrechte an den BSI-Publikationen, dem IT-Grundschutz-Kompendium und den Texten der Grundschutz++-Kataloge verbleiben uneingeschränkt beim <strong>Bundesamt für Sicherheit in der Informationstechnik (BSI)</strong> bzw. der <strong>Bundesrepublik Deutschland</strong>.
+              Als Diensteanbieter bin ich gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+              Nach §§ 8 bis 10 DDG bin ich als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
+              oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
             </p>
           </div>
 
           <div>
-            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Haftungsausschluss (Disclaimer)</h3>
+            <h3>Haftung für Links</h3>
             <p>
-              Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt. Dennoch übernehme ich keinerlei Gewähr für die Richtigkeit, Vollständigkeit oder Aktualität der dargestellten Inhalte oder für Fehler bei der maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung. Für verbindliche Auditierungen und Zertifizierungen sind ausschließlich die amtlichen Dokumente und Vorgaben des BSI maßgeblich.
+              Mein Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe. Deshalb kann ich für diese fremden Inhalte
+              keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
+            </p>
+          </div>
+
+          <div>
+            <h3>Urheberrecht &amp; Open Source</h3>
+            <p>
+              Die von mir erstellten Inhalte und Werke auf diesen Seiten unterliegen dem Urheberrecht. Das Softwareprojekt Grundschutz++ Explorer
+              ist unter der freien <strong>MIT-Lizenz</strong> lizenziert.
+            </p>
+          </div>
+
+          <div>
+            <h3>Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
+            <p>
+              Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der
+              Informationstechnik (BSI).
+            </p>
+            <p>
+              Die angezeigten Katalogdaten (Grundschutz++-Anwenderkatalog) und Begriffsdefinitionen stammen aus der öffentlich zugänglichen
+              <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
+              des BSI und stehen unter der Lizenz
+              <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>.
+              Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
+            </p>
+          </div>
+
+          <div>
+            <h3>Keine Gewähr für die angezeigten Inhalte</h3>
+            <p>
+              Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt, übernehme jedoch keine Gewähr für die Richtigkeit, Vollständigkeit
+              oder Aktualität der dargestellten Inhalte oder für Fehler bei ihrer maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung.
+              Maßgeblich sind ausschließlich die amtlichen Veröffentlichungen des BSI.
             </p>
           </div>
         </div>
@@ -1775,7 +1802,7 @@ SOFTWARE.</pre>
 
         <div class="modal-foot">
           <span class="spacer"></span>
-          <button class="btn btn-primary" @click="isLicenseModalOpen = false">Schließen</button>
+          <button class="btn btn-secondary" @click="isLicenseModalOpen = false">Schließen</button>
         </div>
       </div>
     </div>
@@ -1786,78 +1813,98 @@ SOFTWARE.</pre>
         <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
           <div style="flex:1">
             <h2 id="datenschutz-title">Datenschutzerklärung</h2>
-            <p>Datenschutzhinweise für den Grundschutz++ Explorer (Hosting via GitHub Pages, MIT-Lizenz)</p>
+            <p>Informationen zur Verarbeitung Ihrer Daten</p>
           </div>
           <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
-        <div class="modal-body" style="gap:16px; font-size:calc(13.5px * var(--font-scale)); line-height:1.6; color:var(--text-2)">
+        <div class="modal-body legal-body">
           <div>
-            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Mein Grundsatz &amp; Open-Source-Transparenz (MIT-Lizenz)</h3>
+            <h3>1. Datenschutz auf einen Blick</h3>
             <p>
-              Ich nehme den Schutz Ihrer persönlichen Daten sehr ernst. Bei der Konzeption des <strong>Grundschutz++ Explorers</strong> verfolge ich ein striktes Privacy-by-Design-Prinzip: Die gesamte Anwendung läuft als <em>reine Single Page Application (SPA)</em> zu 100 % lokal in Ihrem Webbrowser ab.
-            </p>
-            <p style="margin-top:8px">
-              Das Projekt ist ein freies Open-Source-Projekt unter der <strong>MIT-Lizenz</strong>. Der gesamte Quellcode ist auf GitHub öffentlich einsehbar, sodass Sie jederzeit selbst transparent nachvollziehen können, dass keinerlei Tracking-Code, keine Analyse-Tools und keine verdeckten Datenabflüsse enthalten sind.
+              Der Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
+              setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien und
+              Vergleiche verlassen Ihr Gerät nicht.
             </p>
           </div>
 
-          <div style="display:grid; gap:10px">
-            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-              <strong style="color:var(--text); display:block; margin-bottom:4px">1. Hosting und Bereitstellung über GitHub Pages</strong>
-              <p style="margin:0 0 8px">
-                Ich hoste diese statische Webanwendung über <strong>GitHub Pages</strong>, einen Dienst der GitHub Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, USA (bzw. für Nutzer im EWR: GitHub B.V., Vijzelstraat 68-72, 1017 HL Amsterdam, Niederlande; nachfolgend „GitHub“).
-              </p>
-              <p style="margin:0 0 8px">
-                Wenn Sie diese Webseite aufrufen, erfasst GitHub zur technischen Auslieferung der statischen Webseitendateien (HTML, CSS, JS) sowie zur Gewährleistung der Netzsicherheit und Stabilität automatisiert technische Server-Logfiles. Hierbei werden typischerweise verarbeitet: Ihre IP-Adresse, Datum und Uhrzeit des Abrufs, übertragene Datenmenge, Referrer-URL sowie Informationen zu Ihrem Browsertyp und Betriebssystem.
-              </p>
-              <p style="margin:0">
-                Die Rechtsgrundlage für diese Datenverarbeitung durch GitHub ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der sicheren und verlässlichen Auslieferung des Webangebots). Ich selbst habe keinen direkten Zugriff auf diese Server-Logfiles und führe zu keinem Zeitpunkt statistische Auswertungen oder Profilbildungen durch. Weitere Einzelheiten zur Datenverarbeitung durch GitHub finden Sie in der <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer" style="color:var(--accent-text); text-decoration:underline">GitHub Privacy Policy</a>.
-              </p>
-            </div>
-
-            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-              <strong style="color:var(--text); display:block; margin-bottom:2px">2. Keine Verarbeitung von Anwendungsdaten durch mich</strong>
-              <p style="margin:0">
-                Sobald die statischen Dateien einmalig von GitHub Pages in Ihren Browser geladen wurden, arbeitet der Grundschutz++ Explorer vollkommen autark und offline-fähig. Ich betreibe keinen Backend-Server und empfange zu keinem Zeitpunkt Ihre Suchanfragen, Filterauswahlen, hochgeladenen JSON-Dateien oder Differenzanalysen.
-              </p>
-            </div>
-
-            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-              <strong style="color:var(--text); display:block; margin-bottom:2px">3. Lokale Speicherung in Ihrem Browser (IndexedDB &amp; LocalStorage)</strong>
-              <p style="margin:0">
-                Wenn Sie Kataloge importieren oder Einstellungen (wie den Hell-/Dunkelmodus) anpassen, werden diese Informationen ausschließlich in der internen Speicherdatenbank Ihres eigenen Browsers (IndexedDB / LocalStorage) abgelegt. Diese Daten verlassen Ihr Endgerät zu keinem Zeitpunkt. Sie können diesen lokalen Speicher jederzeit über das Menü „Versionen“ per Klick auf „Gesamten Speicher leeren“ oder über Ihre Browser-Chronik vollständig löschen.
-              </p>
-            </div>
-
-            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-              <strong style="color:var(--text); display:block; margin-bottom:2px">4. Keine Cookies, kein Tracking, keine Werbenetzwerke</strong>
-              <p style="margin:0">
-                Ich verwende weder technisch notwendige noch optionale Tracking-Cookies, keine Analyse-Dienste (wie Google Analytics, Matomo etc.) und keine Werbe-Tracker.
-              </p>
-            </div>
-
-            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
-              <strong style="color:var(--text); display:block; margin-bottom:2px">5. Externe Links (GitHub &amp; BSI)</strong>
-              <p style="margin:0">
-                In der Fußzeile sowie bei der Preset-Funktion verlinke ich auf externe Webseiten (das GitHub-Repository und die offizielle Webseite des BSI). Wenn Sie diese Links aufrufen, verlassen Sie diese Webanwendung; es gelten die Datenschutzbestimmungen der jeweiligen Drittanbieter.
-              </p>
-            </div>
+          <div>
+            <h3>2. Verantwortlicher</h3>
+            <p>
+              Frank Winter, Wilhelmstr. 5A, 03046 Cottbus<br />
+              E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
+            </p>
           </div>
 
           <div>
-            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Ihre Rechte als betroffene Person</h3>
+            <h3>3. Hosting via GitHub Pages</h3>
             <p>
-              Da ich selbst zu keinem Zeitpunkt personenbezogene Daten von Ihnen erhebe, speichere oder automatisiert verarbeite, existieren bei mir keine Sie betreffenden Datenbestände, über die Auskunft erteilt, die berichtigt oder gelöscht werden könnten. Die Bereitstellung der Server-Infrastruktur erfolgt durch GitHub Pages; die volle Kontrolle über Ihre lokal im Browser abgelegten Daten liegt stets bei Ihnen.
+              Diese Webanwendung wird als statische Seite über <strong>GitHub Pages</strong> bereitgestellt. Anbieter ist die GitHub Inc.,
+              88 Colin P Kelly Jr St, San Francisco, CA 94107, USA.
+            </p>
+            <p>
+              Beim Aufruf erfasst GitHub automatisch technische Server-Logfiles (u. a. IP-Adresse, Datum und Uhrzeit des Abrufs, Browsertyp,
+              Betriebssystem und Referrer-URL). Dies ist technisch erforderlich, um die Anwendung sicher und stabil bereitzustellen
+              (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO, berechtigtes Interesse an einer verlässlichen Bereitstellung). Ich habe auf diese
+              Logfiles keinen Zugriff. Weitere Informationen finden Sie in der
+              <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von GitHub</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3>4. Laden von Katalogen</h3>
+            <p>
+              Die Anwendung stellt nur dann eine Verbindung zu weiteren Servern her, wenn Sie selbst einen Katalog laden:
+            </p>
+            <ul>
+              <li>
+                <strong>Offiziellen Katalog laden:</strong> Ihr Browser ruft die Katalogdatei direkt aus der Stand-der-Technik-Bibliothek des BSI
+                auf GitHub ab (raw.githubusercontent.com, ebenfalls ein Dienst der GitHub Inc.). Dabei erhält GitHub die unter 3. genannten technischen Daten.
+              </li>
+              <li>
+                <strong>Laden über eine URL:</strong> Ihr Browser ruft die Datei direkt von dem Server ab, dessen Adresse Sie angeben. Dessen Betreiber
+                erhält dabei technische Daten wie Ihre IP-Adresse; es gelten seine Datenschutzbestimmungen.
+              </li>
+              <li>
+                <strong>Datei hochladen:</strong> Die Datei wird ausschließlich lokal in Ihrem Browser gelesen und nicht übertragen.
+              </li>
+            </ul>
+            <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; der Abruf erfolgt nur auf Ihre ausdrückliche Anforderung.</p>
+          </div>
+
+          <div>
+            <h3>5. Lokale Speicherung in Ihrem Browser</h3>
+            <p>
+              Geladene Kataloge sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
+              Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Sie löschen sie über <strong>Versionen → Gesamten Speicher leeren</strong>
+              oder über die Einstellungen Ihres Browsers.
+            </p>
+          </div>
+
+          <div>
+            <h3>6. Externe Links</h3>
+            <p>
+              Die Anwendung verlinkt auf externe Websites, etwa die GitHub-Projektseite, die Stand-der-Technik-Bibliothek des BSI und Lizenztexte.
+              Mit dem Aufruf eines solchen Links verlassen Sie diese Anwendung; es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.
+            </p>
+          </div>
+
+          <div>
+            <h3>7. Ihre Rechte als betroffene Person</h3>
+            <p>
+              Sie haben nach der Datenschutz-Grundverordnung (DSGVO) das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO),
+              Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO) bezüglich etwaiger personenbezogener Daten sowie das Recht,
+              sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO). Bei Fragen zum Datenschutz können Sie mich jederzeit unter der
+              oben angegebenen E-Mail-Adresse kontaktieren.
             </p>
           </div>
         </div>
 
         <div class="modal-foot">
           <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isDatenschutzModalOpen = false">Verstanden &amp; Schließen</button>
+          <button class="btn btn-secondary" @click="isDatenschutzModalOpen = false">Schließen</button>
         </div>
       </div>
     </div>

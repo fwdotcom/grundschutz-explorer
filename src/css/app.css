@@ -1254,3 +1254,11 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .license-list { margin: 0; padding-left: 18px; list-style: disc; display: grid; gap: 6px; }
 .license-list a { color: var(--accent-text); text-decoration: underline; }
+
+/* Impressum und Datenschutz */
+.legal-body { gap: 16px; font-size: calc(13.5px * var(--font-scale)); line-height: 1.6; color: var(--text-2); }
+.legal-body h3 { font-size: calc(14px * var(--font-scale)); font-weight: 650; color: var(--text); margin: 0 0 4px; }
+.legal-body p { margin: 0; }
+.legal-body p + p, .legal-body ul + p { margin-top: 8px; }
+.legal-body ul { margin: 6px 0 0; padding-left: 18px; list-style: disc; display: grid; gap: 4px; }
+.legal-body a { color: var(--accent-text); text-decoration: underline; }
