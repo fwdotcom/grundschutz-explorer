@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Grundschutz++ Explorer SPA - Main Application (Pure JavaScript, Zero-Build)
  */
 
@@ -76,7 +79,7 @@ const app = createApp({
     // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
     const detailScope = ref(null);
     // Ausgeklappte Definitionen (Info-Buttons) in der Detailansicht
-    const openDefs = ref({ effort: false, actionWord: false, documentation: false, securityTargets: false });
+    const openDefs = ref({ effort: false, actionWord: false, documentation: false, securityTargets: false, secLevel: false });
     // Zähler, der nach dem Laden der BSI-Namespaces erhöht wird (macht Definitionen reaktiv)
     const namespacesVersion = ref(0);
 
@@ -106,6 +109,9 @@ const app = createApp({
     const threatShowOnlyMatching = ref(false);
     const threatShowAll = ref(false);
 
+    // Flache Trefferliste vs. Baumansicht ('tree' | 'flat')
+    const listViewMode = ref('tree');
+
     // Aufklapp-Status der Rail-Sektionen
     const railCollapsed = ref({
       modalVerbs: false,
@@ -117,7 +123,10 @@ const app = createApp({
       actionWords: true,
       documentation: true,
       securityTargets: false,
+      tags: true,
     });
+
+    const tagRailSearch = ref('');
 
     // Suchfelder der langen Werte-Facetten
     const facetSearch = ref({ actionWord: '', documentation: '' });
@@ -227,8 +236,8 @@ const app = createApp({
     // Computed: Active filter specification grouped by category and mode
     const activeFilterSpec = computed(() => {
       const spec = {
-        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set() },
-        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set() },
+        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set() },
+        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set() },
       };
       for (const category of Object.keys(VALUE_FACETS)) {
         spec.inc[category] = new Set();
@@ -257,7 +266,8 @@ const app = createApp({
           ctrl.title.toLowerCase().includes(query) ||
           (ctrl.statementProse || '').toLowerCase().includes(query) ||
           (ctrl.guidanceProse || '').toLowerCase().includes(query) ||
-          ctrl.elementareGefaehrdungen.some((t) => t.toLowerCase().includes(query));
+          ctrl.elementareGefaehrdungen.some((t) => t.toLowerCase().includes(query)) ||
+          (ctrl.tags || []).some((t) => t.toLowerCase().includes(query));
         if (!queryMatches) return false;
       }
 
@@ -332,6 +342,20 @@ const app = createApp({
         }
       }
 
+      // Tags (mehrwertig aus tags.csv)
+      if (ignoreCategory !== 'tags') {
+        if (spec.exc.tags?.size > 0 && (ctrl.tags || []).some((tag) => spec.exc.tags.has(tag))) {
+          return false;
+        }
+        if (spec.inc.tags?.size > 0) {
+          for (const reqTag of spec.inc.tags) {
+            if (!(ctrl.tags || []).includes(reqTag)) {
+              return false;
+            }
+          }
+        }
+      }
+
       return true;
     }
 
@@ -347,6 +371,17 @@ const app = createApp({
         if (matchesFilters(ctrl)) matches.add(ctrl.id);
       }
       return matches;
+    });
+
+    // Flache Trefferliste aller matchenden Anforderungen
+    const flatFilteredControls = computed(() => {
+      if (!activeCatalog.value) return [];
+      const list = [];
+      const ids = filteredControlIds.value;
+      for (const ctrl of activeCatalog.value.allControls) {
+        if (ids.has(ctrl.id)) list.push(ctrl);
+      }
+      return list;
     });
 
     // Practice Counts (ignoring practice facet)
@@ -438,9 +473,8 @@ const app = createApp({
 
     const threatsWithMatchesCount = computed(() => {
       let count = 0;
-      for (let i = 1; i <= 47; i++) {
-        const code = `G 0.${i}`;
-        if ((threatCounts.value[code] || 0) > 0) count++;
+      for (const [code, c] of Object.entries(threatCounts.value)) {
+        if (c > 0) count++;
       }
       return count;
     });
@@ -474,7 +508,12 @@ const app = createApp({
         }
 
         if (q) {
-          const matchesCode = code.toLowerCase().includes(q) || `g0${i}`.includes(q) || `g${i}`.includes(q) || `${i}` === q;
+          const num = code.replace(/^G\s*0?\.?/i, '').trim();
+          const matchesCode =
+            code.toLowerCase().includes(q) ||
+            `g0${num}`.includes(q) ||
+            `g${num}`.includes(q) ||
+            num === q;
           const matchesTitle = title.toLowerCase().includes(q);
           if (!matchesCode && !matchesTitle) continue;
         }
@@ -488,6 +527,60 @@ const app = createApp({
       }
       return list;
     });
+
+    // Tags (kontrolliertes Vokabular aus tags.csv)
+    const allCatalogTags = computed(() => {
+      if (!activeCatalog.value) return [];
+      const set = new Set();
+      for (const ctrl of activeCatalog.value.allControls) {
+        for (const tag of ctrl.tags || []) {
+          set.add(tag);
+        }
+      }
+      return Array.from(set).sort((a, b) => a.localeCompare(b, 'de'));
+    });
+
+    const tagCounts = computed(() => {
+      const counts = {};
+      if (!activeCatalog.value) return counts;
+      for (const ctrl of activeCatalog.value.allControls) {
+        if (!matchesFilterCategory(ctrl, 'tags')) continue;
+        for (const tag of ctrl.tags || []) {
+          counts[tag] = (counts[tag] || 0) + 1;
+        }
+      }
+      return counts;
+    });
+
+    const displayedTagOptions = computed(() => {
+      const q = tagRailSearch.value.trim().toLowerCase();
+      const list = [];
+      for (const tag of allCatalogTags.value) {
+        if (q && !tag.toLowerCase().includes(q)) continue;
+        list.push({
+          tag,
+          count: tagCounts.value[tag] || 0,
+          isActive: isTagActive('tags', tag),
+          isIncluded: isTagActive('tags', tag, 'include'),
+          isExcluded: isTagActive('tags', tag, 'exclude'),
+        });
+      }
+      return list;
+    });
+
+    function activeTagCountFor(category) {
+      return activeTags.value.filter((t) => t.category === category).length;
+    }
+
+    function countTagsForCategory(category) {
+      return activeTagCountFor(category);
+    }
+
+    const activeTagFilterCount = computed(() => activeTagCountFor('tags'));
+
+    function tagDefinition(name) {
+      return definition('tags', name);
+    }
 
     // Alle aktiven Filter-Chips für die Visualisierungsleiste über dem Explorer
     const allActiveChips = computed(() => {
@@ -622,8 +715,11 @@ const app = createApp({
 
     // Reihenfolge der sichtbaren Einträge (für Pfeiltasten-Navigation)
     const visibleOrder = computed(() => {
+      if (!activeCatalog.value) return [];
+      if (listViewMode.value === 'flat') {
+        return flatFilteredControls.value.map((c) => c.id);
+      }
       const order = [];
-      if (!activeCatalog.value) return order;
       const ids = filteredControlIds.value;
       const keys = expandedKeys.value;
       for (const p of activeCatalog.value.practices) {
@@ -664,6 +760,7 @@ const app = createApp({
             threatRailSearch: threatRailSearch.value,
             threatShowOnlyMatching: threatShowOnlyMatching.value,
             threatShowAll: threatShowAll.value,
+            tagRailSearch: tagRailSearch.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Filter:', err);
@@ -681,6 +778,7 @@ const app = createApp({
             railCollapsed: { ...railCollapsed.value },
             expandedKeys: Array.from(expandedKeys.value),
             selectedControlId: selectedControlId.value,
+            listViewMode: listViewMode.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Einklappsituation:', err);
@@ -753,6 +851,21 @@ const app = createApp({
       { deep: true }
     );
 
+    // Wenn von ungefiltert auf gefiltert gewechselt wird: automatisch auf flache Liste wechseln
+    watch(
+      () => hasActiveFilters.value,
+      (isActive, wasActive) => {
+        if (isRestoringState.value) return;
+        if (isActive && !wasActive) {
+          listViewMode.value = 'flat';
+          scheduleSaveCollapse();
+        } else if (!isActive && wasActive) {
+          listViewMode.value = 'tree';
+          scheduleSaveCollapse();
+        }
+      }
+    );
+
     // Einklapp-Zustände der Rail-Sektionen & Auswahl automatisch persistieren
     watch(
       () => [
@@ -766,6 +879,7 @@ const app = createApp({
         railCollapsed.value.documentation,
         railCollapsed.value.securityTargets,
         selectedControlId.value,
+        listViewMode.value,
       ],
       () => {
         scheduleSaveCollapse();
@@ -824,6 +938,9 @@ const app = createApp({
           if (typeof savedFilterState.threatShowAll === 'boolean') {
             threatShowAll.value = savedFilterState.threatShowAll;
           }
+          if (typeof savedFilterState.tagRailSearch === 'string') {
+            tagRailSearch.value = savedFilterState.tagRailSearch;
+          }
         }
 
         if (savedCollapseState) {
@@ -838,6 +955,9 @@ const app = createApp({
           }
           if (savedCollapseState.selectedControlId) {
             selectedControlId.value = savedCollapseState.selectedControlId;
+          }
+          if (savedCollapseState.listViewMode === 'flat' || savedCollapseState.listViewMode === 'tree') {
+            listViewMode.value = savedCollapseState.listViewMode;
           }
         }
 
@@ -1371,6 +1491,32 @@ const app = createApp({
       scheduleSaveFilters();
     }
 
+    function secLevelDisplayLabel(lvl) {
+      return definition('securityLevels', lvl) || (lvl === 'normal-SdT' ? 'Standard-Sicherheitsstufe' : (lvl === 'erhöht' ? 'Erhöhte Sicherheitsstufe' : (lvl || '')));
+    }
+
+    function secLevelDefinition(lvl) {
+      return secLevelDisplayLabel(lvl);
+    }
+
+    function secLevelDescription() {
+      return '';
+    }
+
+    function onBreadcrumbClick(level, target, extra) {
+      listViewMode.value = 'tree';
+      scheduleSaveCollapse();
+      if (level === 'practice') {
+        navigateToPractice(target);
+      } else if (level === 'subgroup') {
+        navigateToSubgroup(target, extra);
+      } else if (level === 'parent') {
+        if (target) {
+          selectControl(target);
+        }
+      }
+    }
+
     // Breadcrumb-Navigation: wechselt nur die Detailansicht auf die gewählte Ebene, setzt keine Filter
     function navigateToPractice(groupId) {
       if (!groupId) return;
@@ -1526,16 +1672,16 @@ const app = createApp({
     }
 
     function countMatchingControlsInPractice(p) {
-      return p.controls.filter((c) => filteredControlIds.value.has(c.id)).length;
+      return p.controls.filter((c) => filteredControlIds.value.has(c.id) || c.id === selectedControlId.value || c.subcontrols?.some((sc) => sc.id === selectedControlId.value)).length;
     }
 
     function countMatchingControlsInSubgroup(sub) {
       let count = 0;
       for (const c of sub.controls) {
-        if (filteredControlIds.value.has(c.id)) count++;
+        if (filteredControlIds.value.has(c.id) || c.id === selectedControlId.value) count++;
         if (c.subcontrols) {
           for (const sc of c.subcontrols) {
-            if (filteredControlIds.value.has(sc.id)) count++;
+            if (filteredControlIds.value.has(sc.id) || sc.id === selectedControlId.value) count++;
           }
         }
       }
@@ -1543,8 +1689,9 @@ const app = createApp({
     }
 
     function isControlVisible(ctrl) {
+      if (ctrl.id === selectedControlId.value) return true;
       if (filteredControlIds.value.has(ctrl.id)) return true;
-      if (ctrl.subcontrols && ctrl.subcontrols.some((sc) => filteredControlIds.value.has(sc.id))) {
+      if (ctrl.subcontrols && ctrl.subcontrols.some((sc) => filteredControlIds.value.has(sc.id) || sc.id === selectedControlId.value)) {
         return true;
       }
       return false;
@@ -1674,7 +1821,8 @@ const app = createApp({
       const safe = escapeHtml(prose);
       const key = verbKey(modalVerb);
       if (!key) return safe;
-      return safe.replace(new RegExp(`\\b(${modalVerb})\\b`, 'g'), `<mark class="${key}">$1</mark>`);
+      const escapedVerb = modalVerb.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return safe.replace(new RegExp(`\\b(${escapedVerb})\\b`, 'g'), `<mark class="${key}">$1</mark>`);
     }
 
     function splitThreat(threatStr) {
@@ -1762,6 +1910,12 @@ const app = createApp({
       threatRailSearch,
       threatShowOnlyMatching,
       threatsWithMatchesCount,
+      allCatalogTags,
+      tagCounts,
+      tagRailSearch,
+      displayedTagOptions,
+      activeTagFilterCount,
+      tagDefinition,
       railCollapsed,
       filteredControlIds,
       allActiveChips,
@@ -1778,6 +1932,7 @@ const app = createApp({
       toggleTagMode,
       clearTagsForCategory,
       activeTagCountFor,
+      countTagsForCategory,
       removeChip,
       toggleChipMode,
 
@@ -1831,6 +1986,12 @@ const app = createApp({
       formatVersion,
       highlightProse,
       splitThreat,
+      listViewMode,
+      flatFilteredControls,
+      secLevelDisplayLabel,
+      secLevelDefinition,
+      secLevelDescription,
+      onBreadcrumbClick,
       verbKey,
       diffLabel,
     };

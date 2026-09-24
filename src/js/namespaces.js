@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * BSI-Namespace-Definitionen (kontrollierte Vokabulare der Stand-der-Technik-Bibliothek)
  *
  * Die CSV-Dateien liegen unverändert unter data/namespaces/ und stammen aus
@@ -18,6 +21,7 @@ const NAMESPACE_FILES = {
   securityLevels: { file: 'security_level.csv', key: 'Begriff' },
   securityTargets: { file: 'security_targets.csv', key: 'Begriff' },
   securityTargetLevels: { file: 'security_targets_levels.csv', key: 'Wert' },
+  tags: { file: 'tags.csv', key: 'Tag' },
 };
 
 /**
@@ -83,14 +87,24 @@ function tableFromCsv(text, keyColumn) {
   const columns = header.map((h) => h.trim());
   const keyIndex = columns.indexOf(keyColumn);
   const table = {};
+  const normalized = {};
   for (const r of rows) {
     const entry = {};
     columns.forEach((col, idx) => {
       entry[col] = (r[idx] ?? '').trim();
     });
     const key = (r[keyIndex] ?? '').trim();
-    if (key) table[key] = entry;
+    if (key) {
+      table[key] = entry;
+      normalized[normalizeKey(key)] = entry;
+    }
   }
+  Object.defineProperty(table, '_normalized', {
+    value: normalized,
+    enumerable: false,
+    writable: true,
+    configurable: true,
+  });
   return table;
 }
 
@@ -123,8 +137,8 @@ export function lookupNamespace(name, value) {
   const key = String(value).trim();
   if (table[key]) return table[key];
   const norm = normalizeKey(key);
-  for (const [k, entry] of Object.entries(table)) {
-    if (normalizeKey(k) === norm) return entry;
+  if (table._normalized && table._normalized[norm]) {
+    return table._normalized[norm];
   }
   return null;
 }
@@ -133,5 +147,6 @@ export function lookupNamespace(name, value) {
  * Definitionstext eines Namespace-Eintrags (Spalte "Definition").
  */
 export function namespaceDefinition(name, value) {
-  return lookupNamespace(name, value)?.Definition || '';
+  const entry = lookupNamespace(name, value);
+  return entry?.Definition || entry?.Bedeutung || '';
 }

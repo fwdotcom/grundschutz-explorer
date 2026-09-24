@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Pure JavaScript Diff Engine & LCS Word-Diff (Zero-Build, Client-Side)
  */
 

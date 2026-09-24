@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Pure JavaScript BSI OSCAL Parser (Zero-Build, Client-Side)
  * Strictly follows NIST OSCAL 1.1.3 & official BSI Grundschutz++ catalog schemas.
  */
@@ -103,6 +106,20 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
     a.localeCompare(b, 'de', { numeric: true })
   );
 
+  // Tags aus der OSCAL-Eigenschaft 'tags' der Anforderung (kontrolliertes Vokabular aus tags.csv)
+  const tagList = [];
+  const tagProps = props.filter((p) => p.name === 'tags' || p.name === 'tag');
+  for (const tp of tagProps) {
+    if (tp.value) {
+      const parts = tp.value.split(',').map((s) => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        if (!tagList.includes(part)) {
+          tagList.push(part);
+        }
+      }
+    }
+  }
+
   // Recursively parse child subcontrols if present (e.g. ARCH.1.1 -> ARCH.1.1.1, ARCH.1.1.2...)
   const subcontrols = [];
   if (ctrl.controls && ctrl.controls.length > 0) {
@@ -149,6 +166,7 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
     documentation,
     guidanceProse,
     elementareGefaehrdungen,
+    tags: tagList,
   };
 }
 
@@ -228,7 +246,7 @@ export function parseOscalCatalog(rawJson) {
 
   const metadata = catalog.metadata || {};
   const uuid = catalog.uuid || metadata.uuid || crypto.randomUUID();
-  const title = metadata.title || 'BSI IT-Grundschutz++ Katalog';
+  const title = metadata.title || 'Grundschutz++ Katalog';
   const version = metadata.version || metadata['last-modified'] || '';
   const lastModified = metadata['last-modified'] || '';
   const oscalVersion = metadata['oscal-version'] || '1.1.3';

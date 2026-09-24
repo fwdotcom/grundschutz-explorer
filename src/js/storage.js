@@ -1,16 +1,19 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Pure JavaScript IndexedDB Storage Layer (No npm dependencies, zero-build)
  */
 
 const DB_NAME = 'bsi_gs_explorer_db';
 const DB_VERSION = 2;
 
-let dbInstance = null;
+let dbPromise = null;
 
 function openDatabase() {
-  if (dbInstance) return Promise.resolve(dbInstance);
+  if (dbPromise) return dbPromise;
 
-  return new Promise((resolve, reject) => {
+  dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = (event) => {
@@ -29,14 +32,21 @@ function openDatabase() {
     };
 
     request.onsuccess = (event) => {
-      dbInstance = event.target.result;
-      resolve(dbInstance);
+      const db = event.target.result;
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
     };
 
     request.onerror = (event) => {
+      dbPromise = null;
       reject(event.target.error);
     };
   });
+
+  return dbPromise;
 }
 
 export async function saveCatalogRecord(record) {
