@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232459d6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grundschutz++ Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="app" v-cloak class="app">
+
+    <!-- ============ Topbar ============ -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title">Grundschutz++ Explorer</div>
+          <div class="brand-sub" :title="activeCatalog?.title">
+            <template v-if="activeCatalog">{{ activeCatalog.title }}<template v-if="activeCatalog.version"> · {{ formatVersion(activeCatalog.version) }}</template></template>
+            <template v-else>Kein Katalog geladen</template>
+          </div>
+        </div>
+      </div>
+
+      <div class="search">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input
+          ref="searchInput"
+          type="search"
+          v-model="filters.searchQuery"
+          :disabled="!activeCatalog"
+          placeholder="Kennung, Titel, Text oder Gefährdung suchen …"
+          @keydown.esc="filters.searchQuery = ''; $event.target.blur()"
+        />
+        <div class="search-end">
+          <button v-if="filters.searchQuery" class="icon-btn sm" @click="filters.searchQuery = ''" title="Suche leeren">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+          <span v-else class="kbd">Strg K</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" @click="isVersionsModalOpen = true" title="Gespeicherte Versionen und Differenzvergleich">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a4 4 0 0 0 4 4h5"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/></svg>
+          <span class="hide-sm">Versionen</span>
+        </button>
+        <button class="btn btn-secondary" @click="isImportModalOpen = true">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <span class="hide-sm">Daten laden</span>
+        </button>
+        <button class="icon-btn" @click="toggleDarkMode" :title="isDarkMode ? 'Helles Design' : 'Dunkles Design'">
+          <svg v-if="isDarkMode" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ Diff Banner ============ -->
+    <div v-if="diffSummary?.hasDiff" class="diff-banner">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a4 4 0 0 0 4 4h5"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/></svg>
+      <strong>Vergleichsmodus</strong>
+      <span class="tag diff-added">+{{ diffSummary.addedCount }} neu</span>
+      <span class="tag diff-modified">{{ diffSummary.modifiedCount }} geändert</span>
+      <span class="tag diff-deleted">−{{ diffSummary.deletedCount }} gelöscht</span>
+      <span class="spacer"></span>
+      <button class="link-btn" @click="clearComparison">Vergleich beenden</button>
+    </div>
+
+    <!-- ============ Workspace ============ -->
+    <main class="workspace">
+
+      <div v-if="isLoadingInitial" class="center-state">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span>Lade Katalogdaten …</span>
+        </div>
+      </div>
+
+      <div v-else-if="!activeCatalog" class="center-state">
+        <div class="welcome">
+          <div class="welcome-mark">
+            <svg style="width:26px;height:26px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h2>Grundschutz++ Explorer</h2>
+          <p>Anforderungen, Elementare Gefährdungen und Versionsunterschiede der OSCAL-Kataloge durchsuchen und vergleichen.</p>
+          <div class="actions">
+            <button class="btn btn-primary btn-lg btn-block" @click="loadOfficialBundle" :disabled="isLoadingBundle">
+              <div v-if="isLoadingBundle" class="spinner" style="width:16px;height:16px"></div>
+              <span>Offiziellen Katalog laden</span>
+            </button>
+            <button class="btn btn-secondary btn-lg btn-block" @click="isImportModalOpen = true">
+              Eigene URL oder Datei importieren
+            </button>
+          </div>
+          <p class="fineprint">Alle Daten bleiben lokal in Ihrem Browser (IndexedDB).</p>
+        </div>
+      </div>
+
+      <template v-else>
+        <!-- ---------- Rail: Facetten-Filter (Modalverben, Niveau, Praktiken, Gefährdungen, Diff) ---------- -->
+        <aside class="rail">
+          <div class="rail-header">
+            <span class="rail-header-title">Filter</span>
+            <button v-if="hasActiveFilters" class="link-btn xs" @click="resetFilters" title="Alle Filter zurücksetzen">Zurücksetzen</button>
+            <span class="spacer"></span>
+            <div class="btn-group">
+              <button class="icon-btn sm btn-outline" @click="expandAllRail" title="Alle Filterbereiche aufklappen">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+              </button>
+              <button class="icon-btn sm btn-outline" @click="collapseAllRail" title="Alle Filterbereiche zuklappen">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="rail-scroll">
+
+            <!-- 1. Modalverben -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.modalVerbs = !railCollapsed.modalVerbs" title="Modalverben ein-/ausklappen">
+                <span class="rail-heading-title">Modalverben</span>
+                <span v-if="activeTagCountFor('modalVerb')" class="rail-active-badge">{{ activeTagCountFor('modalVerb') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.modalVerbs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.modalVerbs" class="rail-section-body">
+                <div
+                  v-for="v in ['MUSS', 'SOLLTE', 'KANN']"
+                  :key="v"
+                  v-show="!hasCategoryInclude('modalVerb') || getTagMode('modalVerb', v) === 'include'"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('modalVerb', v) === 'include',
+                    'is-excluded': getTagMode('modalVerb', v) === 'exclude',
+                    'is-empty': !modalVerbCounts[v]
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('modalVerb', v) ? removeTag('modalVerb', v) : toggleTag('modalVerb', v, 'include', v, 'Modalverb')"
+                    :title="getTagMode('modalVerb', v) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + v + ' filtern'"
+                  >
+                    <span class="dot" :class="'dot-' + v.toLowerCase()"></span>
+                    <span class="rail-row-label font-bold">{{ v }}</span>
+                    <span class="rail-row-count">{{ modalVerbCounts[v] || 0 }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <!-- Wenn 'Nur' aktiv: Papierkorb zum Löschen -->
+                    <button
+                      v-if="getTagMode('modalVerb', v) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('modalVerb', v)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <!-- Wenn 'Nicht' aktiv: Papierkorb zum Aufheben des Ausschlusses -->
+                    <button
+                      v-else-if="getTagMode('modalVerb', v) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('modalVerb', v)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <!-- Wenn nicht aktiv: Haken (✓) und Kreuz (✕) -->
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('modalVerb', v, 'include', v, 'Modalverb')"
+                        title="Nur diesen Wert einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('modalVerb', v, 'exclude', v, 'Modalverb')"
+                        title="Diesen Wert ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Schutzniveau -->
+            <div v-if="availableSecLevels.length > 0" class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.secLevels = !railCollapsed.secLevels" title="Schutzniveau ein-/ausklappen">
+                <span class="rail-heading-title">Schutzniveau</span>
+                <span v-if="activeTagCountFor('secLevel')" class="rail-active-badge">{{ activeTagCountFor('secLevel') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.secLevels" class="rail-section-body">
+                <div
+                  v-for="lvl in availableSecLevels"
+                  :key="lvl"
+                  v-show="!hasCategoryInclude('secLevel') || getTagMode('secLevel', lvl) === 'include'"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('secLevel', lvl) === 'include',
+                    'is-excluded': getTagMode('secLevel', lvl) === 'exclude',
+                    'is-empty': !secLevelCounts[lvl]
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('secLevel', lvl) ? removeTag('secLevel', lvl) : toggleTag('secLevel', lvl, 'include', lvl, 'Niveau')"
+                    :title="getTagMode('secLevel', lvl) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + lvl + ' filtern'"
+                  >
+                    <span class="rail-row-label">{{ lvl }}</span>
+                    <span class="rail-row-count">{{ secLevelCounts[lvl] || 0 }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <button
+                      v-if="getTagMode('secLevel', lvl) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('secLevel', lvl)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <button
+                      v-else-if="getTagMode('secLevel', lvl) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('secLevel', lvl)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('secLevel', lvl, 'include', lvl, 'Niveau')"
+                        title="Nur dieses Niveau einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('secLevel', lvl, 'exclude', lvl, 'Niveau')"
+                        title="Dieses Niveau ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Praktiken -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
+                <span class="rail-heading-title">Praktiken</span>
+                <span v-if="activeTagCountFor('practice')" class="rail-active-badge">{{ activeTagCountFor('practice') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.practices" class="rail-section-body">
+                <div
+                  v-show="!hasCategoryInclude('practice')"
+                  class="rail-row rail-all-row"
+                  :class="{ 'is-all-active': !activeTagCountFor('practice') }"
+                  @click="clearTagsForCategory('practice')"
+                  title="Alle Praktiken anzeigen"
+                >
+                  <div class="rail-row-main">
+                    <span class="rail-row-label">Alle Praktiken</span>
+                    <span class="rail-row-count">{{ practiceCounts.__all }}</span>
+                  </div>
+                </div>
+                <div v-show="!hasCategoryInclude('practice')" class="rail-divider"></div>
+                <div
+                  v-for="p in activeCatalog.practices"
+                  :key="p.id"
+                  v-show="!hasCategoryInclude('practice') || getTagMode('practice', p.id) === 'include'"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('practice', p.id) === 'include',
+                    'is-excluded': getTagMode('practice', p.id) === 'exclude',
+                    'is-empty': !practiceCounts[p.id]
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('practice', p.id) ? removeTag('practice', p.id) : toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
+                    :title="getTagMode('practice', p.id) ? 'Klicken zum Aufheben des Filters' : p.id + ' – ' + p.title"
+                  >
+                    <span class="rail-code">{{ p.id }}</span>
+                    <span class="rail-row-label">{{ p.title }}</span>
+                    <span class="rail-row-count">{{ practiceCounts[p.id] || 0 }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <button
+                      v-if="getTagMode('practice', p.id) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('practice', p.id)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <button
+                      v-else-if="getTagMode('practice', p.id) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('practice', p.id)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
+                        title="Nur diese Praktik einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('practice', p.id, 'exclude', p.id + ' ' + p.title, 'Praktik')"
+                        title="Diese Praktik ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Elementare Gefährdungen -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.threats = !railCollapsed.threats" title="Elementare Gefährdungen ein-/ausklappen">
+                <span class="rail-heading-title">Gefährdungen</span>
+                <span v-if="activeTagCountFor('threat')" class="rail-active-badge">{{ activeTagCountFor('threat') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.threats }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.threats" class="rail-section-body">
+                <div class="rail-threat-search">
+                  <input
+                    type="search"
+                    class="rail-search-input"
+                    v-model="threatRailSearch"
+                    placeholder="Gefährdung suchen (z.B. G 0.14)..."
+                  />
+                </div>
+                <div class="rail-subfilter-row">
+                  <button
+                    class="chip-toggle xs"
+                    :class="{ on: threatShowOnlyMatching }"
+                    @click="threatShowOnlyMatching = !threatShowOnlyMatching"
+                    title="Nur Gefährdungen mit Treffern anzeigen"
+                  >
+                    Nur mit Treffern ({{ threatsWithMatchesCount }})
+                  </button>
+                </div>
+                <div class="rail-threats-scroll">
+                  <div
+                    v-for="t in displayedThreatOptions"
+                    :key="t.code"
+                    class="rail-row"
+                    :class="{
+                      'is-included': getTagMode('threat', t.code) === 'include',
+                      'is-excluded': getTagMode('threat', t.code) === 'exclude',
+                      'is-empty': !threatCounts[t.code]
+                    }"
+                  >
+                    <div
+                      class="rail-row-main"
+                      @click="getTagMode('threat', t.code) ? removeTag('threat', t.code) : toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
+                      :title="getTagMode('threat', t.code) ? 'Klicken zum Aufheben des Filters' : t.label"
+                    >
+                      <span class="threat-pill-code">{{ t.code }}</span>
+                      <span class="rail-row-label">{{ t.title }}</span>
+                      <span class="rail-row-count">{{ threatCounts[t.code] || 0 }}</span>
+                    </div>
+                    <div class="rail-row-actions">
+                      <button
+                        v-if="getTagMode('threat', t.code) === 'include'"
+                        class="rail-btn btn-trash"
+                        @click.stop="removeTag('threat', t.code)"
+                        title="Filter aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <button
+                        v-else-if="getTagMode('threat', t.code) === 'exclude'"
+                        class="rail-btn btn-trash is-exclude-trash"
+                        @click.stop="removeTag('threat', t.code)"
+                        title="Ausschluss aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <template v-else>
+                        <button
+                          class="rail-btn btn-check"
+                          @click.stop="toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
+                          title="Nur diese Gefährdung einschließen (✓)"
+                        >
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </button>
+                        <button
+                          class="rail-btn btn-cross"
+                          @click.stop="toggleTag('threat', t.code, 'exclude', t.code + ' ' + t.title, 'Gefährdung')"
+                          title="Diese Gefährdung ausschließen (✕)"
+                        >
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="hasCategoryInclude('threat') && !threatRailSearch" class="rail-subfilter-row" style="margin-top: 4px;">
+                  <button v-if="!threatShowAll" class="link-btn xs" @click="threatShowAll = true">&plus; Weitere Gef&auml;hrdung ausw&auml;hlen</button>
+                  <button v-else class="link-btn xs" @click="threatShowAll = false">Nur ausgew&auml;hlte Gef&auml;hrdungen anzeigen</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Änderungen (Diff) -->
+            <div v-if="diffSummary?.hasDiff" class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.diffs = !railCollapsed.diffs" title="Änderungen ein-/ausklappen">
+                <span class="rail-heading-title">Änderungen</span>
+                <span v-if="activeTagCountFor('diff')" class="rail-active-badge">{{ activeTagCountFor('diff') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.diffs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.diffs" class="rail-section-body">
+                <div
+                  v-for="st in [
+                    { id: 'added', label: 'Neu', count: diffCounts.added, cls: 'diff-added' },
+                    { id: 'modified', label: 'Geändert', count: diffCounts.modified, cls: 'diff-modified' },
+                    { id: 'deleted', label: 'Gelöscht', count: diffCounts.deleted, cls: 'diff-deleted' }
+                  ]"
+                  :key="st.id"
+                  v-show="!hasCategoryInclude('diff') || getTagMode('diff', st.id) === 'include'"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('diff', st.id) === 'include',
+                    'is-excluded': getTagMode('diff', st.id) === 'exclude',
+                    'is-empty': !st.count
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('diff', st.id) ? removeTag('diff', st.id) : toggleTag('diff', st.id, 'include', st.label, 'Status')"
+                    :title="getTagMode('diff', st.id) ? 'Klicken zum Aufheben des Filters' : 'Diff: ' + st.label"
+                  >
+                    <span class="tag" :class="st.cls">{{ st.label }}</span>
+                    <span class="rail-row-count">{{ st.count }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <button
+                      v-if="getTagMode('diff', st.id) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('diff', st.id)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <button
+                      v-else-if="getTagMode('diff', st.id) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('diff', st.id)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('diff', st.id, 'include', st.label, 'Status')"
+                        title="Nur diesen Status einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('diff', st.id, 'exclude', st.label, 'Status')"
+                        title="Diesen Status ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="rail-footer">
+            <div class="row-kv"><span>Anforderungen</span><span>{{ activeCatalog.allControls.length }}</span></div>
+            <div class="row-kv"><span>Gefährdungs-Mapping</span><span :class="{ 'status-on': threatsMap.size > 0 }">{{ threatsMap.size > 0 ? 'aktiv' : 'nicht geladen' }}</span></div>
+          </div>
+        </aside>
+
+        <div class="split" ref="splitEl">
+          <!-- ---------- List pane ---------- -->
+          <section class="list-pane">
+            <div class="filterbar">
+              <!-- Aktive Filter-Tags Visualisierung -->
+              <div class="active-tags-bar" :class="{ 'has-tags': allActiveChips.length > 0 }">
+                <div v-if="allActiveChips.length === 0" class="no-tags-hint">
+                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  <span>Keine Filter aktiv &ndash; Links mit &bdquo;&check;&ldquo; (Nur) oder &bdquo;&cross;&ldquo; (Nicht) w&auml;hlen oder Volltextsuche nutzen</span>
+                </div>
+                <div v-else class="tags-container">
+                  <span class="tags-lead-label">Aktive Filter:</span>
+                  <div class="tag-chips-wrap">
+                    <div
+                      v-for="chip in allActiveChips"
+                      :key="chip.key"
+                      class="tag-chip"
+                      :class="{
+                        'is-include': chip.mode === 'include',
+                        'is-exclude': chip.mode === 'exclude',
+                        'is-search': chip.type === 'search'
+                      }"
+                    >
+                      <!-- Modus-Umschalter für Facetten (Haken / Kreuz) -->
+                      <button
+                        v-if="chip.type === 'facet'"
+                        class="chip-mode-badge"
+                        :class="chip.mode === 'exclude' ? 'badge-exclude' : 'badge-include'"
+                        @click="toggleChipMode(chip)"
+                        :title="'Modus umschalten: aktuell ' + (chip.mode === 'exclude' ? 'NICHT (Ausschluss)' : 'NUR (Einschluss)')"
+                      >
+                        <svg v-if="chip.mode === 'exclude'" class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        <svg v-else class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span class="chip-mode-text">{{ chip.mode === 'exclude' ? 'NICHT' : 'NUR' }}</span>
+                      </button>
+
+                      <span v-else-if="chip.type === 'search'" class="chip-mode-badge badge-search">Suche</span>
+                      <span v-else class="chip-mode-badge badge-include">
+                        <svg class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span class="chip-mode-text">NUR</span>
+                      </span>
+
+                      <!-- Kategorie & Bezeichnung -->
+                      <span class="chip-category">{{ chip.categoryLabel }}:</span>
+                      <span class="chip-label" :title="chip.label">{{ chip.label }}</span>
+
+                      <!-- Filter entfernen Button (Papierkorb) -->
+                      <button
+                        class="chip-remove-btn"
+                        @click="removeChip(chip)"
+                        title="Filter löschen"
+                      >
+                        <svg class="icon-chip-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <button class="link-btn clear-all-btn" @click="resetFilters" title="Alle Filter zurücksetzen">
+                    Alle zurücksetzen
+                  </button>
+                </div>
+              </div>
+
+              <div class="list-meta">
+                <span><strong>{{ filteredControlIds.size }}</strong> von {{ activeCatalog.allControls.length }} Anforderungen</span>
+                <button v-if="hasActiveFilters" class="link-btn" @click="resetFilters">Filter zurücksetzen</button>
+                <span class="spacer"></span>
+                <div class="btn-group">
+                  <button class="icon-btn sm btn-outline" @click="expandAll" title="Alle aufklappen">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                  </button>
+                  <button class="icon-btn sm btn-outline" @click="collapseAll" title="Alle zuklappen">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-scroll" ref="listScroll">
+              <div v-if="filteredControlIds.size === 0" class="list-empty">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <p>Keine Anforderungen gefunden.</p>
+                <p><button class="link-btn" @click="resetFilters">Filter zurücksetzen</button></p>
+              </div>
+
+              <template v-for="practice in activeCatalog.practices" :key="practice.id">
+                <div v-if="countMatchingControlsInPractice(practice) > 0">
+                  <button class="practice-head" :data-practice-id="practice.id" @click="toggleGroup('p_' + practice.id)">
+                    <svg class="icon-sm chev" :class="{ open: expandedKeys.has('p_' + practice.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                    <span class="code">{{ practice.id }}</span>
+                    <span class="title">{{ practice.title }}</span>
+                    <span class="count">{{ countMatchingControlsInPractice(practice) }}</span>
+                  </button>
+
+                  <template v-if="expandedKeys.has('p_' + practice.id)">
+                    <template v-for="sub in practice.subgroups" :key="sub.id">
+                      <div v-if="countMatchingControlsInSubgroup(sub) > 0">
+                        <button class="subgroup-head" :data-sub-id="sub.id" :class="{ active: filters.subgroupFilter === sub.id }" @click="toggleGroup('sub_' + sub.id)">
+                          <svg class="icon-xs chev" :class="{ open: expandedKeys.has('sub_' + sub.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                          <span class="code">{{ sub.id }}</span>
+                          <span class="title">{{ sub.title }}</span>
+                          <span class="count">{{ countMatchingControlsInSubgroup(sub) }}</span>
+                        </button>
+
+                        <template v-if="expandedKeys.has('sub_' + sub.id)">
+                          <template v-for="ctrl in sub.controls" :key="ctrl.id">
+                            <div
+                              v-if="isControlVisible(ctrl)"
+                              class="ctrl-row"
+                              :class="{ selected: selectedControlId === ctrl.id, dimmed: !filteredControlIds.has(ctrl.id), deleted: ctrl.diff?.status === 'deleted' }"
+                              :data-ctrl-id="ctrl.id"
+                              @click="selectControl(ctrl)"
+                            >
+                              <button v-if="ctrl.subcontrols?.length" class="ctrl-toggle" @click.stop="toggleControlExpand(ctrl.id)" :title="expandedKeys.has('ctrl_' + ctrl.id) ? 'Unteranforderungen einklappen' : 'Unteranforderungen ausklappen'">
+                                <svg class="icon-xs chev" :class="{ open: expandedKeys.has('ctrl_' + ctrl.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                              </button>
+                              <span v-else class="ctrl-toggle-spacer"></span>
+                              <span class="ctrl-id">{{ ctrl.id }}</span>
+                              <span class="ctrl-title" :title="ctrl.title">{{ ctrl.title }}</span>
+                              <span class="ctrl-meta">
+                                <span v-if="ctrl.diff && ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + ctrl.diff.status">{{ diffLabel(ctrl.diff.status) }}</span>
+                                <span v-if="ctrl.subcontrols?.length" class="meta-num" :title="ctrl.subcontrols.length + ' Unteranforderungen'">
+                                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ ctrl.subcontrols.length }}
+                                </span>
+                                <span v-if="ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
+                                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ ctrl.elementareGefaehrdungen.length }}
+                                </span>
+                                <span class="verb-label" :class="verbKey(ctrl.modalVerb)">{{ verbKey(ctrl.modalVerb) ? ctrl.modalVerb : '' }}</span>
+                              </span>
+                            </div>
+
+                            <template v-if="ctrl.subcontrols?.length && expandedKeys.has('ctrl_' + ctrl.id)">
+                              <template v-for="subc in ctrl.subcontrols" :key="subc.id">
+                                <div
+                                  v-if="filteredControlIds.has(subc.id)"
+                                  class="ctrl-row sub"
+                                  :class="{ selected: selectedControlId === subc.id, deleted: subc.diff?.status === 'deleted' }"
+                                  :data-ctrl-id="subc.id"
+                                  @click="selectControl(subc)"
+                                >
+                                  <span class="ctrl-id">{{ subc.id }}</span>
+                                  <span class="ctrl-title" :title="subc.title">{{ subc.title }}</span>
+                                  <span class="ctrl-meta">
+                                    <span v-if="subc.diff && subc.diff.status !== 'unchanged'" class="tag" :class="'diff-' + subc.diff.status">{{ diffLabel(subc.diff.status) }}</span>
+                                    <span v-if="subc.elementareGefaehrdungen?.length" class="meta-num threat" :title="subc.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
+                                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ subc.elementareGefaehrdungen.length }}
+                                    </span>
+                                    <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
+                                  </span>
+                                </div>
+                              </template>
+                            </template>
+                          </template>
+                        </template>
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </section>
+
+          <div class="resizer" :class="{ active: isResizing }" @mousedown.prevent="startResize" title="Breite anpassen"></div>
+
+          <!-- ---------- Detail pane ---------- -->
+          <section class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
+            <div v-if="!selectedControl" class="detail-empty">
+              <div>
+                <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+                <h3>Keine Anforderung ausgewählt</h3>
+                <p>Wählen Sie links eine Anforderung aus. Mit ↑ / ↓ blättern Sie durch die Liste.</p>
+              </div>
+            </div>
+
+            <template v-else>
+              <div class="detail-head">
+                <nav class="crumbs" aria-label="Hierarchie">
+                  <!-- Ebene 1: Praktik -->
+                  <button
+                    :class="{ active: isTagActive('practice', selectedControl.groupId, 'include') && !filters.subgroupFilter && !filters.controlFilter }"
+                    @click="selectPracticeBreadcrumb(selectedControl.groupId)"
+                    :title="'Praktik ' + practiceBreadcrumbLabel(selectedControl) + ' filtern'"
+                  >
+                    {{ practiceBreadcrumbLabel(selectedControl) }}
+                  </button>
+
+                  <!-- Ebene 2: Teilbereich -->
+                  <template v-if="selectedControl.subgroupTitle">
+                    <span class="sep">&raquo;</span>
+                    <button
+                      :class="{ active: filters.subgroupFilter === selectedControl.subgroupId && !filters.controlFilter }"
+                      @click="selectSubgroupBreadcrumb(selectedControl.subgroupId, selectedControl.groupId)"
+                      :title="'Teilbereich ' + subgroupBreadcrumbLabel(selectedControl) + ' filtern'"
+                    >
+                      {{ subgroupBreadcrumbLabel(selectedControl) }}
+                    </button>
+                  </template>
+
+                  <!-- Ebene 3 (wenn Unteranforderung aktiv): Übergeordnete Anforderung -->
+                  <template v-if="parentControl">
+                    <span class="sep">&raquo;</span>
+                    <button
+                      :class="{ active: filters.controlFilter === parentControl.id }"
+                      @click="selectControlBreadcrumb(parentControl)"
+                      :title="'Übergeordnete Anforderung ' + controlBreadcrumbLabel(parentControl) + ' filtern'"
+                    >
+                      {{ controlBreadcrumbLabel(parentControl) }}
+                    </button>
+                    <!-- Ebene 4: Aktive Unteranforderung -->
+                    <span class="sep">&raquo;</span>
+                    <button
+                      class="crumb-current"
+                      :class="{ active: filters.controlFilter === selectedControl.id }"
+                      @click="selectControlBreadcrumb(selectedControl)"
+                      :title="'Unteranforderung ' + controlBreadcrumbLabel(selectedControl) + ' filtern'"
+                    >
+                      {{ controlBreadcrumbLabel(selectedControl) }}
+                    </button>
+                  </template>
+
+                  <!-- Ebene 3 (wenn Hauptanforderung aktiv): Aktive Anforderung -->
+                  <template v-else>
+                    <span class="sep">&raquo;</span>
+                    <button
+                      class="crumb-current"
+                      :class="{ active: filters.controlFilter === selectedControl.id }"
+                      @click="selectControlBreadcrumb(selectedControl)"
+                      :title="'Anforderung ' + controlBreadcrumbLabel(selectedControl) + ' filtern'"
+                    >
+                      {{ controlBreadcrumbLabel(selectedControl) }}
+                    </button>
+                  </template>
+                </nav>
+
+                <div class="detail-titlebar">
+                  <div class="titles">
+                    <div class="detail-id">{{ selectedControl.id }}</div>
+                    <h2 class="detail-title">{{ selectedControl.title }}</h2>
+                  </div>
+                </div>
+
+                <div class="detail-tags">
+                  <span v-if="verbKey(selectedControl.modalVerb)" class="tag tag-lg" :class="'verb-' + verbKey(selectedControl.modalVerb)">
+                    <span class="dot" :class="'dot-' + verbKey(selectedControl.modalVerb)"></span>{{ selectedControl.modalVerb }}
+                  </span>
+                  <span v-if="selectedControl.secLevel" class="tag tag-lg tag-outline">Niveau: {{ selectedControl.secLevel }}</span>
+                  <span v-if="selectedControl.effortLevel" class="tag tag-lg tag-outline">Aufwand: {{ selectedControl.effortLevel }}</span>
+                  <span v-if="selectedControl.isSubcontrol" class="tag tag-lg tag-accent">Unteranforderung</span>
+                  <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
+                </div>
+
+                <div class="tabs">
+                  <button class="tab" :class="{ on: detailActiveTab === 'overview' }" @click="detailActiveTab = 'overview'">
+                    Übersicht
+                    <span v-if="selectedControl.elementareGefaehrdungen.length" class="tab-count">{{ selectedControl.elementareGefaehrdungen.length }}</span>
+                  </button>
+                  <button class="tab" :class="{ on: detailActiveTab === 'guidance' }" @click="detailActiveTab = 'guidance'">Hilfestellung</button>
+                  <button v-if="diffSummary?.hasDiff" class="tab" :class="{ on: detailActiveTab === 'diff' }" @click="detailActiveTab = 'diff'">Änderungen</button>
+                  <button class="tab" :class="{ on: detailActiveTab === 'props' }" @click="detailActiveTab = 'props'">OSCAL</button>
+                </div>
+              </div>
+
+              <div class="detail-body" ref="detailBody">
+
+                <!-- Übersicht -->
+                <div v-if="detailActiveTab === 'overview'" class="stack">
+                  <button v-if="selectedControl.isSubcontrol && parentControl" class="parent-link" @click="selectControlById(parentControl.id)">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+                    <span>Übergeordnet:</span>
+                    <span class="mono">{{ parentControl.id }}</span>
+                    <span class="grow">{{ parentControl.title }}</span>
+                  </button>
+
+                  <div>
+                    <div class="section-label">Anforderungstext</div>
+                    <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
+                  </div>
+
+                  <div class="card">
+                    <dl class="kv-grid" style="margin:0">
+                      <div class="kv">
+                        <dt>Handlung</dt>
+                        <dd :class="{ muted: !selectedControl.actionWord }">{{ selectedControl.actionWord || '–' }}</dd>
+                      </div>
+                      <div class="kv">
+                        <dt>Dokumentation</dt>
+                        <dd :class="{ muted: !selectedControl.documentation }">{{ selectedControl.documentation || 'Nicht vorgegeben' }}</dd>
+                      </div>
+                      <div class="kv full">
+                        <dt>Gefordertes Ergebnis</dt>
+                        <dd :class="{ muted: !selectedControl.result }">{{ selectedControl.result || '–' }}</dd>
+                      </div>
+                      <div v-if="selectedControl.resultSpecification" class="kv full">
+                        <dt>Spezifikation</dt>
+                        <dd>{{ selectedControl.resultSpecification }}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div class="card">
+                    <div class="card-head">
+                      <svg class="icon-sm" style="color:var(--threat)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                      <h4>Elementare Gefährdungen</h4>
+                      <span class="hint">{{ selectedControl.elementareGefaehrdungen.length ? 'Klicken zum Filtern' : 'keine zugeordnet' }}</span>
+                    </div>
+                    <ul v-if="selectedControl.elementareGefaehrdungen.length" class="threat-list">
+                      <li v-for="threat in selectedControl.elementareGefaehrdungen" :key="threat">
+                        <button
+                          class="threat-item"
+                          :class="{
+                            active: getTagMode('threat', splitThreat(threat).code) === 'include',
+                            'is-excluded': getTagMode('threat', splitThreat(threat).code) === 'exclude'
+                          }"
+                          @click="filterByThreat(threat)"
+                          :title="'Liste nach ' + splitThreat(threat).code + ' filtern (Klick: Einschluss umschalten)'"
+                        >
+                          <span class="threat-code">{{ splitThreat(threat).code }}</span>
+                          <span class="threat-title">{{ splitThreat(threat).title || threat }}</span>
+                          <span class="tag" :class="getThreatCategory(threat).cls">{{ getThreatCategory(threat).name }}</span>
+                          <svg class="icon-sm go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></svg>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div v-if="selectedControl.subcontrols?.length" class="card">
+                    <div class="card-head">
+                      <h4>Unteranforderungen</h4>
+                      <span class="hint">{{ selectedControl.subcontrols.length }}</span>
+                    </div>
+                    <ul class="sub-list">
+                      <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
+                        <button class="sub-item" @click="selectControl(subc)">
+                          <span class="mono">{{ subc.id }}</span>
+                          <span class="grow">{{ subc.title }}</span>
+                          <span v-if="verbKey(subc.modalVerb)" class="verb-label" :class="verbKey(subc.modalVerb)">{{ subc.modalVerb }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Hilfestellung -->
+                <div v-else-if="detailActiveTab === 'guidance'" class="card card-pad">
+                  <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
+                  <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
+                </div>
+
+                <!-- Änderungen -->
+                <div v-else-if="detailActiveTab === 'diff'" class="stack">
+                  <div v-if="selectedControl.diff" class="card card-pad">
+                    <div class="diff-status">
+                      <span class="tag tag-lg" :class="selectedControl.diff.status === 'unchanged' ? '' : 'diff-' + selectedControl.diff.status">
+                        {{ selectedControl.diff.status === 'unchanged' ? 'Unverändert' : diffLabel(selectedControl.diff.status, true) }}
+                      </span>
+                    </div>
+                    <ul v-if="selectedControl.diff.changes.length" class="change-list">
+                      <li v-for="ch in selectedControl.diff.changes" :key="ch.field">
+                        <strong>{{ ch.label }}</strong>
+                        <span>
+                          <span v-if="ch.oldValue" class="old">{{ ch.oldValue }}</span>
+                          <span v-if="ch.oldValue && ch.newValue"> → </span>
+                          <span v-if="ch.newValue" class="new">{{ ch.newValue }}</span>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div v-if="statementDiffTokens.length">
+                    <div class="section-label">Anforderungstext</div>
+                    <div class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                  </div>
+
+                  <div v-if="guidanceDiffTokens.length">
+                    <div class="section-label">Hilfestellung</div>
+                    <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                  </div>
+                </div>
+
+                <!-- OSCAL -->
+                <div v-else-if="detailActiveTab === 'props'" class="stack">
+                  <div class="card" style="overflow:hidden">
+                    <table class="props-table">
+                      <thead><tr><th>Name</th><th>Wert</th><th>Namespace</th></tr></thead>
+                      <tbody>
+                        <tr v-for="prop in selectedControl.allProps" :key="prop.name + prop.value">
+                          <td>{{ prop.name }}</td>
+                          <td>{{ prop.value }}</td>
+                          <td class="ns">{{ prop.ns || '–' }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div v-if="selectedControl.params?.length" class="card">
+                    <div class="card-head"><h4>Parameter</h4></div>
+                    <div v-for="p in selectedControl.params" :key="p.id" class="param">
+                      <b>{{ p.id }}</b>&nbsp; {{ p.values?.join(', ') || p.label }}
+                    </div>
+                  </div>
+                  <div v-if="selectedControl.altIdentifier" class="card">
+                    <dl style="margin:0"><div class="kv"><dt>Alternative Kennung (UUID)</dt><dd class="mono" style="font-size:12.5px">{{ selectedControl.altIdentifier }}</dd></div></dl>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </section>
+        </div>
+      </template>
+    </main>
+
+    <!-- ============ Footer ============ -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span class="footer-brand">Grundschutz++ Explorer</span>
+        <span class="footer-sep">·</span>
+        <span class="footer-note">v{{ appVersion }}</span>
+      </div>
+      <div class="footer-right">
+        <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+        <span class="footer-sep">|</span>
+        <a href="https://www.bsi.bund.de" target="_blank" rel="noopener noreferrer" class="footer-link">BSI</a>
+        <span class="footer-sep">|</span>
+        <button class="footer-link" @click="isImpressumModalOpen = true">Impressum</button>
+        <span class="footer-sep">|</span>
+        <button class="footer-link" @click="isDatenschutzModalOpen = true">Datenschutz</button>
+      </div>
+    </footer>
+
+    <!-- ============ Import Modal ============ -->
+    <div v-if="isImportModalOpen" class="modal-backdrop" @mousedown.self="isImportModalOpen = false">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-head">
+          <div style="flex:1">
+            <h2>Daten laden</h2>
+            <p>OSCAL-Katalog oder Gefährdungs-Mapping importieren</p>
+          </div>
+          <button class="icon-btn" @click="isImportModalOpen = false" title="Schließen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-tabs">
+          <button class="tab" :class="{ on: importModalTab === 'presets' }" @click="importModalTab = 'presets'">Presets</button>
+          <button class="tab" :class="{ on: importModalTab === 'url' }" @click="importModalTab = 'url'">URL</button>
+          <button class="tab" :class="{ on: importModalTab === 'upload' }" @click="importModalTab = 'upload'">Datei</button>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="importError" class="alert alert-error">{{ importError }}</div>
+          <div v-if="importSuccess" class="alert alert-success">{{ importSuccess }}</div>
+
+          <div v-if="importModalTab === 'presets'" class="stack" style="gap:10px">
+            <div class="option-card">
+              <div class="opt-icon tag-accent">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+              </div>
+              <div class="grow">
+                <h3>Grundschutz++ Anwenderkatalog</h3>
+                <p>Offizieller Katalog (OSCAL), ca. 5,4 MB</p>
+              </div>
+              <button class="btn btn-primary" :disabled="importLoading" @click="fetchFromUrl(PRESET_CATALOG_URL, 'Grundschutz++ Anwenderkatalog', 'data/Grundschutz++-resolved_catalog.json')">Laden</button>
+            </div>
+            <div class="option-card">
+              <div class="opt-icon tag-threat">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+              </div>
+              <div class="grow">
+                <h3>Elementare Gefährdungen</h3>
+                <p>Mapping G 0.1 – G 0.47 auf GS++-Anforderungen</p>
+              </div>
+              <button class="btn btn-secondary" :disabled="importLoading" @click="fetchFromUrl(PRESET_MAPPING_URL, 'Elementare Gefährdungen Mapping', 'data/ITGS-to-GS++-mapping_collection.json')">Laden</button>
+            </div>
+          </div>
+
+          <div v-else-if="importModalTab === 'url'">
+            <label class="field-label" for="import-url">URL zur JSON-Datei</label>
+            <div class="input-row">
+              <input id="import-url" class="input" type="url" v-model="importUrlInput" placeholder="https://…/katalog.json" @keydown.enter="handleCustomUrlFetch" />
+              <button class="btn btn-primary" style="height:36px" :disabled="importLoading" @click="handleCustomUrlFetch">Abrufen</button>
+            </div>
+          </div>
+
+          <div v-else-if="importModalTab === 'upload'">
+            <div
+              class="dropzone"
+              :class="{ over: isDragOver }"
+              @dragover.prevent="isDragOver = true"
+              @dragleave="isDragOver = false"
+              @drop="isDragOver = false; handleFileDrop($event)"
+              @click="$refs.uploadFileInput.click()"
+            >
+              <input ref="uploadFileInput" type="file" accept=".json" style="display:none" @change="handleFileUpload" />
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+              <strong>JSON-Datei ablegen oder auswählen</strong>
+              <span>OSCAL-Kataloge und Mapping-Collections</span>
+            </div>
+          </div>
+
+          <label class="check-card">
+            <input type="checkbox" v-model="importIsDiff" />
+            <div>
+              <strong>Als Vergleichsversion laden</strong>
+              <span>Zeigt neue, geänderte und gelöschte Anforderungen gegenüber dem aktuellen Katalog.</span>
+            </div>
+          </label>
+
+          <div v-if="importLoading" class="loading-state"><div class="spinner" style="width:16px;height:16px"></div><span>Wird geladen …</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Versions Modal ============ -->
+    <div v-if="isVersionsModalOpen" class="modal-backdrop" @mousedown.self="isVersionsModalOpen = false">
+      <div class="modal wide" role="dialog" aria-modal="true">
+        <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <h2>Versionen</h2>
+            <p>Basis wählen und mit einer anderen Version vergleichen</p>
+          </div>
+          <button class="icon-btn" @click="isVersionsModalOpen = false" title="Schließen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body" style="gap:8px">
+          <div v-if="storedCatalogs.length === 0" class="empty-box">Noch keine Kataloge gespeichert.</div>
+
+          <div
+            v-for="cat in storedCatalogs"
+            :key="cat.id"
+            class="version-item"
+            :class="{ 'is-base': cat.id === activeRecordId, 'is-comp': cat.id === comparisonRecordId }"
+          >
+            <div class="grow">
+              <h3>
+                {{ cat.title }}
+                <span v-if="cat.id === activeRecordId" class="tag tag-accent">Basis</span>
+                <span v-if="cat.id === comparisonRecordId" class="tag diff-modified">Vergleich</span>
+              </h3>
+              <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
+            </div>
+            <div class="acts">
+              <button v-if="cat.id !== activeRecordId" class="btn btn-secondary" @click="loadCatalogById(cat.id)">Als Basis</button>
+              <button v-if="cat.id !== activeRecordId && cat.id !== comparisonRecordId" class="btn btn-secondary" @click="selectComparison(cat.id)">Vergleichen</button>
+              <button v-if="cat.id === comparisonRecordId" class="btn btn-ghost" @click="clearComparison">Vergleich lösen</button>
+              <button class="icon-btn sm" @click="deleteCatalog(cat.id)" title="Version löschen">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button v-if="storedCatalogs.length" class="btn-danger-link" @click="clearAll">Gesamten Speicher leeren</button>
+          <span class="spacer"></span>
+          <button class="btn btn-primary" @click="isVersionsModalOpen = false">Fertig</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Impressum Modal ============ -->
+    <div v-if="isImpressumModalOpen" class="modal-backdrop" @mousedown.self="isImpressumModalOpen = false">
+      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
+        <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <h2 id="impressum-title">Impressum</h2>
+            <p>Rechtliche Angaben und Hinweise zum Grundschutz++ Explorer</p>
+          </div>
+          <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body" style="gap:16px; font-size:13.5px; line-height:1.6; color:var(--text-2)">
+          <div>
+            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Angaben gemäß § 5 TMG / § 18 MStV</h3>
+            <p>
+              Ich betreibe diesen <strong>Grundschutz++ Explorer</strong> als privates, unabhängiges und nicht-kommerzielles Open-Source-Projekt unter der freien <strong>MIT-Lizenz</strong>. Die Bereitstellung erfolgt unentgeltlich und öffentlich via <strong>GitHub Pages</strong> mit dem Ziel, die Arbeit mit strukturierten Sicherheitsanforderungen und OSCAL-Katalogen im Webbrowser zu vereinfachen.
+            </p>
+          </div>
+
+          <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+            <strong style="color:var(--text); display:block; margin-bottom:4px">Verantwortlicher Betreiber:</strong>
+            <p style="margin:0">
+              Frank Winter<br>
+              E-Mail: <a href="mailto:studio@frankwinter.com" style="color:var(--accent-text); text-decoration:underline">studio@frankwinter.com</a>
+            </p>
+          </div>
+
+          <div>
+            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
+            <p>
+              Der <strong>Grundschutz++ Explorer</strong> ist eine eigenständige Software und steht in <em>keiner offiziellen Verbindung</em> zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Die Benennung und Konzeption dieses Werkzeugs erfolgt unabhängig.
+            </p>
+            <p style="margin-top:8px">
+              Die in dieser Anwendung visualisierten Katalogdaten (Grundschutz++ Anwenderkatalog) sowie die Zuordnungen der Elementaren Gefährdungen (G 0.1 bis G 0.47) stammen aus öffentlich zugänglichen Repositorien der <strong>Stand-der-Technik-Bibliothek des BSI</strong> (Open Data, NIST OSCAL-Format). Sämtliche Urheber- und Markenrechte an den BSI-Publikationen, dem IT-Grundschutz-Kompendium und den Texten der Grundschutz++-Kataloge verbleiben uneingeschränkt beim <strong>Bundesamt für Sicherheit in der Informationstechnik (BSI)</strong> bzw. der <strong>Bundesrepublik Deutschland</strong>.
+            </p>
+          </div>
+
+          <div>
+            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Haftungsausschluss (Disclaimer)</h3>
+            <p>
+              Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt. Dennoch übernehme ich keinerlei Gewähr für die Richtigkeit, Vollständigkeit oder Aktualität der dargestellten Inhalte oder für Fehler bei der maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung. Für verbindliche Auditierungen und Zertifizierungen sind ausschließlich die amtlichen Dokumente und Vorgaben des BSI maßgeblich.
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" @click="isImpressumModalOpen = false">Schließen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Datenschutz Modal ============ -->
+    <div v-if="isDatenschutzModalOpen" class="modal-backdrop" @mousedown.self="isDatenschutzModalOpen = false">
+      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="datenschutz-title">
+        <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <h2 id="datenschutz-title">Datenschutzerklärung</h2>
+            <p>Datenschutzhinweise für den Grundschutz++ Explorer (Hosting via GitHub Pages, MIT-Lizenz)</p>
+          </div>
+          <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body" style="gap:16px; font-size:13.5px; line-height:1.6; color:var(--text-2)">
+          <div>
+            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Mein Grundsatz &amp; Open-Source-Transparenz (MIT-Lizenz)</h3>
+            <p>
+              Ich nehme den Schutz Ihrer persönlichen Daten sehr ernst. Bei der Konzeption des <strong>Grundschutz++ Explorers</strong> verfolge ich ein striktes Privacy-by-Design-Prinzip: Die gesamte Anwendung läuft als <em>reine Single Page Application (SPA)</em> zu 100 % lokal in Ihrem Webbrowser ab.
+            </p>
+            <p style="margin-top:8px">
+              Das Projekt ist ein freies Open-Source-Projekt unter der <strong>MIT-Lizenz</strong>. Der gesamte Quellcode ist auf GitHub öffentlich einsehbar, sodass Sie jederzeit selbst transparent nachvollziehen können, dass keinerlei Tracking-Code, keine Analyse-Tools und keine verdeckten Datenabflüsse enthalten sind.
+            </p>
+          </div>
+
+          <div style="display:grid; gap:10px">
+            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+              <strong style="color:var(--text); display:block; margin-bottom:4px">1. Hosting und Bereitstellung über GitHub Pages</strong>
+              <p style="margin:0 0 8px">
+                Ich hoste diese statische Webanwendung über <strong>GitHub Pages</strong>, einen Dienst der GitHub Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, USA (bzw. für Nutzer im EWR: GitHub B.V., Vijzelstraat 68-72, 1017 HL Amsterdam, Niederlande; nachfolgend „GitHub“).
+              </p>
+              <p style="margin:0 0 8px">
+                Wenn Sie diese Webseite aufrufen, erfasst GitHub zur technischen Auslieferung der statischen Webseitendateien (HTML, CSS, JS) sowie zur Gewährleistung der Netzsicherheit und Stabilität automatisiert technische Server-Logfiles. Hierbei werden typischerweise verarbeitet: Ihre IP-Adresse, Datum und Uhrzeit des Abrufs, übertragene Datenmenge, Referrer-URL sowie Informationen zu Ihrem Browsertyp und Betriebssystem.
+              </p>
+              <p style="margin:0">
+                Die Rechtsgrundlage für diese Datenverarbeitung durch GitHub ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der sicheren und verlässlichen Auslieferung des Webangebots). Ich selbst habe keinen direkten Zugriff auf diese Server-Logfiles und führe zu keinem Zeitpunkt statistische Auswertungen oder Profilbildungen durch. Weitere Einzelheiten zur Datenverarbeitung durch GitHub finden Sie in der <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer" style="color:var(--accent-text); text-decoration:underline">GitHub Privacy Policy</a>.
+              </p>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+              <strong style="color:var(--text); display:block; margin-bottom:2px">2. Keine Verarbeitung von Anwendungsdaten durch mich</strong>
+              <p style="margin:0">
+                Sobald die statischen Dateien einmalig von GitHub Pages in Ihren Browser geladen wurden, arbeitet der Grundschutz++ Explorer vollkommen autark und offline-fähig. Ich betreibe keinen Backend-Server und empfange zu keinem Zeitpunkt Ihre Suchanfragen, Filterauswahlen, hochgeladenen JSON-Dateien oder Differenzanalysen.
+              </p>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+              <strong style="color:var(--text); display:block; margin-bottom:2px">3. Lokale Speicherung in Ihrem Browser (IndexedDB &amp; LocalStorage)</strong>
+              <p style="margin:0">
+                Wenn Sie Kataloge importieren, Mappings laden oder Einstellungen (wie den Hell-/Dunkelmodus) anpassen, werden diese Informationen ausschließlich in der internen Speicherdatenbank Ihres eigenen Browsers (IndexedDB / LocalStorage) abgelegt. Diese Daten verlassen Ihr Endgerät zu keinem Zeitpunkt. Sie können diesen lokalen Speicher jederzeit über das Menü „Versionen“ per Klick auf „Gesamten Speicher leeren“ oder über Ihre Browser-Chronik vollständig löschen.
+              </p>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+              <strong style="color:var(--text); display:block; margin-bottom:2px">4. Keine Cookies, kein Tracking, keine Werbenetzwerke</strong>
+              <p style="margin:0">
+                Ich verwende weder technisch notwendige noch optionale Tracking-Cookies, keine Analyse-Dienste (wie Google Analytics, Matomo etc.) und keine Werbe-Tracker.
+              </p>
+            </div>
+
+            <div style="padding:12px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius)">
+              <strong style="color:var(--text); display:block; margin-bottom:2px">5. Externe Links (GitHub &amp; BSI)</strong>
+              <p style="margin:0">
+                In der Fußzeile sowie bei der Preset-Funktion verlinke ich auf externe Webseiten (das GitHub-Repository und die offizielle Webseite des BSI). Wenn Sie diese Links aufrufen, verlassen Sie diese Webanwendung; es gelten die Datenschutzbestimmungen der jeweiligen Drittanbieter.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Ihre Rechte als betroffene Person</h3>
+            <p>
+              Da ich selbst zu keinem Zeitpunkt personenbezogene Daten von Ihnen erhebe, speichere oder automatisiert verarbeite, existieren bei mir keine Sie betreffenden Datenbestände, über die Auskunft erteilt, die berichtigt oder gelöscht werden könnten. Die Bereitstellung der Server-Infrastruktur erfolgt durch GitHub Pages; die volle Kontrolle über Ihre lokal im Browser abgelegten Daten liegt stets bei Ihnen.
+            </p>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" @click="isDatenschutzModalOpen = false">Verstanden &amp; Schließen</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="vendor/vue.global.prod.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
