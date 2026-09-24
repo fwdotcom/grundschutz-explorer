@@ -45,6 +45,7 @@
   --text: #101828;
   --text-2: #475467;
   --text-3: #667085; /* mind. 4,5:1 gegen alle hellen Hintergründe (WCAG AA) */
+  --icon-subtle: #6187e1; /* dezentes Blau für Info-Symbole: mind. 3:1 gegen alle hellen Hintergründe (WCAG 1.4.11) */
 
   --accent: #2459d6;
   --accent-hover: #1c47b3;
@@ -93,6 +94,7 @@
   --text: #e8ebf1;
   --text-2: #a5adbb;
   --text-3: #8990a0; /* mind. 4,5:1 gegen alle dunklen Hintergründe (WCAG AA) */
+  --icon-subtle: #476cb4; /* mind. 3:1 gegen alle dunklen Hintergründe */
 
   --accent: #5b8def;
   --accent-hover: #7ba4f4;
@@ -734,16 +736,19 @@ ul { margin: 0; padding: 0; list-style: none; }
 .effort-value { font-size: calc(13.5px * var(--font-scale)); font-weight: 600; font-variant-numeric: tabular-nums; }
 .effort-value .muted { font-weight: 400; color: var(--text-3); }
 .info-btn {
-  display: inline-flex; align-items: center; justify-content: center; margin-left: 10px; vertical-align: middle;
-  width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 1px solid var(--border-strong);
-  color: var(--text-3); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; vertical-align: middle;
+  width: calc(12px * var(--font-scale)); height: calc(12px * var(--font-scale)); padding: 0; border: 0; border-radius: 50%; background: none;
+  color: var(--icon-subtle); box-shadow: var(--shadow-sm); cursor: pointer; flex-shrink: 0;
 }
-.kv-value { display: inline-flex; align-items: flex-start; gap: 8px; max-width: 100%; }
-.kv-value .info-btn { margin: 1px 0 0; flex-shrink: 0; }
-.info-btn:hover { color: var(--text); border-color: var(--border-strong); }
-.info-btn.on { background: var(--accent-soft); color: var(--accent-text); border-color: var(--accent-border); }
+.kv-value { display: inline-flex; align-items: flex-start; gap: 5px; max-width: 100%; }
+.kv-value .info-btn { margin: 4px 0 0; flex-shrink: 0; }
+/* Dezentes Blau mit mind. 3:1 Kontrast; Hover in Akzentfarbe, geöffnet in Akzent-Textfarbe */
+.info-btn:hover { color: var(--accent); }
+/* Info-Symbol: gefüllter Kreis mit ausgestanztem „i“ (mit Serifen), wächst mit der Schriftgröße */
+.info-glyph { width: 100%; height: 100%; flex-shrink: 0; }
+.info-btn.on { color: var(--accent-text); }
 /* Schutzziele */
-.st-head { display: flex; align-items: center; gap: 8px; }
+.st-head { display: flex; align-items: center; gap: 5px; }
 .st-head .info-btn { margin: 0; }
 /* Zwei Spalten, solange sie passen; die Mindestbreite wächst mit der Schriftgröße */
 .st-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(230px * var(--font-scale))), 1fr)); gap: 6px 24px; margin-top: 2px; }
@@ -905,7 +910,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tag-item-btn:hover { color: var(--accent-text); }
 .icon-tag-filter { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.65; }
 .tag-item.active .icon-tag-filter { opacity: 1; }
-.tag-item .info-btn { margin: 0 4px 0 0; width: 18px; height: 18px; }
+.tag-item .info-btn { margin: 0 7px 0 0; }
+/* Tag mit Info-Symbol: Symbol dicht am Text */
+.tag-item-btn:has(+ .info-btn) { padding-right: 4px; }
 
 .threat-list > li + li { border-top: 1px solid var(--border); }
 .threat-item {
@@ -1214,6 +1221,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   --text: #000000;
   --text-2: #1d2939;
   --text-3: #344054;
+  --icon-subtle: #1a3fa0;
 
   --accent: #1a3fa0;
   --accent-hover: #142f78;
@@ -1241,6 +1249,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   --text: #ffffff;
   --text-2: #e4e7ec;
   --text-3: #c0c6d1;
+  --icon-subtle: #8fb3ff;
 
   --accent: #8fb3ff;
   --accent-hover: #b3cbff;

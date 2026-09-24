@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [1.0.2] – 2026-09-24
+
+### Geändert
+
+- Neues Info-Symbol: gefüllter blauer Kreis mit ausgestanztem „i“ (WCAG 1.4.11)
+
 ## [1.0.1] – 2026-09-24
 
 ### Behoben

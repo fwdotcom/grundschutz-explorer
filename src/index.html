@@ -1228,7 +1228,7 @@
                             :title="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
                             :aria-label="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
                           >
-                            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                           </button>
                         </dt>
                         <dd v-if="hasSecurityTargets(selectedControl)">
@@ -1273,7 +1273,7 @@
                               :title="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
                               :aria-label="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
                             >
-                              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                             </button>
                           </span>
                           <div v-if="openDefs.actionWord && definition('actionWords', selectedControl.actionWord)" class="def-text">
@@ -1297,7 +1297,7 @@
                               :title="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
                               :aria-label="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
                             >
-                              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                             </button>
                           </span>
                           <div v-if="openDefs.documentation && definition('documentation', selectedControl.documentation)" class="def-text">
@@ -1341,7 +1341,7 @@
                             :title="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
                             :aria-label="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
                           >
-                            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                           </button>
                           <p v-if="openDefs.effort && effortDefinition(selectedControl.effortLevel)" class="def-text">{{ effortDefinition(selectedControl.effortLevel) }}</p>
                         </dd>
@@ -1373,7 +1373,7 @@
                                 :title="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
                                 :aria-label="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
                               >
-                                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                               </button>
                             </span>
                           </div>
