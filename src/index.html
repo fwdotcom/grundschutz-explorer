@@ -273,6 +273,85 @@
               </div>
             </div>
 
+            <!-- 2a. Aufwand, Handlungswort, Dokumentation -->
+            <template v-for="fs in [
+              { cat: 'effort', rail: 'effort', title: 'Aufwand', chip: 'Aufwand', search: false },
+              { cat: 'actionWord', rail: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' },
+              { cat: 'documentation', rail: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
+            ]" :key="fs.cat">
+              <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
+                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                  <span class="rail-heading-title">{{ fs.title }}</span>
+                  <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
+                  <span class="spacer"></span>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+                </div>
+                <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
+                  <div v-if="fs.search" class="rail-threat-search">
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                  </div>
+                  <div :class="{ 'rail-threats-scroll': fs.search }">
+                    <div
+                      v-for="v in facetOptionsFiltered(fs.cat)"
+                      :key="v"
+                      class="rail-row"
+                      :class="{
+                        'is-included': getTagMode(fs.cat, v) === 'include',
+                        'is-excluded': getTagMode(fs.cat, v) === 'exclude',
+                        'is-empty': !facetCounts[fs.cat][v]
+                      }"
+                    >
+                      <div
+                        class="rail-row-main"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + fs.title + ' „' + v + '“ filtern')"
+                      >
+                        <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
+                          <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
+                        </span>
+                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode(fs.cat, v)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
+                          @click.stop="removeTag(fs.cat, v)"
+                          :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                          </svg>
+                        </button>
+                        <template v-else>
+                          <button
+                            class="rail-btn btn-check"
+                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Nur diesen Wert einschließen (✓)"
+                          >
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button
+                            class="rail-btn btn-cross"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Diesen Wert ausschließen (✕)"
+                          >
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                    <p v-if="fs.search && facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">Keine Treffer</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
             <!-- 3. Praktiken -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
@@ -632,8 +711,8 @@
 
               <template v-for="practice in activeCatalog.practices" :key="practice.id">
                 <div v-if="countMatchingControlsInPractice(practice) > 0">
-                  <button class="practice-head" :data-practice-id="practice.id" @click="toggleGroup('p_' + practice.id)">
-                    <svg class="icon-sm chev" :class="{ open: expandedKeys.has('p_' + practice.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                  <button class="practice-head" :data-practice-id="practice.id" :class="{ active: !scopeSubgroup && scopePractice?.id === practice.id }" @click="onPracticeHeadClick(practice.id)">
+                    <span class="head-toggle" @click.stop="toggleGroup('p_' + practice.id)" :title="expandedKeys.has('p_' + practice.id) ? 'Einklappen' : 'Ausklappen'"><svg class="icon-sm chev" :class="{ open: expandedKeys.has('p_' + practice.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
                     <span class="code">{{ practice.id }}</span>
                     <span class="title">{{ practice.title }}</span>
                     <span class="count">{{ countMatchingControlsInPractice(practice) }}</span>
@@ -642,8 +721,8 @@
                   <template v-if="expandedKeys.has('p_' + practice.id)">
                     <template v-for="sub in practice.subgroups" :key="sub.id">
                       <div v-if="countMatchingControlsInSubgroup(sub) > 0">
-                        <button class="subgroup-head" :data-sub-id="sub.id" :class="{ active: filters.subgroupFilter === sub.id }" @click="toggleGroup('sub_' + sub.id)">
-                          <svg class="icon-xs chev" :class="{ open: expandedKeys.has('sub_' + sub.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                        <button class="subgroup-head" :data-sub-id="sub.id" :class="{ active: filters.subgroupFilter === sub.id || scopeSubgroup?.id === sub.id }" @click="onSubgroupHeadClick(sub.id, practice.id)">
+                          <span class="head-toggle" @click.stop="toggleGroup('sub_' + sub.id)" :title="expandedKeys.has('sub_' + sub.id) ? 'Einklappen' : 'Ausklappen'"><svg class="icon-xs chev" :class="{ open: expandedKeys.has('sub_' + sub.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
                           <span class="code">{{ sub.id }}</span>
                           <span class="title">{{ sub.title }}</span>
                           <span class="count">{{ countMatchingControlsInSubgroup(sub) }}</span>
@@ -654,7 +733,7 @@
                             <div
                               v-if="isControlVisible(ctrl)"
                               class="ctrl-row"
-                              :class="{ selected: selectedControlId === ctrl.id, dimmed: !filteredControlIds.has(ctrl.id), deleted: ctrl.diff?.status === 'deleted' }"
+                              :class="{ selected: !scopePractice && selectedControlId === ctrl.id, dimmed: !filteredControlIds.has(ctrl.id), deleted: ctrl.diff?.status === 'deleted' }"
                               :data-ctrl-id="ctrl.id"
                               @click="selectControl(ctrl)"
                             >
@@ -681,7 +760,7 @@
                                 <div
                                   v-if="filteredControlIds.has(subc.id)"
                                   class="ctrl-row sub"
-                                  :class="{ selected: selectedControlId === subc.id, deleted: subc.diff?.status === 'deleted' }"
+                                  :class="{ selected: !scopePractice && selectedControlId === subc.id, deleted: subc.diff?.status === 'deleted' }"
                                   :data-ctrl-id="subc.id"
                                   @click="selectControl(subc)"
                                 >
@@ -711,7 +790,7 @@
 
           <!-- ---------- Detail pane ---------- -->
           <section class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
-            <div v-if="!selectedControl" class="detail-empty">
+            <div v-if="!selectedControl && !scopePractice" class="detail-empty">
               <div>
                 <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
                 <h3>Keine Anforderung ausgewählt</h3>
@@ -719,14 +798,117 @@
               </div>
             </div>
 
+            <!-- Übersicht einer Praktik bzw. eines Teilbereichs (über Breadcrumb angesteuert) -->
+            <template v-else-if="scopePractice">
+              <div class="detail-head scope-head">
+                <nav class="crumbs" aria-label="Hierarchie">
+                  <button v-if="scopeSubgroup" @click="navigateToPractice(scopePractice.id)" :title="'Übersicht Praktik ' + scopePractice.id">
+                    {{ scopePractice.id }} {{ scopePractice.title }}
+                  </button>
+                  <span v-else class="crumb-current">{{ scopePractice.id }} {{ scopePractice.title }}</span>
+                  <template v-if="scopeSubgroup">
+                    <span class="sep">&raquo;</span>
+                    <span class="crumb-current">{{ scopeSubgroup.id }} {{ scopeSubgroup.title }}</span>
+                  </template>
+                </nav>
+
+                <div class="detail-titlebar">
+                  <div class="titles">
+                    <div class="detail-id">{{ scopeSubgroup ? scopeSubgroup.id : scopePractice.id }}</div>
+                    <h2 class="detail-title">{{ scopeSubgroup ? scopeSubgroup.title : scopePractice.title }}</h2>
+                  </div>
+                </div>
+
+                <div class="detail-tags">
+                  <span class="tag tag-lg tag-accent">{{ scopeSubgroup ? 'Teilbereich' : 'Praktik' }}</span>
+                  <span v-if="!scopeSubgroup" class="tag tag-lg tag-outline">{{ scopePractice.subgroups.length }} {{ scopePractice.subgroups.length === 1 ? 'Teilbereich' : 'Teilbereiche' }}</span>
+                  <span class="tag tag-lg tag-outline">{{ scopeStats.main }} {{ scopeStats.main === 1 ? 'Anforderung' : 'Anforderungen' }}</span>
+                  <span v-if="scopeStats.sub" class="tag tag-lg tag-outline">{{ scopeStats.sub }} {{ scopeStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-body" ref="detailBody">
+                <div class="stack">
+                  <div v-if="!scopeSubgroup && scopePractice.remarks">
+                    <div class="section-label">Beschreibung</div>
+                    <div class="card card-pad prose">{{ scopePractice.remarks }}</div>
+                  </div>
+
+                  <div class="card">
+                    <dl class="kv-grid" style="margin:0">
+                      <div class="kv">
+                        <dt>Anforderungen</dt>
+                        <dd>{{ scopeStats.main }}</dd>
+                      </div>
+                      <div class="kv">
+                        <dt>Unteranforderungen</dt>
+                        <dd :class="{ muted: !scopeStats.sub }">{{ scopeStats.sub || '–' }}</dd>
+                      </div>
+                      <div class="kv full">
+                        <dt>Modalverben (inkl. Unteranforderungen)</dt>
+                        <dd class="scope-counts">
+                          <span><span class="dot dot-muss"></span>MUSS {{ scopeStats.muss }}</span>
+                          <span><span class="dot dot-sollte"></span>SOLLTE {{ scopeStats.sollte }}</span>
+                          <span><span class="dot dot-kann"></span>KANN {{ scopeStats.kann }}</span>
+                        </dd>
+                      </div>
+                      <div v-if="diffSummary?.hasDiff" class="kv full">
+                        <dt>Änderungen gegenüber Vergleichsversion</dt>
+                        <dd class="scope-counts">
+                          <span class="tag diff-added">Neu {{ scopeStats.added }}</span>
+                          <span class="tag diff-modified">Geändert {{ scopeStats.modified }}</span>
+                          <span class="tag diff-deleted">Gelöscht {{ scopeStats.deleted }}</span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <!-- Praktik: Teilbereiche -->
+                  <div v-if="!scopeSubgroup && scopePractice.subgroups.length" class="card">
+                    <div class="card-head">
+                      <h4>Teilbereiche</h4>
+                      <span class="hint">{{ scopePractice.subgroups.length }}</span>
+                    </div>
+                    <ul class="sub-list">
+                      <li v-for="sg in scopePractice.subgroups" :key="sg.id">
+                        <button class="sub-item" @click="navigateToSubgroup(sg.id, scopePractice.id)">
+                          <span class="mono">{{ sg.id }}</span>
+                          <span class="grow">{{ sg.title }}</span>
+                          <span class="meta-num" :title="sg.controls.length + ' Anforderungen'">{{ sg.controls.length }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Anforderungen des Teilbereichs bzw. direkt an der Praktik -->
+                  <div v-if="scopeSubgroup ? scopeSubgroup.controls.length : scopeDirectControls.length" class="card">
+                    <div class="card-head">
+                      <h4>Anforderungen</h4>
+                      <span class="hint">{{ (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls).length }}</span>
+                    </div>
+                    <ul class="sub-list">
+                      <li v-for="c in (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls)" :key="c.id">
+                        <button class="sub-item" @click="selectControl(c)">
+                          <span class="mono">{{ c.id }}</span>
+                          <span class="grow">{{ c.title }}</span>
+                          <span v-if="c.diff && c.diff.status !== 'unchanged'" class="tag" :class="'diff-' + c.diff.status">{{ diffLabel(c.diff.status) }}</span>
+                          <span v-if="c.subcontrols?.length" class="meta-num" :title="c.subcontrols.length + ' Unteranforderungen'">+{{ c.subcontrols.length }}</span>
+                          <span class="verb-label" :class="verbKey(c.modalVerb)">{{ verbKey(c.modalVerb) ? c.modalVerb : '' }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </template>
+
             <template v-else>
               <div class="detail-head">
                 <nav class="crumbs" aria-label="Hierarchie">
                   <!-- Ebene 1: Praktik -->
                   <button
-                    :class="{ active: isTagActive('practice', selectedControl.groupId, 'include') && !filters.subgroupFilter && !filters.controlFilter }"
-                    @click="selectPracticeBreadcrumb(selectedControl.groupId)"
-                    :title="'Praktik ' + practiceBreadcrumbLabel(selectedControl) + ' filtern'"
+                    @click="navigateToPractice(selectedControl.groupId)"
+                    :title="'Übersicht Praktik ' + practiceBreadcrumbLabel(selectedControl)"
                   >
                     {{ practiceBreadcrumbLabel(selectedControl) }}
                   </button>
@@ -735,9 +917,8 @@
                   <template v-if="selectedControl.subgroupTitle">
                     <span class="sep">&raquo;</span>
                     <button
-                      :class="{ active: filters.subgroupFilter === selectedControl.subgroupId && !filters.controlFilter }"
-                      @click="selectSubgroupBreadcrumb(selectedControl.subgroupId, selectedControl.groupId)"
-                      :title="'Teilbereich ' + subgroupBreadcrumbLabel(selectedControl) + ' filtern'"
+                      @click="navigateToSubgroup(selectedControl.subgroupId, selectedControl.groupId)"
+                      :title="'Übersicht Teilbereich ' + subgroupBreadcrumbLabel(selectedControl)"
                     >
                       {{ subgroupBreadcrumbLabel(selectedControl) }}
                     </button>
@@ -747,36 +928,16 @@
                   <template v-if="parentControl">
                     <span class="sep">&raquo;</span>
                     <button
-                      :class="{ active: filters.controlFilter === parentControl.id }"
-                      @click="selectControlBreadcrumb(parentControl)"
-                      :title="'Übergeordnete Anforderung ' + controlBreadcrumbLabel(parentControl) + ' filtern'"
+                      @click="selectControl(parentControl)"
+                      :title="'Übergeordnete Anforderung ' + controlBreadcrumbLabel(parentControl) + ' anzeigen'"
                     >
                       {{ controlBreadcrumbLabel(parentControl) }}
                     </button>
-                    <!-- Ebene 4: Aktive Unteranforderung -->
-                    <span class="sep">&raquo;</span>
-                    <button
-                      class="crumb-current"
-                      :class="{ active: filters.controlFilter === selectedControl.id }"
-                      @click="selectControlBreadcrumb(selectedControl)"
-                      :title="'Unteranforderung ' + controlBreadcrumbLabel(selectedControl) + ' filtern'"
-                    >
-                      {{ controlBreadcrumbLabel(selectedControl) }}
-                    </button>
                   </template>
 
-                  <!-- Ebene 3 (wenn Hauptanforderung aktiv): Aktive Anforderung -->
-                  <template v-else>
-                    <span class="sep">&raquo;</span>
-                    <button
-                      class="crumb-current"
-                      :class="{ active: filters.controlFilter === selectedControl.id }"
-                      @click="selectControlBreadcrumb(selectedControl)"
-                      :title="'Anforderung ' + controlBreadcrumbLabel(selectedControl) + ' filtern'"
-                    >
-                      {{ controlBreadcrumbLabel(selectedControl) }}
-                    </button>
-                  </template>
+                  <!-- Aktuelle Anforderung -->
+                  <span class="sep">&raquo;</span>
+                  <span class="crumb-current">{{ controlBreadcrumbLabel(selectedControl) }}</span>
                 </nav>
 
                 <div class="detail-titlebar">
@@ -787,12 +948,11 @@
                 </div>
 
                 <div class="detail-tags">
+                  <span class="tag tag-lg tag-accent">{{ selectedControl.isSubcontrol ? 'Unteranforderung' : 'Anforderung' }}</span>
                   <span v-if="verbKey(selectedControl.modalVerb)" class="tag tag-lg" :class="'verb-' + verbKey(selectedControl.modalVerb)">
                     <span class="dot" :class="'dot-' + verbKey(selectedControl.modalVerb)"></span>{{ selectedControl.modalVerb }}
                   </span>
                   <span v-if="selectedControl.secLevel" class="tag tag-lg tag-outline">Niveau: {{ selectedControl.secLevel }}</span>
-                  <span v-if="selectedControl.effortLevel" class="tag tag-lg tag-outline">Aufwand: {{ selectedControl.effortLevel }}</span>
-                  <span v-if="selectedControl.isSubcontrol" class="tag tag-lg tag-accent">Unteranforderung</span>
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 
@@ -827,11 +987,13 @@
                     <dl class="kv-grid" style="margin:0">
                       <div class="kv">
                         <dt>Handlung</dt>
-                        <dd :class="{ muted: !selectedControl.actionWord }">{{ selectedControl.actionWord || '–' }}</dd>
+                        <dd v-if="selectedControl.actionWord"><button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button></dd>
+                        <dd v-else class="muted">–</dd>
                       </div>
                       <div class="kv">
                         <dt>Dokumentation</dt>
-                        <dd :class="{ muted: !selectedControl.documentation }">{{ selectedControl.documentation || 'Nicht vorgegeben' }}</dd>
+                        <dd v-if="selectedControl.documentation"><button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button></dd>
+                        <dd v-else class="muted">Nicht vorgegeben</dd>
                       </div>
                       <div class="kv full">
                         <dt>Gefordertes Ergebnis</dt>
@@ -841,6 +1003,33 @@
                         <dt>Spezifikation</dt>
                         <dd>{{ selectedControl.resultSpecification }}</dd>
                       </div>
+                      <div v-if="hasEffort(selectedControl.effortLevel)" class="kv full">
+                        <dt>Aufwand</dt>
+                        <dd>
+                          <button
+                            class="effort-row"
+                            @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
+                            title="Nach dieser Aufwandsstufe filtern"
+                          >
+                            <span class="effort-meter" :aria-label="'Aufwand ' + selectedControl.effortLevel + ' von ' + maxEffort">
+                              <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(selectedControl.effortLevel) ? { background: effortColor(selectedControl.effortLevel) } : null"></span>
+                            </span>
+                            <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
+                          </button>
+                          <button
+                            v-if="effortDefinition(selectedControl.effortLevel)"
+                            class="effort-info-btn"
+                            :class="{ on: effortDefOpen }"
+                            @click="effortDefOpen = !effortDefOpen"
+                            :aria-expanded="effortDefOpen"
+                            :title="effortDefOpen ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                            :aria-label="effortDefOpen ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                          >
+                            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                          </button>
+                          <p v-if="effortDefOpen && effortDefinition(selectedControl.effortLevel)" class="effort-def">{{ effortDefinition(selectedControl.effortLevel) }}</p>
+                        </dd>
+                      </div>
                     </dl>
                   </div>
 
@@ -848,7 +1037,7 @@
                     <div class="card-head">
                       <svg class="icon-sm" style="color:var(--threat)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
                       <h4>Elementare Gefährdungen</h4>
-                      <span class="hint">{{ selectedControl.elementareGefaehrdungen.length ? 'Klicken zum Filtern' : 'keine zugeordnet' }}</span>
+                      <span class="hint">{{ selectedControl.elementareGefaehrdungen.length || 'keine zugeordnet' }}</span>
                     </div>
                     <ul v-if="selectedControl.elementareGefaehrdungen.length" class="threat-list">
                       <li v-for="threat in selectedControl.elementareGefaehrdungen" :key="threat">
@@ -859,12 +1048,11 @@
                             'is-excluded': getTagMode('threat', splitThreat(threat).code) === 'exclude'
                           }"
                           @click="filterByThreat(threat)"
-                          :title="'Liste nach ' + splitThreat(threat).code + ' filtern (Klick: Einschluss umschalten)'"
+                          :title="'Liste nach ' + splitThreat(threat).code + ' filtern'"
                         >
                           <span class="threat-code">{{ splitThreat(threat).code }}</span>
-                          <span class="threat-title">{{ splitThreat(threat).title || threat }}</span>
+                          <span class="threat-title"><span class="threat-link">{{ splitThreat(threat).title || threat }}</span></span>
                           <span class="tag" :class="getThreatCategory(threat).cls">{{ getThreatCategory(threat).name }}</span>
-                          <svg class="icon-sm go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.5V19l4 2v-8.5z"/></svg>
                         </button>
                       </li>
                     </ul>
@@ -880,7 +1068,7 @@
                         <button class="sub-item" @click="selectControl(subc)">
                           <span class="mono">{{ subc.id }}</span>
                           <span class="grow">{{ subc.title }}</span>
-                          <span v-if="verbKey(subc.modalVerb)" class="verb-label" :class="verbKey(subc.modalVerb)">{{ subc.modalVerb }}</span>
+                          <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
                         </button>
                       </li>
                     </ul>

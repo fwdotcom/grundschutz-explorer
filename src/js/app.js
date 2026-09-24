@@ -2,7 +2,7 @@
  * Grundschutz++ Explorer SPA - Main Application (Pure JavaScript, Zero-Build)
  */
 
-import { parseOscalCatalog, parseMappingCollection, formatBsiThreat, BSI_ELEMENTARE_GEFAEHRDUNGEN } from './oscalParser.js';
+import { parseOscalCatalog, parseMappingCollection, formatBsiThreat, BSI_ELEMENTARE_GEFAEHRDUNGEN, BSI_EFFORT_LEVELS } from './oscalParser.js';
 import { compareCatalogs, computeWordDiff } from './diffEngine.js';
 import {
   saveCatalogRecord,
@@ -15,6 +15,14 @@ import {
   getSetting,
   clearAllData,
 } from './storage.js';
+
+// Einwertige Filter-Facetten: Kategorie → Feld der Anforderung
+const VALUE_FACETS = {
+  secLevel: 'secLevel',
+  effort: 'effortLevel',
+  actionWord: 'actionWord',
+  documentation: 'documentation',
+};
 
 const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } = window.Vue;
 
@@ -57,6 +65,10 @@ const app = createApp({
 
     // Detail Tab State
     const detailActiveTab = ref('overview');
+    // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
+    const detailScope = ref(null);
+    // Beschreibung der Aufwandsstufe in der Detailansicht ausgeklappt
+    const effortDefOpen = ref(false);
 
     // Import Modal State
     const importModalTab = ref('presets');
@@ -91,7 +103,13 @@ const app = createApp({
       practices: false,
       threats: false,
       diffs: false,
+      effort: false,
+      actionWords: true,
+      documentation: true,
     });
+
+    // Suchfelder der langen Werte-Facetten
+    const facetSearch = ref({ actionWord: '', documentation: '' });
 
     // Computed: Practice options
     const practiceOptions = computed(() => {
@@ -112,12 +130,64 @@ const app = createApp({
       return Array.from(levels).sort((a, b) => (b.startsWith('normal') - a.startsWith('normal')) || a.localeCompare(b, 'de'));
     });
 
+    // Computed: Werte der Facetten Aufwand, Handlungswort und Dokumentation
+    const facetOptions = computed(() => {
+      const opts = { effort: [], actionWord: [], documentation: [] };
+      if (!activeCatalog.value) return opts;
+      for (const [category, field] of Object.entries(VALUE_FACETS)) {
+        if (!(category in opts)) continue;
+        const values = new Set();
+        for (const c of activeCatalog.value.allControls) {
+          if (c[field] !== undefined && c[field] !== null && c[field] !== '') values.add(String(c[field]));
+        }
+        opts[category] = Array.from(values).sort((a, b) =>
+          category === 'effort' ? Number(a) - Number(b) : a.localeCompare(b, 'de')
+        );
+      }
+      return opts;
+    });
+
+    // Höchste Aufwandsstufe (BSI-Skala, ggf. durch den Katalog erweitert)
+    const maxEffort = computed(() => {
+      const nums = [...Object.keys(BSI_EFFORT_LEVELS), ...facetOptions.value.effort].map(Number).filter((n) => !Number.isNaN(n));
+      return nums.length ? Math.max(...nums) : 0;
+    });
+
+    // Gefilterte Optionslisten für Handlungswort/Dokumentation (Suchfeld im Rail)
+    function facetOptionsFiltered(category) {
+      const q = (facetSearch.value[category] || '').trim().toLowerCase();
+      const list = facetOptions.value[category] || [];
+      const selected = list.filter((v) => getTagMode(category, v));
+      const rest = list.filter((v) => !getTagMode(category, v) && (!q || v.toLowerCase().includes(q)));
+      // Bei aktivem Einschluss nur die gewählten Werte zeigen (analog Schutzniveau)
+      if (hasCategoryInclude(category) && !q) return selected;
+      return [...selected, ...rest];
+    }
+
+    // Aufwand als horizontaler Balken: Farbe von grün (0) bis rot (Maximum)
+    function hasEffort(level) {
+      return level !== undefined && level !== null && level !== '' && !Number.isNaN(Number(level));
+    }
+
+    function effortColor(level) {
+      const ratio = maxEffort.value ? Math.max(0, Math.min(1, Number(level) / maxEffort.value)) : 0;
+      return `hsl(${Math.round(120 * (1 - ratio))}, 70%, 45%)`;
+    }
+
+    function effortDefinition(level) {
+      return BSI_EFFORT_LEVELS[Number(level)] || '';
+    }
+
     // Computed: Active filter specification grouped by category and mode
     const activeFilterSpec = computed(() => {
       const spec = {
-        inc: { practice: new Set(), modalVerb: new Set(), secLevel: new Set(), threat: new Set(), diff: new Set() },
-        exc: { practice: new Set(), modalVerb: new Set(), secLevel: new Set(), threat: new Set(), diff: new Set() },
+        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set() },
+        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set() },
       };
+      for (const category of Object.keys(VALUE_FACETS)) {
+        spec.inc[category] = new Set();
+        spec.exc[category] = new Set();
+      }
       for (const t of activeTags.value) {
         if (t.mode === 'include') {
           if (!spec.inc[t.category]) spec.inc[t.category] = new Set();
@@ -177,13 +247,13 @@ const app = createApp({
         }
       }
 
-      // Sec Level
-      if (ignoreCategory !== 'secLevel') {
-        if (spec.exc.secLevel.has(ctrl.secLevel)) return false;
-        if (spec.inc.secLevel.size > 0) {
-          for (const reqLvl of spec.inc.secLevel) {
-            if (ctrl.secLevel !== reqLvl) return false;
-          }
+      // Einwertige Facetten: Schutzniveau, Aufwand, Handlungswort, Dokumentation
+      for (const [category, field] of Object.entries(VALUE_FACETS)) {
+        if (ignoreCategory === category) continue;
+        const value = ctrl[field] === undefined || ctrl[field] === null ? '' : String(ctrl[field]);
+        if (spec.exc[category].has(value)) return false;
+        for (const req of spec.inc[category]) {
+          if (value !== req) return false;
         }
       }
 
@@ -269,6 +339,23 @@ const app = createApp({
         }
       }
       return counts;
+    });
+
+    // Counts für Aufwand, Handlungswort, Dokumentation (jeweils ohne eigene Facette)
+    const facetCounts = computed(() => {
+      const result = { effort: {}, actionWord: {}, documentation: {} };
+      if (!activeCatalog.value) return result;
+      for (const category of Object.keys(result)) {
+        const field = VALUE_FACETS[category];
+        const counts = result[category];
+        for (const ctrl of activeCatalog.value.allControls) {
+          const v = ctrl[field];
+          if (v === undefined || v === null || v === '') continue;
+          if (!matchesFilterCategory(ctrl, category)) continue;
+          counts[v] = (counts[v] || 0) + 1;
+        }
+      }
+      return result;
     });
 
     // Threat Counts (ignoring threat facet)
@@ -425,6 +512,31 @@ const app = createApp({
       return activeCatalog.value.controlMap.get(selectedControl.value.parentControlId) || null;
     });
 
+    // Praktik bzw. Teilbereich der aktiven Detail-Ebene
+    const scopePractice = computed(() => {
+      const scope = detailScope.value;
+      if (!scope || !activeCatalog.value) return null;
+      if (scope.level === 'practice') return activeCatalog.value.practices.find((p) => p.id === scope.id) || null;
+      return activeCatalog.value.practices.find((p) => p.subgroups.some((sg) => sg.id === scope.id)) || null;
+    });
+
+    const scopeSubgroup = computed(() => {
+      if (detailScope.value?.level !== 'subgroup' || !scopePractice.value) return null;
+      return scopePractice.value.subgroups.find((sg) => sg.id === detailScope.value.id) || null;
+    });
+
+    const scopeStats = computed(() => {
+      if (scopeSubgroup.value) return summarizeControls(flattenControls(scopeSubgroup.value.controls));
+      if (scopePractice.value) return summarizeControls(scopePractice.value.controls);
+      return null;
+    });
+
+    // Anforderungen, die direkt an der Praktik hängen (ohne Teilbereich)
+    const scopeDirectControls = computed(() => {
+      if (!scopePractice.value || scopeSubgroup.value) return [];
+      return scopePractice.value.controls.filter((c) => !c.subgroupId && !c.parentControlId);
+    });
+
     // Example controls with threats for quick jumping
     const exampleControlsWithThreats = computed(() => {
       if (!activeCatalog.value) return [];
@@ -494,7 +606,8 @@ const app = createApp({
               subgroupFilter: filters.value.subgroupFilter,
               controlFilter: filters.value.controlFilter,
             },
-            activeTags: activeTags.value,
+            // Reaktive Proxys lassen sich nicht in IndexedDB klonen → einfache Kopien speichern
+            activeTags: activeTags.value.map((t) => ({ ...t })),
             threatRailSearch: threatRailSearch.value,
             threatShowOnlyMatching: threatShowOnlyMatching.value,
             threatShowAll: threatShowAll.value,
@@ -595,6 +708,9 @@ const app = createApp({
         railCollapsed.value.practices,
         railCollapsed.value.threats,
         railCollapsed.value.diffs,
+        railCollapsed.value.effort,
+        railCollapsed.value.actionWords,
+        railCollapsed.value.documentation,
         selectedControlId.value,
       ],
       () => {
@@ -785,6 +901,17 @@ const app = createApp({
     function stepSelection(delta) {
       const order = visibleOrder.value;
       if (order.length === 0) return;
+      // Aus einer Ebenen-Übersicht heraus: bei der ersten bzw. letzten Anforderung dieser Ebene einsteigen
+      if (detailScope.value && scopePractice.value) {
+        const inScope = order.filter((id) => {
+          const c = activeCatalog.value.controlMap.get(id);
+          return scopeSubgroup.value ? c?.subgroupId === scopeSubgroup.value.id : c?.groupId === scopePractice.value.id;
+        });
+        if (inScope.length) {
+          selectControlById(delta > 0 ? inScope[0] : inScope[inScope.length - 1]);
+          return;
+        }
+      }
       const idx = order.indexOf(selectedControlId.value);
       const next =
         idx === -1 ? (delta > 0 ? 0 : order.length - 1) : Math.max(0, Math.min(order.length - 1, idx + delta));
@@ -1061,6 +1188,7 @@ const app = createApp({
 
     function selectControl(ctrl) {
       if (!ctrl) return;
+      detailScope.value = null;
       selectedControlId.value = ctrl.id;
 
       let changedKeys = false;
@@ -1164,7 +1292,7 @@ const app = createApp({
       }
 
       // Wenn 'include' (Nur) in einer Einzelauswahl-Kategorie gewählt wird, eventuell vorhandene andere Includes ablösen
-      if (targetMode === 'include' && ['modalVerb', 'practice', 'secLevel', 'diff'].includes(category)) {
+      if (targetMode === 'include' && ['modalVerb', 'practice', 'diff', ...Object.keys(VALUE_FACETS)].includes(category)) {
         activeTags.value = activeTags.value.filter((t) => !(t.category === category && t.mode === 'include'));
       }
 
@@ -1247,72 +1375,70 @@ const app = createApp({
       scheduleSaveFilters();
     }
 
-    function selectPracticeBreadcrumb(groupId) {
+    // Breadcrumb-Navigation: wechselt nur die Detailansicht auf die gewählte Ebene, setzt keine Filter
+    function navigateToPractice(groupId) {
       if (!groupId) return;
-      // Stets auf Praktik filtern (als einzige Praktik-Inklusion)
-      activeTags.value = activeTags.value.filter((t) => t.category !== 'practice');
-      const p = activeCatalog.value?.practices.find((item) => item.id === groupId);
-      setTag('practice', groupId, 'include', p ? `${groupId} ${p.title}` : groupId, 'Praktik');
-      filters.value.subgroupFilter = '';
-      filters.value.controlFilter = '';
+      detailScope.value = { level: 'practice', id: groupId };
       expandedKeys.value.add('p_' + groupId);
       expandedKeys.value = new Set(expandedKeys.value);
       scheduleSaveCollapse();
       scrollPracticeIntoView(groupId);
+      resetDetailScroll();
     }
 
-    function selectSubgroupBreadcrumb(subgroupId, groupId) {
+    function navigateToSubgroup(subgroupId, groupId) {
       if (!subgroupId) return;
-      if (groupId) {
-        activeTags.value = activeTags.value.filter((t) => t.category !== 'practice');
-        const p = activeCatalog.value?.practices.find((item) => item.id === groupId);
-        setTag('practice', groupId, 'include', p ? `${groupId} ${p.title}` : groupId, 'Praktik');
-        expandedKeys.value.add('p_' + groupId);
-      }
-      // Stets auf Teilbereich filtern
-      filters.value.subgroupFilter = subgroupId;
-      filters.value.controlFilter = '';
+      detailScope.value = { level: 'subgroup', id: subgroupId };
+      if (groupId) expandedKeys.value.add('p_' + groupId);
       expandedKeys.value.add('sub_' + subgroupId);
       expandedKeys.value = new Set(expandedKeys.value);
       scheduleSaveCollapse();
-
-      // Falls aktuelle Auswahl nicht in diesem Teilbereich oder eine Unteranforderung ist,
-      // die erste Anforderung des Teilbereichs auswählen
-      if (activeCatalog.value) {
-        for (const p of activeCatalog.value.practices) {
-          const sub = p.subgroups.find((s) => s.id === subgroupId);
-          if (sub && sub.controls?.length > 0) {
-            if (selectedControl.value?.subgroupId !== subgroupId || selectedControl.value?.parentControlId) {
-              selectControl(sub.controls[0]);
-            }
-            break;
-          }
-        }
-      }
-
       scrollSubgroupIntoView(subgroupId);
+      resetDetailScroll();
     }
 
-    function selectControlBreadcrumb(ctrl) {
-      if (!ctrl) return;
-      if (ctrl.groupId) {
-        activeTags.value = activeTags.value.filter((t) => t.category !== 'practice');
-        const p = activeCatalog.value?.practices.find((item) => item.id === ctrl.groupId);
-        setTag('practice', ctrl.groupId, 'include', p ? `${ctrl.groupId} ${p.title}` : ctrl.groupId, 'Praktik');
-        expandedKeys.value.add('p_' + ctrl.groupId);
+    // Klick auf Praktik/Teilbereich im Explorer: Übersicht öffnen; ist sie bereits offen, auf-/zuklappen
+    function onPracticeHeadClick(groupId) {
+      if (detailScope.value?.level === 'practice' && detailScope.value.id === groupId) toggleGroup('p_' + groupId);
+      else navigateToPractice(groupId);
+    }
+
+    function onSubgroupHeadClick(subgroupId, groupId) {
+      if (detailScope.value?.level === 'subgroup' && detailScope.value.id === subgroupId) toggleGroup('sub_' + subgroupId);
+      else navigateToSubgroup(subgroupId, groupId);
+    }
+
+    function resetDetailScroll() {
+      nextTick(() => {
+        if (detailBody.value) detailBody.value.scrollTop = 0;
+      });
+    }
+
+    // Kennzahlen für eine Menge von Anforderungen (inkl. Unteranforderungen)
+    function summarizeControls(controls) {
+      const stats = { total: 0, main: 0, sub: 0, muss: 0, sollte: 0, kann: 0, added: 0, modified: 0, deleted: 0 };
+      for (const c of controls) {
+        stats.total++;
+        if (c.parentControlId) stats.sub++;
+        else stats.main++;
+        const v = verbKey(c.modalVerb);
+        if (v) stats[v]++;
+        const s = c.diff?.status;
+        if (s === 'added' || s === 'modified' || s === 'deleted') stats[s]++;
       }
-      if (ctrl.subgroupId) {
-        filters.value.subgroupFilter = ctrl.subgroupId;
-        expandedKeys.value.add('sub_' + ctrl.subgroupId);
-      }
-      // Stets auf diese Anforderung filtern
-      filters.value.controlFilter = ctrl.id;
-      if (ctrl.parentControlId) {
-        expandedKeys.value.add('ctrl_' + ctrl.parentControlId);
-      } else if (ctrl.subcontrols?.length) {
-        expandedKeys.value.add('ctrl_' + ctrl.id);
-      }
-      selectControl(ctrl);
+      return stats;
+    }
+
+    function flattenControls(controls) {
+      const out = [];
+      const walk = (list) => {
+        for (const c of list) {
+          out.push(c);
+          if (c.subcontrols?.length) walk(c.subcontrols);
+        }
+      };
+      walk(controls);
+      return out;
     }
 
     function controlBreadcrumbLabel(ctrl) {
@@ -1630,6 +1756,15 @@ const app = createApp({
       practiceCounts,
       modalVerbCounts,
       secLevelCounts,
+      facetCounts,
+      facetOptions,
+      facetOptionsFiltered,
+      facetSearch,
+      maxEffort,
+      hasEffort,
+      effortColor,
+      effortDefinition,
+      effortDefOpen,
       threatCounts,
       diffCounts,
       displayedThreatOptions,
@@ -1666,9 +1801,17 @@ const app = createApp({
       handleFileDrop,
       selectControl,
       selectControlById,
-      selectPracticeBreadcrumb,
-      selectSubgroupBreadcrumb,
-      selectControlBreadcrumb,
+      navigateToPractice,
+      navigateToSubgroup,
+      onPracticeHeadClick,
+      onSubgroupHeadClick,
+      detailScope,
+      scopePractice,
+      scopeSubgroup,
+      scopeStats,
+      scopeDirectControls,
+      summarizeControls,
+      flattenControls,
       practiceBreadcrumbLabel,
       subgroupBreadcrumbLabel,
       controlBreadcrumbLabel,
