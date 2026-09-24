@@ -45,6 +45,13 @@ const PRESET_CATALOG_URL =
 
 const APP_VERSION = '1.0.0';
 
+// Stufen der Schriftgröße (Faktor auf alle Schriftgrößen, CSS-Variable --font-scale)
+const FONT_SCALES = [
+  { value: 1, label: 'normal' },
+  { value: 1.125, label: 'groß' },
+  { value: 1.25, label: 'sehr groß' },
+];
+
 const app = createApp({
   setup() {
     // Core State
@@ -62,6 +69,7 @@ const app = createApp({
     const isImpressumModalOpen = ref(false);
     const isDatenschutzModalOpen = ref(false);
     const isDarkMode = ref(false);
+    const fontScale = ref(1);
     const isLoadingInitial = ref(true);
     const isLoadingBundle = ref(false);
     const detailPaneWidth = ref(46); // Anteil der Detailsicht am Arbeitsbereich (%)
@@ -978,6 +986,10 @@ const app = createApp({
       isDarkMode.value = Boolean(savedDark);
       applyDarkMode(isDarkMode.value);
 
+      const savedScale = Number(await getSetting('font_scale', 1));
+      fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
+      applyFontScale(fontScale.value);
+
       // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
       await loadNamespaces();
       namespacesVersion.value++;
@@ -1079,6 +1091,16 @@ const app = createApp({
       } else {
         document.documentElement.classList.remove('dark');
       }
+    }
+
+    function applyFontScale(value) {
+      document.documentElement.style.setProperty('--font-scale', String(value));
+    }
+
+    function setFontScale(value) {
+      fontScale.value = value;
+      applyFontScale(value);
+      saveSetting('font_scale', value);
     }
 
     function toggleDarkMode() {
@@ -1939,6 +1961,9 @@ const app = createApp({
       // Actions
       applyDarkMode,
       toggleDarkMode,
+      FONT_SCALES,
+      fontScale,
+      setFontScale,
       loadCatalogById,
       loadOfficialBundle,
       fetchFromUrl,

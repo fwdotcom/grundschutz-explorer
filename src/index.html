@@ -56,6 +56,17 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
           <span class="hide-sm">Daten laden</span>
         </button>
+        <div class="font-size-group" role="group" aria-label="Schriftgröße">
+          <button
+            v-for="(opt, i) in FONT_SCALES"
+            :key="opt.value"
+            :class="['fs-' + (i + 1), { on: fontScale === opt.value }]"
+            @click="setFontScale(opt.value)"
+            :title="'Schriftgröße: ' + opt.label"
+            :aria-label="'Schriftgröße ' + opt.label"
+            :aria-pressed="fontScale === opt.value"
+          >A</button>
+        </div>
         <button class="icon-btn" @click="toggleDarkMode" :title="isDarkMode ? 'Helles Design' : 'Dunkles Design'">
           <svg v-if="isDarkMode" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
           <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -1434,7 +1445,7 @@
                     </div>
                   </div>
                   <div v-if="selectedControl.altIdentifier" class="card">
-                    <dl style="margin:0"><div class="kv"><dt>Alternative Kennung (UUID)</dt><dd class="mono" style="font-size:12.5px">{{ selectedControl.altIdentifier }}</dd></div></dl>
+                    <dl style="margin:0"><div class="kv"><dt>Alternative Kennung (UUID)</dt><dd class="mono" style="font-size:calc(12.5px * var(--font-scale))">{{ selectedControl.altIdentifier }}</dd></div></dl>
                   </div>
                 </div>
               </div>
@@ -1597,9 +1608,9 @@
           </button>
         </div>
 
-        <div class="modal-body" style="gap:16px; font-size:13.5px; line-height:1.6; color:var(--text-2)">
+        <div class="modal-body" style="gap:16px; font-size:calc(13.5px * var(--font-scale)); line-height:1.6; color:var(--text-2)">
           <div>
-            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Angaben gemäß § 5 TMG / § 18 MStV</h3>
+            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Angaben gemäß § 5 TMG / § 18 MStV</h3>
             <p>
               Ich betreibe diesen <strong>Grundschutz++ Explorer</strong> als privates, unabhängiges und nicht-kommerzielles Open-Source-Projekt unter der freien <strong>MIT-Lizenz</strong>. Die Bereitstellung erfolgt unentgeltlich und öffentlich via <strong>GitHub Pages</strong> mit dem Ziel, die Arbeit mit strukturierten Sicherheitsanforderungen und OSCAL-Katalogen im Webbrowser zu vereinfachen.
             </p>
@@ -1614,7 +1625,7 @@
           </div>
 
           <div>
-            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
+            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
             <p>
               Der <strong>Grundschutz++ Explorer</strong> ist eine eigenständige Software und steht in <em>keiner offiziellen Verbindung</em> zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Die Benennung und Konzeption dieses Werkzeugs erfolgt unabhängig.
             </p>
@@ -1624,7 +1635,7 @@
           </div>
 
           <div>
-            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Haftungsausschluss (Disclaimer)</h3>
+            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Haftungsausschluss (Disclaimer)</h3>
             <p>
               Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt. Dennoch übernehme ich keinerlei Gewähr für die Richtigkeit, Vollständigkeit oder Aktualität der dargestellten Inhalte oder für Fehler bei der maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung. Für verbindliche Auditierungen und Zertifizierungen sind ausschließlich die amtlichen Dokumente und Vorgaben des BSI maßgeblich.
             </p>
@@ -1651,9 +1662,9 @@
           </button>
         </div>
 
-        <div class="modal-body" style="gap:16px; font-size:13.5px; line-height:1.6; color:var(--text-2)">
+        <div class="modal-body" style="gap:16px; font-size:calc(13.5px * var(--font-scale)); line-height:1.6; color:var(--text-2)">
           <div>
-            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Mein Grundsatz &amp; Open-Source-Transparenz (MIT-Lizenz)</h3>
+            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Mein Grundsatz &amp; Open-Source-Transparenz (MIT-Lizenz)</h3>
             <p>
               Ich nehme den Schutz Ihrer persönlichen Daten sehr ernst. Bei der Konzeption des <strong>Grundschutz++ Explorers</strong> verfolge ich ein striktes Privacy-by-Design-Prinzip: Die gesamte Anwendung läuft als <em>reine Single Page Application (SPA)</em> zu 100 % lokal in Ihrem Webbrowser ab.
             </p>
@@ -1706,7 +1717,7 @@
           </div>
 
           <div>
-            <h3 style="font-size:14px; font-weight:650; color:var(--text); margin-bottom:4px">Ihre Rechte als betroffene Person</h3>
+            <h3 style="font-size:calc(14px * var(--font-scale)); font-weight:650; color:var(--text); margin-bottom:4px">Ihre Rechte als betroffene Person</h3>
             <p>
               Da ich selbst zu keinem Zeitpunkt personenbezogene Daten von Ihnen erhebe, speichere oder automatisiert verarbeite, existieren bei mir keine Sie betreffenden Datenbestände, über die Auskunft erteilt, die berichtigt oder gelöscht werden könnten. Die Bereitstellung der Server-Infrastruktur erfolgt durch GitHub Pages; die volle Kontrolle über Ihre lokal im Browser abgelegten Daten liegt stets bei Ihnen.
             </p>
