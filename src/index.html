@@ -980,60 +980,35 @@
                         </button>
 
                         <template v-if="expandedKeys.has('sub_' + sub.id)">
-                          <template v-for="ctrl in sub.controls" :key="ctrl.id">
-                            <div
-                              v-if="isControlVisible(ctrl)"
-                              class="ctrl-row"
-                              :class="{ selected: !scopePractice && selectedControlId === ctrl.id, dimmed: !filteredControlIds.has(ctrl.id), deleted: ctrl.diff?.status === 'deleted' }"
-                              :data-ctrl-id="ctrl.id"
-                              @click="selectControl(ctrl)"
-                            >
-                              <button v-if="ctrl.subcontrols?.length" class="ctrl-toggle" @click.stop="toggleControlExpand(ctrl.id)" :title="expandedKeys.has('ctrl_' + ctrl.id) ? 'Unteranforderungen einklappen' : 'Unteranforderungen ausklappen'">
-                                <svg class="icon-xs chev" :class="{ open: expandedKeys.has('ctrl_' + ctrl.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
-                              </button>
-                              <span v-else class="ctrl-toggle-spacer"></span>
-                              <span class="ctrl-id">{{ ctrl.id }}</span>
-                              <span class="ctrl-title" :title="ctrl.title">{{ ctrl.title }}</span>
-                              <span class="ctrl-meta">
-                                <span v-if="ctrl.diff && ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + ctrl.diff.status">{{ diffLabel(ctrl.diff.status) }}</span>
-                                <span v-if="ctrl.subcontrols?.length" class="meta-num" :title="ctrl.subcontrols.length + ' Unteranforderungen'">
-                                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ ctrl.subcontrols.length }}
-                                </span>
-                                <span v-if="ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
-                                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ ctrl.elementareGefaehrdungen.length }}
-                                </span>
-                                <span v-if="centralSecurityTargets(ctrl).length" class="st-badges" :title="'Schutzziel im Zentrum: ' + centralSecurityTargets(ctrl).map((t) => t.label).join(', ')">
-                                  <span v-for="t in centralSecurityTargets(ctrl)" :key="t.key" class="st-badge">{{ t.short }}</span>
-                                </span>
-                                <span class="verb-label" :class="verbKey(ctrl.modalVerb)">{{ verbKey(ctrl.modalVerb) ? ctrl.modalVerb : '' }}</span>
+                          <div
+                            v-for="row in visibleControlRows(sub.controls)"
+                            :key="row.ctrl.id"
+                            class="ctrl-row"
+                            :class="{ sub: row.depth > 0, selected: !scopePractice && selectedControlId === row.ctrl.id, dimmed: !filteredControlIds.has(row.ctrl.id), deleted: row.ctrl.diff?.status === 'deleted' }"
+                            :style="row.depth > 0 ? { '--depth': row.depth } : null"
+                            :data-ctrl-id="row.ctrl.id"
+                            @click="selectControl(row.ctrl)"
+                          >
+                            <button v-if="row.ctrl.subcontrols?.length" class="ctrl-toggle" @click.stop="toggleControlExpand(row.ctrl.id)" :title="expandedKeys.has('ctrl_' + row.ctrl.id) ? 'Unteranforderungen einklappen' : 'Unteranforderungen ausklappen'">
+                              <svg class="icon-xs chev" :class="{ open: expandedKeys.has('ctrl_' + row.ctrl.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                            </button>
+                            <span v-else class="ctrl-toggle-spacer"></span>
+                            <span class="ctrl-id">{{ row.ctrl.id }}</span>
+                            <span class="ctrl-title" :title="row.ctrl.title">{{ row.ctrl.title }}</span>
+                            <span class="ctrl-meta">
+                              <span v-if="row.ctrl.diff && row.ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + row.ctrl.diff.status">{{ diffLabel(row.ctrl.diff.status) }}</span>
+                              <span v-if="row.ctrl.subcontrols?.length" class="meta-num" :title="row.ctrl.subcontrols.length + ' Unteranforderungen'">
+                                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ row.ctrl.subcontrols.length }}
                               </span>
-                            </div>
-
-                            <template v-if="ctrl.subcontrols?.length && expandedKeys.has('ctrl_' + ctrl.id)">
-                              <template v-for="subc in ctrl.subcontrols" :key="subc.id">
-                                <div
-                                  v-if="filteredControlIds.has(subc.id) || selectedControlId === subc.id"
-                                  class="ctrl-row sub"
-                                  :class="{ selected: !scopePractice && selectedControlId === subc.id, dimmed: !filteredControlIds.has(subc.id), deleted: subc.diff?.status === 'deleted' }"
-                                  :data-ctrl-id="subc.id"
-                                  @click="selectControl(subc)"
-                                >
-                                  <span class="ctrl-id">{{ subc.id }}</span>
-                                  <span class="ctrl-title" :title="subc.title">{{ subc.title }}</span>
-                                  <span class="ctrl-meta">
-                                    <span v-if="subc.diff && subc.diff.status !== 'unchanged'" class="tag" :class="'diff-' + subc.diff.status">{{ diffLabel(subc.diff.status) }}</span>
-                                    <span v-if="subc.elementareGefaehrdungen?.length" class="meta-num threat" :title="subc.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
-                                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ subc.elementareGefaehrdungen.length }}
-                                    </span>
-                                    <span v-if="centralSecurityTargets(subc).length" class="st-badges" :title="'Schutzziel im Zentrum: ' + centralSecurityTargets(subc).map((t) => t.label).join(', ')">
-                                    <span v-for="t in centralSecurityTargets(subc)" :key="t.key" class="st-badge">{{ t.short }}</span>
-                                </span>
-                                    <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
-                                  </span>
-                                </div>
-                              </template>
-                            </template>
-                          </template>
+                              <span v-if="row.ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="row.ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
+                                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ row.ctrl.elementareGefaehrdungen.length }}
+                              </span>
+                              <span v-if="centralSecurityTargets(row.ctrl).length" class="st-badges" :title="'Schutzziel im Zentrum: ' + centralSecurityTargets(row.ctrl).map((t) => t.label).join(', ')">
+                                <span v-for="t in centralSecurityTargets(row.ctrl)" :key="t.key" class="st-badge">{{ t.short }}</span>
+                              </span>
+                              <span class="verb-label" :class="verbKey(row.ctrl.modalVerb)">{{ verbKey(row.ctrl.modalVerb) ? row.ctrl.modalVerb : '' }}</span>
+                            </span>
+                          </div>
                         </template>
                       </div>
                     </template>
@@ -1181,14 +1156,14 @@
                     </button>
                   </template>
 
-                  <!-- Ebene 3 (wenn Unteranforderung aktiv): Übergeordnete Anforderung -->
-                  <template v-if="parentControl">
+                  <!-- Weitere Ebenen (bei Unteranforderungen): alle übergeordneten Anforderungen -->
+                  <template v-for="ancestor in ancestorControls" :key="ancestor.id">
                     <span class="sep">&raquo;</span>
                     <button
-                      @click="onBreadcrumbClick('parent', parentControl)"
-                      :title="'Übergeordnete Anforderung ' + controlBreadcrumbLabel(parentControl) + ' in der Baumansicht anzeigen'"
+                      @click="onBreadcrumbClick('parent', ancestor)"
+                      :title="'Übergeordnete Anforderung ' + controlBreadcrumbLabel(ancestor) + ' in der Baumansicht anzeigen'"
                     >
-                      {{ controlBreadcrumbLabel(parentControl) }}
+                      {{ controlBreadcrumbLabel(ancestor) }}
                     </button>
                   </template>
                 </nav>

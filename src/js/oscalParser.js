@@ -274,14 +274,12 @@ export function parseOscalCatalog(rawJson) {
     for (const c of catalog.controls) {
       if (!controlMap.has(c.id)) {
         const parsed = parseControl(c, ['GENERAL'], 'Allgemein', undefined, undefined, null);
-        allControls.push(parsed);
-        controlMap.set(c.id, parsed);
-        if (parsed.subcontrols && parsed.subcontrols.length > 0) {
-          for (const subc of parsed.subcontrols) {
-            allControls.push(subc);
-            controlMap.set(subc.id, subc);
-          }
-        }
+        const addWithChildren = (ctrl) => {
+          allControls.push(ctrl);
+          controlMap.set(ctrl.id, ctrl);
+          for (const subc of ctrl.subcontrols || []) addWithChildren(subc);
+        };
+        addWithChildren(parsed);
       }
     }
   }

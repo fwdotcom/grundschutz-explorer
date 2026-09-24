@@ -293,8 +293,9 @@ const app = createApp({
       if (f.subgroupFilter && ctrl.subgroupId !== f.subgroupFilter) return false;
       if (f.controlFilter) {
         const isSelf = ctrl.id === f.controlFilter;
-        const isChild = ctrl.parentControlId === f.controlFilter;
-        const isParent = ctrl.subcontrols?.some((sc) => sc.id === f.controlFilter);
+        const isChild = controlAncestors(ctrl).some((a) => a.id === f.controlFilter);
+        const target = activeCatalog.value?.controlMap.get(f.controlFilter);
+        const isParent = Boolean(target && controlAncestors(target).some((a) => a.id === ctrl.id));
         if (!isSelf && !isChild && !isParent) return false;
       }
 
@@ -670,11 +671,21 @@ const app = createApp({
       return activeCatalog.value.controlMap.get(selectedControlId.value) || null;
     });
 
-    // Parent Control (if selectedControl is a subcontrol)
-    const parentControl = computed(() => {
-      if (!activeCatalog.value || !selectedControl.value?.parentControlId) return null;
-      return activeCatalog.value.controlMap.get(selectedControl.value.parentControlId) || null;
-    });
+    // Übergeordnete Anforderungen der Auswahl, von oben nach unten (Unteranforderungen sind beliebig tief verschachtelt)
+    function controlAncestors(ctrl) {
+      const out = [];
+      const map = activeCatalog.value?.controlMap;
+      let parentId = ctrl?.parentControlId;
+      while (map && parentId) {
+        const parent = map.get(parentId);
+        if (!parent) break;
+        out.unshift(parent);
+        parentId = parent.parentControlId;
+      }
+      return out;
+    }
+
+    const ancestorControls = computed(() => controlAncestors(selectedControl.value));
 
     // Praktik bzw. Teilbereich der aktiven Detail-Ebene
     const scopePractice = computed(() => {
@@ -697,8 +708,8 @@ const app = createApp({
       const ctrl = selectedControl.value;
       if (!ctrl) return false;
       if (filteredControlIds.value.has(ctrl.id)) return false;
-      // Hauptanforderung, die wegen passender Unteranforderungen in der Baumansicht steht
-      return !(listViewMode.value === 'tree' && !ctrl.parentControlId && isControlVisible(ctrl));
+      // Anforderung, die wegen passender Unteranforderungen in der Baumansicht steht
+      return !(listViewMode.value === 'tree' && isControlVisible(ctrl));
     });
 
     const scopeStats = computed(() => {
@@ -750,21 +761,12 @@ const app = createApp({
         return flatFilteredControls.value.map((c) => c.id);
       }
       const order = [];
-      const ids = filteredControlIds.value;
       const keys = expandedKeys.value;
       for (const p of activeCatalog.value.practices) {
         if (!keys.has(`p_${p.id}`)) continue;
         for (const sub of p.subgroups) {
           if (!keys.has(`sub_${sub.id}`)) continue;
-          for (const ctrl of sub.controls) {
-            if (!isControlVisible(ctrl)) continue;
-            order.push(ctrl.id);
-            if (ctrl.subcontrols?.length && keys.has(`ctrl_${ctrl.id}`)) {
-              for (const sc of ctrl.subcontrols) {
-                if (ids.has(sc.id)) order.push(sc.id);
-              }
-            }
-          }
+          for (const row of visibleControlRows(sub.controls)) order.push(row.ctrl.id);
         }
       }
       return order;
@@ -827,19 +829,20 @@ const app = createApp({
             let hasPracticeMatch = false;
             for (const sub of p.subgroups) {
               let hasSubMatch = false;
+              // true, wenn die Anforderung selbst oder eine Unteranforderung passt; klappt Zweige mit Treffern auf
+              const expandMatches = (ctrl) => {
+                let childMatch = false;
+                for (const sc of ctrl.subcontrols || []) {
+                  if (expandMatches(sc)) childMatch = true;
+                }
+                if (childMatch && !expandedKeys.value.has(`ctrl_${ctrl.id}`)) {
+                  expandedKeys.value.add(`ctrl_${ctrl.id}`);
+                  keysChanged = true;
+                }
+                return childMatch || newIds.has(ctrl.id);
+              };
               for (const ctrl of sub.controls) {
-                const ctrlMatch = newIds.has(ctrl.id);
-                const subCtrlMatch = ctrl.subcontrols?.some((sc) => newIds.has(sc.id));
-                if (subCtrlMatch) {
-                  if (!expandedKeys.value.has(`ctrl_${ctrl.id}`)) {
-                    expandedKeys.value.add(`ctrl_${ctrl.id}`);
-                    keysChanged = true;
-                  }
-                  hasSubMatch = true;
-                }
-                if (ctrlMatch || subCtrlMatch) {
-                  hasSubMatch = true;
-                }
+                if (expandMatches(ctrl)) hasSubMatch = true;
               }
               if (hasSubMatch) {
                 if (!expandedKeys.value.has(`sub_${sub.id}`)) {
@@ -1398,10 +1401,10 @@ const app = createApp({
           changedKeys = true;
         }
       }
-      // If this is a subcontrol, ensure parent is expanded
-      if (ctrl.parentControlId) {
-        if (!expandedKeys.value.has('ctrl_' + ctrl.parentControlId)) {
-          expandedKeys.value.add('ctrl_' + ctrl.parentControlId);
+      // Unteranforderung: alle übergeordneten Anforderungen aufklappen
+      for (const ancestor of controlAncestors(ctrl)) {
+        if (!expandedKeys.value.has('ctrl_' + ancestor.id)) {
+          expandedKeys.value.add('ctrl_' + ancestor.id);
           changedKeys = true;
         }
       }
@@ -1724,10 +1727,8 @@ const app = createApp({
         s.add(`p_${p.id}`);
         for (const sub of p.subgroups) {
           s.add(`sub_${sub.id}`);
-          for (const c of sub.controls) {
-            if (c.subcontrols && c.subcontrols.length > 0) {
-              s.add(`ctrl_${c.id}`);
-            }
+          for (const c of flattenControls(sub.controls)) {
+            if (c.subcontrols?.length) s.add(`ctrl_${c.id}`);
           }
         }
       }
@@ -1759,22 +1760,25 @@ const app = createApp({
     }
 
     function countMatchingControlsInSubgroup(sub) {
-      let count = 0;
-      for (const c of sub.controls) {
-        if (filteredControlIds.value.has(c.id)) count++;
-        if (c.subcontrols) {
-          for (const sc of c.subcontrols) {
-            if (filteredControlIds.value.has(sc.id)) count++;
-          }
-        }
-      }
-      return count;
+      return flattenControls(sub.controls).filter((c) => filteredControlIds.value.has(c.id)).length;
     }
 
-    // Sichtbar ist, was zu den Filtern passt, sowie eine Anforderung mit passenden Unteranforderungen
+    // Sichtbar ist, was zu den Filtern passt, sowie eine Anforderung mit passenden Unteranforderungen (in beliebiger Tiefe)
     function isControlVisible(ctrl) {
       if (filteredControlIds.value.has(ctrl.id)) return true;
-      return Boolean(ctrl.subcontrols?.some((sc) => filteredControlIds.value.has(sc.id)));
+      return Boolean(ctrl.subcontrols?.some((sc) => isControlVisible(sc)));
+    }
+
+    // Zeilen der Baumansicht unterhalb eines Teilbereichs: sichtbare Anforderungen mit Tiefe, nur aufgeklappte Zweige
+    function visibleControlRows(controls, depth = 0, out = []) {
+      for (const ctrl of controls) {
+        if (!isControlVisible(ctrl)) continue;
+        out.push({ ctrl, depth });
+        if (ctrl.subcontrols?.length && expandedKeys.value.has('ctrl_' + ctrl.id)) {
+          visibleControlRows(ctrl.subcontrols, depth + 1, out);
+        }
+      }
+      return out;
     }
 
     // Comparison actions in Versions Modal
@@ -1927,7 +1931,7 @@ const app = createApp({
       storedCatalogs,
       selectedControlId,
       selectedControl,
-      parentControl,
+      ancestorControls,
       exampleControlsWithThreats,
       baseControlForDiff,
       statementDiffTokens,
@@ -2071,6 +2075,7 @@ const app = createApp({
       countMatchingControlsInPractice,
       countMatchingControlsInSubgroup,
       isControlVisible,
+      visibleControlRows,
       selectComparison,
       clearComparison,
       deleteCatalog,

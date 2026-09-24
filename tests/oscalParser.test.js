@@ -125,3 +125,33 @@ test('mitgelieferter BSI-Katalog: Plausibilität', async () => {
     }
   }
 });
+
+test('mitgelieferter BSI-Katalog: Unteranforderungen in beliebiger Tiefe', async () => {
+  const raw = await readJson('data/Grundschutz++-resolved_catalog.json');
+  const cat = parseOscalCatalog(raw);
+
+  // Jede Anforderung aus der Rohdatei, auch tief verschachtelte, ist erfasst
+  let rawCount = 0;
+  const walk = (controls) => {
+    for (const c of controls || []) {
+      rawCount++;
+      walk(c.controls);
+    }
+  };
+  const walkGroups = (groups) => {
+    for (const g of groups || []) {
+      walk(g.controls);
+      walkGroups(g.groups);
+    }
+  };
+  walkGroups(raw.catalog.groups);
+  assert.equal(cat.allControls.length, rawCount);
+
+  // Tiefste bekannte Kette: GC.9.1 › GC.9.1.1 › GC.9.1.1.1 › GC.9.1.1.1.1
+  const deepest = cat.controlMap.get('GC.9.1.1.1.1');
+  assert.ok(deepest, 'GC.9.1.1.1.1 fehlt');
+  assert.equal(deepest.parentControlId, 'GC.9.1.1.1');
+  assert.equal(cat.controlMap.get('GC.9.1.1.1').parentControlId, 'GC.9.1.1');
+  assert.equal(deepest.subgroupId, 'GC.9');
+  assert.ok(cat.controlMap.get('GC.9.1.1.1').subcontrols.some((s) => s.id === 'GC.9.1.1.1.1'));
+});
