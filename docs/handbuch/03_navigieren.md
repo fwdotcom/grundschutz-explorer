@@ -1,6 +1,6 @@
 # Im Katalog navigieren
 
-Der Grundschutz++-Katalog ist hierarchisch aufgebaut. **Praktiken** wie „GC Governance und Compliance“ gliedern sich in **Teilbereiche** wie „GC.1 Grundlagen“. Diese enthalten die **Anforderungen**, etwa „GC.1.1“, und manche Anforderungen haben **Unteranforderungen**, etwa „GC.1.1.1“.
+Der Grundschutz++-Katalog ist hierarchisch aufgebaut. **Praktiken** wie „GC Governance und Compliance“ gliedern sich in **Teilbereiche** wie „GC.1 Grundlagen“. Diese enthalten die **Anforderungen**, etwa „GC.1.1“, und manche Anforderungen haben **Unteranforderungen**, etwa „GC.1.1.1“. Unteranforderungen können ihrerseits weitere Unteranforderungen haben. Im aktuellen Katalog reicht die Verschachtelung bis zu vier Ebenen tief, etwa bis „GC.9.1.1.1.1“.
 
 ## Baumansicht
 
@@ -9,7 +9,13 @@ Nach dem Laden eines Katalogs sind alle Praktiken eingeklappt.
 - Ein Klick auf eine **Praktik** oder einen **Teilbereich** klappt die Ebene auf und zeigt rechts eine Übersicht. Ein weiterer Klick auf dieselbe Zeile klappt sie wieder zu.
 - Der **Pfeil** am Zeilenanfang klappt nur auf oder zu, ohne die Detailansicht zu wechseln.
 - Ein Klick auf eine **Anforderung** zeigt sie rechts in der Detailansicht. Hat sie Unteranforderungen, klappen diese automatisch auf.
+- Anforderungen mit Unteranforderungen haben am Zeilenanfang einen eigenen **Pfeil**; der Pfeil mit Zahl rechts in der Zeile nennt die Anzahl der direkten Unteranforderungen.
+- Jede tiefere Ebene ist weiter eingerückt und durch eine senkrechte Linie mit ihrer übergeordneten Anforderung verbunden.
 - Die Schaltflächen über der Liste klappen alle Ebenen auf oder zu.
+
+![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png)
+
+Wählen Sie eine Anforderung auf anderem Weg aus, etwa über die Suche, den Breadcrumb oder die Liste der Unteranforderungen in der Detailansicht, klappt der Explorer die Baumansicht bis zu dieser Anforderung auf.
 
 ## Übersicht einer Praktik oder eines Teilbereichs
 
@@ -27,13 +33,14 @@ Ein Klick auf einen Eintrag der Liste führt eine Ebene tiefer.
 
 ## Breadcrumb
 
-Über dem Titel der Detailansicht steht der Pfad zur aktuellen Anforderung, zum Beispiel:
+Über dem Titel der Detailansicht steht der Pfad zur aktuellen Anforderung. Bei einer Unteranforderung enthält er alle übergeordneten Anforderungen, zum Beispiel:
 
 ```text
-ASST Informationen und Assets  »  ASST.1 Grundlagen  »  ASST.1.1 …
+GC Governance und Compliance  »  GC.9 Sicherheitsorganisation
+  »  GC.9.1 …  »  GC.9.1.1 …  »  GC.9.1.1.1 …
 ```
 
-Ein Klick auf einen Eintrag öffnet die Übersicht dieser Ebene und zeigt sie in der Baumansicht. Der Breadcrumb setzt dabei keine Filter, er dient nur der Navigation. Bei einer Unteranforderung erreichen Sie über den Breadcrumb auch die übergeordnete Anforderung.
+Ein Klick auf eine Praktik oder einen Teilbereich öffnet die Übersicht dieser Ebene, ein Klick auf eine übergeordnete Anforderung öffnet diese Anforderung. In beiden Fällen zeigt der Explorer das Ziel in der Baumansicht. Der Breadcrumb setzt dabei keine Filter, er dient nur der Navigation.
 
 ## Flache Trefferliste
 

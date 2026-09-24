@@ -2,7 +2,7 @@ import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseOscalCatalog, formatBsiThreat, resolveParamsInProse } from '../src/js/oscalParser.js';
 import { loadNamespaces, lookupNamespace } from '../src/js/namespaces.js';
-import { installLocalFetch, readJson } from './helpers.js';
+import { installLocalFetch, fetchOfficialCatalog } from './helpers.js';
 
 // Kleiner, vollständig bekannter Katalog für exakte Prüfungen
 const SAMPLE = {
@@ -109,8 +109,10 @@ test('formatBsiThreat und resolveParamsInProse', () => {
   assert.equal(resolveParamsInProse('mit {{insert: param, X}}', [{ id: 'x', label: 'Wert' }]), 'mit [Wert]');
 });
 
-test('mitgelieferter BSI-Katalog: Plausibilität', async () => {
-  const cat = parseOscalCatalog(await readJson('data/Grundschutz++-resolved_catalog.json'));
+test('aktueller BSI-Katalog: Plausibilität', async (t) => {
+  const raw = await fetchOfficialCatalog(t);
+  if (!raw) return;
+  const cat = parseOscalCatalog(raw);
   assert.ok(cat.allControls.length > 500, 'zu wenige Anforderungen');
   assert.equal(cat.controlMap.size, cat.allControls.length, 'Kennungen sind nicht eindeutig');
 
@@ -126,8 +128,9 @@ test('mitgelieferter BSI-Katalog: Plausibilität', async () => {
   }
 });
 
-test('mitgelieferter BSI-Katalog: Unteranforderungen in beliebiger Tiefe', async () => {
-  const raw = await readJson('data/Grundschutz++-resolved_catalog.json');
+test('aktueller BSI-Katalog: Unteranforderungen in beliebiger Tiefe', async (t) => {
+  const raw = await fetchOfficialCatalog(t);
+  if (!raw) return;
   const cat = parseOscalCatalog(raw);
 
   // Jede Anforderung aus der Rohdatei, auch tief verschachtelte, ist erfasst
@@ -147,11 +150,43 @@ test('mitgelieferter BSI-Katalog: Unteranforderungen in beliebiger Tiefe', async
   walkGroups(raw.catalog.groups);
   assert.equal(cat.allControls.length, rawCount);
 
-  // Tiefste bekannte Kette: GC.9.1 › GC.9.1.1 › GC.9.1.1.1 › GC.9.1.1.1.1
-  const deepest = cat.controlMap.get('GC.9.1.1.1.1');
-  assert.ok(deepest, 'GC.9.1.1.1.1 fehlt');
-  assert.equal(deepest.parentControlId, 'GC.9.1.1.1');
-  assert.equal(cat.controlMap.get('GC.9.1.1.1').parentControlId, 'GC.9.1.1');
-  assert.equal(deepest.subgroupId, 'GC.9');
-  assert.ok(cat.controlMap.get('GC.9.1.1.1').subcontrols.some((s) => s.id === 'GC.9.1.1.1.1'));
+  // Jede Unteranforderung hängt an einer vorhandenen Anforderung desselben Teilbereichs
+  for (const c of cat.allControls) {
+    if (!c.parentControlId) continue;
+    const parent = cat.controlMap.get(c.parentControlId);
+    assert.ok(parent, `${c.id}: übergeordnete Anforderung ${c.parentControlId} fehlt`);
+    assert.ok(parent.subcontrols.includes(c), `${c.id}: fehlt in subcontrols von ${parent.id}`);
+    assert.equal(c.subgroupId, parent.subgroupId, `${c.id}: anderer Teilbereich als ${parent.id}`);
+  }
+});
+
+test('Unteranforderungen über mehrere Ebenen', () => {
+  const ctrl = (id, controls) => ({
+    id,
+    title: id,
+    props: [{ name: 'modal_verb', value: 'MUSS' }],
+    parts: [{ name: 'statement', prose: 'Text' }],
+    ...(controls ? { controls } : {}),
+  });
+  const raw = {
+    catalog: {
+      uuid: 'deep',
+      metadata: { title: 'Tief' },
+      groups: [
+        {
+          id: 'P',
+          title: 'Praktik',
+          groups: [{ id: 'P.1', title: 'Teilbereich', controls: [ctrl('P.1.1', [ctrl('P.1.1.1', [ctrl('P.1.1.1.1', [ctrl('P.1.1.1.1.1')])])])] }],
+        },
+      ],
+    },
+  };
+  const cat = parseOscalCatalog(raw);
+  assert.equal(cat.allControls.length, 4);
+  const deepest = cat.controlMap.get('P.1.1.1.1.1');
+  assert.ok(deepest);
+  assert.equal(deepest.parentControlId, 'P.1.1.1.1');
+  assert.equal(cat.controlMap.get('P.1.1.1.1').parentControlId, 'P.1.1.1');
+  assert.equal(deepest.subgroupId, 'P.1');
+  assert.equal(deepest.groupId, 'P');
 });

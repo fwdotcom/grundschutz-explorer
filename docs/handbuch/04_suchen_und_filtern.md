@@ -6,7 +6,7 @@ Suche und Filter lassen sich frei kombinieren. Eine Anforderung erscheint nur, w
 
 ## Volltextsuche
 
-Das Suchfeld in der Kopfzeile durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen und die Bezeichnungen der Gefährdungen. Die Treffer erscheinen sofort während der Eingabe.
+Das Suchfeld in der Kopfzeile durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, die Bezeichnungen der Gefährdungen und die Tags. Die Treffer erscheinen sofort während der Eingabe.
 
 - **Strg + K** oder **/** setzt den Cursor ins Suchfeld.
 - **Esc** leert das Suchfeld.

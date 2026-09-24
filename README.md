@@ -31,7 +31,7 @@ Katalog und Begriffsdefinitionen stammen aus der [Stand-der-Technik-Bibliothek](
 
 | Inhalt | Quelle | Im Projekt |
 | :--- | :--- | :--- |
-| Grundschutz++-Anwenderkatalog | `control_layer/Grundschutz++/` | `src/data/` (Kopie, Ersatz bei fehlender Verbindung) |
+| Grundschutz++-Anwenderkatalog | `control_layer/Grundschutz++/` | wird zur Laufzeit direkt vom BSI geladen, keine Kopie im Repository |
 | Begriffsdefinitionen (Namespaces) | `documentation/namespaces/` | `src/data/namespaces/` (unveränderte Kopie) |
 
 „Offiziellen BSI Grundschutz++ Anwenderkatalog laden“ ruft den aktuellen Stand direkt aus der Bibliothek ab. Die Inhalte des BSI stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
@@ -54,7 +54,7 @@ src/
 │   ├── namespaces.js     Laden der BSI-Namespaces (CSV)
 │   ├── diffEngine.js     Katalog- und Textvergleich
 │   └── storage.js        Speicherung im Browser (IndexedDB)
-├── data/                 BSI-Katalog und Namespaces
+├── data/                 BSI-Namespaces
 └── media/                Logo, Vorschaubild
 docs/handbuch/            Benutzerhandbuch (markpublish)
 scripts/build_manual.py   Baut das Handbuch nach src/docs/manual/

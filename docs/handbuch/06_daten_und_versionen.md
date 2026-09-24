@@ -6,7 +6,7 @@ Der Explorer kann mehrere Stände des Grundschutz++-Katalogs speichern und jewei
 
 ![Dialog „Katalog laden“](bilder/kataloge-laden.png)
 
-Über **Kataloge → Katalog laden** in der Kopfzeile öffnen Sie den Dialog zum Laden eines Katalogs. Auf der Startseite erreichen Sie ihn über **Von URL laden**. Es gibt drei Wege:
+Über **Kataloge → Katalog laden** in der Kopfzeile öffnen Sie den Dialog zum Laden eines Katalogs. Auf der Startseite erreichen Sie ihn über **Katalog laden**. Es gibt drei Wege:
 
 | Weg | Verwendung |
 | :--- | :--- |
@@ -14,7 +14,7 @@ Der Explorer kann mehrere Stände des Grundschutz++-Katalogs speichern und jewei
 | URL zur JSON-Datei | Lädt einen OSCAL-Katalog von einer beliebigen Internetadresse. |
 | JSON-Datei | Lädt einen OSCAL-Katalog von Ihrem Rechner, per Auswahl oder durch Ablegen mit der Maus. |
 
-Für URL und Datei geben Sie die Quelle an und bestätigen mit **Laden**. Wählen Sie eine Datei, wird eine eingegebene URL verworfen und umgekehrt. Ist der offizielle Katalog beim BSI gerade nicht erreichbar, verwendet der Explorer die mitgelieferte Kopie.
+Für URL und Datei geben Sie die Quelle an und bestätigen mit **Laden**. Wählen Sie eine Datei, wird eine eingegebene URL verworfen und umgekehrt. Ist der offizielle Katalog beim BSI gerade nicht erreichbar, erscheint eine Fehlermeldung; versuchen Sie es dann später erneut.
 
 Ist ein Katalog mit identischem Inhalt bereits geladen, legt der Explorer ihn nicht erneut an und weist im Dialog **Katalog laden** darauf hin. Andernfalls wird der geladene Katalog als neue Version gespeichert und als Basis angezeigt; ein laufender Vergleich endet dabei. Danach kehrt der Explorer zur Liste der Kataloge zurück, sodass Sie zum Beispiel gleich einen Vergleich starten können. Laden Sie über die Startseite, gelangen Sie direkt in den Katalog. Der Explorer setzt außerdem die Ansicht zurück: Alle Filter werden aufgehoben und alle Bereiche eingeklappt, damit Sie im neuen Katalog neu beginnen.
 
@@ -38,6 +38,8 @@ Alle Versionen und Einstellungen zusammen entfernen Sie in der **Datenschutzerkl
 
 Laden Sie zunächst beide Stände, zum Beispiel den offiziellen Katalog und eine ältere Version als Datei. Wählen Sie dann unter **Kataloge** den neueren Stand mit **Als Basis** und beim älteren Stand **Vergleichen**.
 
+![Vergleichsmodus mit Hinweisbalken, markierten Anforderungen und der Registerkarte „Änderungen“](bilder/vergleich.png)
+
 Im Vergleichsmodus erscheint unter der Kopfzeile ein Hinweisbalken mit der Zahl der neuen, geänderten und gelöschten Anforderungen. Zusätzlich:
 
 - In der Liste sind betroffene Anforderungen mit **Neu**, **Geändert** oder **Gelöscht** gekennzeichnet.
@@ -48,4 +50,4 @@ Im Vergleichsmodus erscheint unter der Kopfzeile ein Hinweisbalken mit der Zahl 
 Mit **Vergleich beenden** im Hinweisbalken kehren Sie zur normalen Ansicht zurück.
 
 > [!TIP]
-> Wenn das BSI einen neuen Stand des Katalogs veröffentlicht, laden Sie ihn als Vergleichsversion. So sehen Sie sofort, welche Anforderungen Sie in Ihrer Umsetzung überprüfen sollten.
+> Wenn das BSI einen neuen Stand des Katalogs veröffentlicht, laden Sie ihn mit **Offiziellen BSI Grundschutz++ Anwenderkatalog laden**. Er wird zur Basis; wählen Sie dann beim bisherigen Stand **Vergleichen**. So sehen Sie sofort, welche Anforderungen Sie in Ihrer Umsetzung überprüfen sollten.

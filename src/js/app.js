@@ -1149,7 +1149,10 @@ const app = createApp({
       isCatalogModalOpen.value = true;
     }
 
-    function openLoadDialog() {
+    // Nach dem Laden zurück zur Katalogliste (über "Kataloge") oder direkt in den Katalog (Startseite)
+    let loadReturnToList = true;
+    function openLoadDialog(returnToList = true) {
+      loadReturnToList = returnToList;
       importError.value = '';
       loadNotice.value = '';
       importSuccess.value = '';
@@ -1192,9 +1195,9 @@ const app = createApp({
       }
     }
 
-    // Offiziellen Katalog laden (Startseite und Dialog "Katalog laden"); ohne Verbindung die mitgelieferte Kopie
+    // Offiziellen Katalog aus der Stand-der-Technik-Bibliothek des BSI laden (Dialog "Katalog laden")
     function loadOfficialCatalog() {
-      fetchFromUrl(PRESET_CATALOG_URL, 'BSI Stand-der-Technik-Bibliothek (GitHub)', 'data/Grundschutz++-resolved_catalog.json', 'Mitgelieferte Kopie des BSI-Katalogs');
+      fetchFromUrl(PRESET_CATALOG_URL, 'BSI Stand-der-Technik-Bibliothek (GitHub)');
     }
 
     function toggleDarkMode() {
@@ -1242,31 +1245,16 @@ const app = createApp({
     }
 
     // Fetch per URL (used in import modal)
-    async function fetchFromUrl(targetUrl, presetName = '', fallbackLocalUrl = '', fallbackName = '') {
+    async function fetchFromUrl(targetUrl, presetName = '') {
       importError.value = '';
       loadNotice.value = '';
       importSuccess.value = '';
       importLoading.value = true;
 
       try {
-        let res;
-        try {
-          res = await fetch(targetUrl, {
-            headers: { Accept: 'application/json' },
-          });
-          if (!res.ok && fallbackLocalUrl) {
-            throw new Error(`Remote HTTP ${res.status}`);
-          }
-        } catch (networkErr) {
-          if (fallbackLocalUrl) {
-            res = await fetch(fallbackLocalUrl, {
-              headers: { Accept: 'application/json' },
-            });
-            if (fallbackName) presetName = fallbackName;
-          } else {
-            throw networkErr;
-          }
-        }
+        const res = await fetch(targetUrl, {
+          headers: { Accept: 'application/json' },
+        });
 
         if (!res.ok) {
           throw new Error(`HTTP-Fehler ${res.status}: ${res.statusText}`);
@@ -1280,12 +1268,6 @@ const app = createApp({
       } finally {
         importLoading.value = false;
       }
-    }
-
-    function handleFileUpload(e) {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      readFile(files[0]);
     }
 
     function readFile(file) {
@@ -1385,7 +1367,7 @@ const app = createApp({
       importLoading.value = false;
       const fromLoadDialog = isLoadModalOpen.value;
       isLoadModalOpen.value = false;
-      isCatalogModalOpen.value = fromLoadDialog;
+      isCatalogModalOpen.value = fromLoadDialog && loadReturnToList;
     }
 
     function selectControl(ctrl) {
@@ -2040,7 +2022,6 @@ const app = createApp({
       setFontScale,
       loadCatalogById,
       fetchFromUrl,
-      handleFileUpload,
       selectControl,
       selectControlById,
       navigateToPractice,

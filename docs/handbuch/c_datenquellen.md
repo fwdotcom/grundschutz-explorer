@@ -8,10 +8,10 @@ Alle fachlichen Inhalte stammen aus der **Stand-der-Technik-Bibliothek** des Bun
 https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek
 ```
 
-| Inhalt | Quelle in der Bibliothek |
-| :--- | :--- |
-| Grundschutz++-Anwenderkatalog | `control_layer/Grundschutz++/` |
-| Definitionen der Begriffe | `documentation/namespaces/` |
+| Inhalt | Quelle in der Bibliothek | Im Explorer |
+| :--- | :--- | :--- |
+| Grundschutz++-Anwenderkatalog | `control_layer/Grundschutz++/` | wird beim Laden direkt vom BSI abgerufen |
+| Definitionen der Begriffe | `documentation/namespaces/` | unveränderte Kopie, mit dem Explorer ausgeliefert |
 
 Die Begriffsdefinitionen umfassen Aufwandsstufen, elementare Gefährdungen, Handlungswörter, Dokumentationsvorgaben, Modalverben, Sicherheitsstufen, Schutzziele und ihre Wirkungsstufen sowie Tags.
 
