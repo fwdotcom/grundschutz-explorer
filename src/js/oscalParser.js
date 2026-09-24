@@ -3,70 +3,12 @@
  * Strictly follows NIST OSCAL 1.1.3 & official BSI Grundschutz++ catalog schemas.
  */
 
-/**
- * Official BSI IT-Grundschutz Elementare Gefährdungen (G 0.1 - G 0.47)
- * Source: BSI IT-Grundschutz-Kompendium Edition 2023
- */
-// Definitionen der Aufwandsstufen (effort_level) laut BSI Stand-der-Technik-Bibliothek,
-// documentation/namespaces/effort_level.csv
-export const BSI_EFFORT_LEVELS = {
-  0: 'Der Aufwand der Anforderung wird nicht bewertet, da ihre Implementierung in jedem Fall zwingend erforderlich ist. Beispiel: Benennung eines Informationssicherheitsbeauftragten.',
-  1: 'In der Regel ist die Umsetzung noch am selben Tag und mit wenig Aufwand erreichbar. Zur Aufrechterhaltung sind keine regelmäßigen Aufwände erforderlich (Sogenannte Quick Wins / low hanging fruit). Beispiel: Aktivierung einer typischerweise vorhandenen Systemfunktion.',
-  2: 'In der Regel ist die Umsetzung innerhalb einer Woche mit eigenen Mitteln möglich. Zur Aufrechterhaltung sind nur geringe Aufwände erforderlich. Beispiel: Erstellung einer Kontaktübersicht, die mit mehreren Fachbereichen abgestimmt werden muss.',
-  3: 'In der Regel ist für die Umsetzung ein Zeitraum über mehrere Wochen bis einige Monate erforderlich. Je nach Ressourcen der Institution kann hierzu auch eine Beteiligung externer Dienstleister erforderlich sein. Die Aufrechterhaltung kann von einem kleinen Team an Betriebspersonal gewährleistet werden. Beispiel: Unterbringung von Geräten im Serverraum.',
-  4: 'In der Regel sind diese Anforderungen mit einer längerfristigen Umsetzung oder Beibehaltung verbunden. Es wird Expertenwissen und oftmals auch eine Unterstützung von Dritten benötigt. Für die Aufrechterhaltung ist häufig ein größeres Team von Betriebspersonal erforderlich. Beispiel: Initiierung und Umsetzung von Baumaßnahmen.',
-  5: 'In der Regel sind für die Umsetzung aufwändige, komplexe Maßnahmen oder eine individuelle Abwägung und Behandlung damit verbundener sekundärer Risiken erforderlich. Hierzu ist häufig tiefgehendes Expertenwissen oder der Einsatz entsprechender externer Dienstleister, sowie eine sorgfältige Planung und Aufrechterhaltung notwendig. Beispiel: Aufbau georedundanter Rechenzentren.',
-};
+import { lookupNamespace } from './namespaces.js';
 
-export const BSI_ELEMENTARE_GEFAEHRDUNGEN = {
-  'G 0.1': 'Feuer',
-  'G 0.2': 'Ungünstige klimatische Bedingungen',
-  'G 0.3': 'Wasser',
-  'G 0.4': 'Verschmutzung, Staub, Korrosion',
-  'G 0.5': 'Naturkatastrophen',
-  'G 0.6': 'Katastrophen im Umfeld',
-  'G 0.7': 'Großschadensereignisse',
-  'G 0.8': 'Ausfall oder Störung der Stromversorgung',
-  'G 0.9': 'Ausfall oder Störung von Kommunikationsnetzen',
-  'G 0.10': 'Ausfall oder Störung von Versorgungsnetzen',
-  'G 0.11': 'Ausfall oder Störung von Dienstleistern',
-  'G 0.12': 'Ausfall oder Störung von IT-Systemen',
-  'G 0.13': 'Ausfall oder Störung von Anwendungen',
-  'G 0.14': 'Ausspähen von Informationen (Spionage)',
-  'G 0.15': 'Abhören',
-  'G 0.16': 'Diebstahl von Geräten, Datenträgern oder Dokumenten',
-  'G 0.17': 'Verlust von Geräten, Datenträgern oder Dokumenten',
-  'G 0.18': 'Fehlplanung oder fehlende Anpassung',
-  'G 0.19': 'Offenlegung schützenswerter Informationen',
-  'G 0.20': 'Informationen oder Produkte aus unzuverlässiger Quelle',
-  'G 0.21': 'Manipulation von Hard- oder Software',
-  'G 0.22': 'Manipulation von Informationen',
-  'G 0.23': 'Unbefugtes Eindringen in IT-Systeme',
-  'G 0.24': 'Zerstörung von Geräten oder Datenträgern',
-  'G 0.25': 'Ausfall von Geräten oder Systemen',
-  'G 0.26': 'Fehlfunktion von Geräten oder Systemen',
-  'G 0.27': 'Ressourcenmangel',
-  'G 0.28': 'Software-Schwachstellen oder -Fehler',
-  'G 0.29': 'Verstoß gegen Gesetze oder Regelungen',
-  'G 0.30': 'Unberechtigte Nutzung oder Administration von Geräten und Systemen',
-  'G 0.31': 'Fehlerhafte Nutzung oder Administration von Geräten und Systemen',
-  'G 0.32': 'Missbrauch von Berechtigungen',
-  'G 0.33': 'Personalausfall',
-  'G 0.34': 'Anschläge',
-  'G 0.35': 'Nötigung, Erpressung oder Bestechung',
-  'G 0.36': 'Identitätsdiebstahl',
-  'G 0.37': 'Abstreiten von Handlungen',
-  'G 0.38': 'Missbrauch personenbezogener Daten',
-  'G 0.39': 'Schadprogramme',
-  'G 0.40': 'Verhinderung von Diensten (Denial of Service)',
-  'G 0.41': 'Sabotage',
-  'G 0.42': 'Social Engineering',
-  'G 0.43': 'Einspielen von Nachrichten',
-  'G 0.44': 'Unbefugtes Eindringen in Räumlichkeiten',
-  'G 0.45': 'Datenverlust',
-  'G 0.46': 'Integritätsverlust schützenswerter Informationen',
-  'G 0.47': 'Schädliche Seiteneffekte IT-gestützter Angriffe',
-};
+// Offizielle Bezeichnung einer elementaren Gefährdung (Namespace basethreats.csv)
+function canonicalThreatTitle(code) {
+  return lookupNamespace('basethreats', code)?.Begriff || '';
+}
 
 /**
  * Normalizes threat code or string to canonical representation: e.g. "G 0.18: Fehlplanung oder fehlende Anpassung"
@@ -78,10 +20,10 @@ export function formatBsiThreat(raw) {
     const parts = trimmed.split(':');
     const code = parts[0].trim();
     const title = parts.slice(1).join(':').trim();
-    const canonicalTitle = BSI_ELEMENTARE_GEFAEHRDUNGEN[code] || title;
+    const canonicalTitle = canonicalThreatTitle(code) || title;
     return `${code}: ${canonicalTitle}`;
   }
-  const canonicalTitle = BSI_ELEMENTARE_GEFAEHRDUNGEN[trimmed];
+  const canonicalTitle = canonicalThreatTitle(trimmed);
   return canonicalTitle ? `${trimmed}: ${canonicalTitle}` : trimmed;
 }
 

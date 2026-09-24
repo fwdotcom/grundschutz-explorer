@@ -2,7 +2,8 @@
  * Grundschutz++ Explorer SPA - Main Application (Pure JavaScript, Zero-Build)
  */
 
-import { parseOscalCatalog, parseMappingCollection, formatBsiThreat, BSI_ELEMENTARE_GEFAEHRDUNGEN, BSI_EFFORT_LEVELS } from './oscalParser.js';
+import { parseOscalCatalog, parseMappingCollection, formatBsiThreat } from './oscalParser.js';
+import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition } from './namespaces.js';
 import { compareCatalogs, computeWordDiff } from './diffEngine.js';
 import {
   saveCatalogRecord,
@@ -67,8 +68,10 @@ const app = createApp({
     const detailActiveTab = ref('overview');
     // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
     const detailScope = ref(null);
-    // Beschreibung der Aufwandsstufe in der Detailansicht ausgeklappt
-    const effortDefOpen = ref(false);
+    // Ausgeklappte Definitionen (Info-Buttons) in der Detailansicht
+    const openDefs = ref({ effort: false, actionWord: false, documentation: false });
+    // Zähler, der nach dem Laden der BSI-Namespaces erhöht wird (macht Definitionen reaktiv)
+    const namespacesVersion = ref(0);
 
     // Import Modal State
     const importModalTab = ref('presets');
@@ -149,7 +152,8 @@ const app = createApp({
 
     // Höchste Aufwandsstufe (BSI-Skala, ggf. durch den Katalog erweitert)
     const maxEffort = computed(() => {
-      const nums = [...Object.keys(BSI_EFFORT_LEVELS), ...facetOptions.value.effort].map(Number).filter((n) => !Number.isNaN(n));
+      namespacesVersion.value;
+      const nums = [...Object.keys(namespaces.effortLevels), ...facetOptions.value.effort].map(Number).filter((n) => !Number.isNaN(n));
       return nums.length ? Math.max(...nums) : 0;
     });
 
@@ -175,7 +179,23 @@ const app = createApp({
     }
 
     function effortDefinition(level) {
-      return BSI_EFFORT_LEVELS[Number(level)] || '';
+      return hasEffort(level) ? definition('effortLevels', String(Number(level))) : '';
+    }
+
+    // Definition eines Begriffs aus einem BSI-Namespace (leer, wenn nicht vorhanden)
+    function definition(name, value) {
+      namespacesVersion.value;
+      return namespaceDefinition(name, value);
+    }
+
+    function namespaceEntry(name, value) {
+      namespacesVersion.value;
+      return lookupNamespace(name, value);
+    }
+
+    // Erster Absatz einer Definition (für Tooltips)
+    function shortDefinition(name, value) {
+      return definition(name, value).split(/\n\s*\n/)[0];
     }
 
     // Computed: Active filter specification grouped by category and mode
@@ -405,9 +425,14 @@ const app = createApp({
       const onlyMatches = threatShowOnlyMatching.value;
       const hasInclude = hasCategoryInclude('threat');
 
-      for (let i = 1; i <= 47; i++) {
-        const code = `G 0.${i}`;
-        const title = BSI_ELEMENTARE_GEFAEHRDUNGEN[code] || `Gefährdung 0.${i}`;
+      namespacesVersion.value;
+      const nsCodes = Object.keys(namespaces.basethreats).sort(
+        (a, b) => Number(a.replace(/^G 0\./, '')) - Number(b.replace(/^G 0\./, ''))
+      );
+      const codes = nsCodes.length ? nsCodes : Array.from({ length: 47 }, (_, i) => `G 0.${i + 1}`);
+
+      for (const code of codes) {
+        const title = namespaces.basethreats[code]?.Begriff || `Gefährdung ${code.replace(/^G /, '')}`;
         const count = threatCounts.value[code] || 0;
         const isActive = isTagActive('threat', code);
         const isIncluded = isTagActive('threat', code, 'include');
@@ -431,6 +456,7 @@ const app = createApp({
           code,
           title,
           label: `${code}: ${title}`,
+          definition: namespaces.basethreats[code]?.Definition?.split(/\n\s*\n/)[0] || '',
         });
       }
       return list;
@@ -829,6 +855,10 @@ const app = createApp({
       );
       isDarkMode.value = Boolean(savedDark);
       applyDarkMode(isDarkMode.value);
+
+      // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
+      await loadNamespaces();
+      namespacesVersion.value++;
 
       await refreshStoredCatalogs();
       await ensureThreatsLoaded();
@@ -1354,7 +1384,7 @@ const app = createApp({
     function filterByThreat(threatText) {
       const { code } = splitThreat(threatText);
       if (!code) return;
-      const title = BSI_ELEMENTARE_GEFAEHRDUNGEN[code] || splitThreat(threatText).title || code;
+      const title = namespaceEntry('basethreats', code)?.Begriff || splitThreat(threatText).title || code;
       const label = `${code} ${title}`.trim();
       toggleTag('threat', code, 'include', label, 'Gefährdung');
       scrollSelectedIntoView();
@@ -1764,7 +1794,10 @@ const app = createApp({
       hasEffort,
       effortColor,
       effortDefinition,
-      effortDefOpen,
+      openDefs,
+      definition,
+      namespaceEntry,
+      shortDefinition,
       threatCounts,
       diffCounts,
       displayedThreatOptions,

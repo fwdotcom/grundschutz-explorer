@@ -144,7 +144,7 @@
                   <div
                     class="rail-row-main"
                     @click="getTagMode('modalVerb', v) ? removeTag('modalVerb', v) : toggleTag('modalVerb', v, 'include', v, 'Modalverb')"
-                    :title="getTagMode('modalVerb', v) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + v + ' filtern'"
+                    :title="getTagMode('modalVerb', v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition('modalVerbs', v) || 'Nur ' + v + ' filtern')"
                   >
                     <span class="dot" :class="'dot-' + v.toLowerCase()"></span>
                     <span class="rail-row-label font-bold">{{ v }}</span>
@@ -222,7 +222,7 @@
                   <div
                     class="rail-row-main"
                     @click="getTagMode('secLevel', lvl) ? removeTag('secLevel', lvl) : toggleTag('secLevel', lvl, 'include', lvl, 'Niveau')"
-                    :title="getTagMode('secLevel', lvl) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + lvl + ' filtern'"
+                    :title="getTagMode('secLevel', lvl) ? 'Klicken zum Aufheben des Filters' : (shortDefinition('securityLevels', lvl) || 'Nur ' + lvl + ' filtern')"
                   >
                     <span class="rail-row-label">{{ lvl }}</span>
                     <span class="rail-row-count">{{ secLevelCounts[lvl] || 0 }}</span>
@@ -304,7 +304,7 @@
                       <div
                         class="rail-row-main"
                         @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
-                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : 'Nur ' + fs.title + ' „' + v + '“ filtern')"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.cat === 'actionWord' ? 'actionWords' : 'documentation', v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
@@ -481,7 +481,7 @@
                     <div
                       class="rail-row-main"
                       @click="getTagMode('threat', t.code) ? removeTag('threat', t.code) : toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
-                      :title="getTagMode('threat', t.code) ? 'Klicken zum Aufheben des Filters' : t.label"
+                      :title="getTagMode('threat', t.code) ? 'Klicken zum Aufheben des Filters' : (t.definition ? t.label + '\n\n' + t.definition : t.label)"
                     >
                       <span class="threat-pill-code">{{ t.code }}</span>
                       <span class="rail-row-label">{{ t.title }}</span>
@@ -949,10 +949,10 @@
 
                 <div class="detail-tags">
                   <span class="tag tag-lg tag-accent">{{ selectedControl.isSubcontrol ? 'Unteranforderung' : 'Anforderung' }}</span>
-                  <span v-if="verbKey(selectedControl.modalVerb)" class="tag tag-lg" :class="'verb-' + verbKey(selectedControl.modalVerb)">
+                  <span v-if="verbKey(selectedControl.modalVerb)" class="tag tag-lg" :class="'verb-' + verbKey(selectedControl.modalVerb)" :title="shortDefinition('modalVerbs', selectedControl.modalVerb)">
                     <span class="dot" :class="'dot-' + verbKey(selectedControl.modalVerb)"></span>{{ selectedControl.modalVerb }}
                   </span>
-                  <span v-if="selectedControl.secLevel" class="tag tag-lg tag-outline">Niveau: {{ selectedControl.secLevel }}</span>
+                  <span v-if="selectedControl.secLevel" class="tag tag-lg tag-outline" :title="shortDefinition('securityLevels', selectedControl.secLevel)">Niveau: {{ selectedControl.secLevel }}</span>
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 
@@ -987,12 +987,54 @@
                     <dl class="kv-grid" style="margin:0">
                       <div class="kv">
                         <dt>Handlung</dt>
-                        <dd v-if="selectedControl.actionWord"><button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button></dd>
+                        <dd v-if="selectedControl.actionWord">
+                          <span class="kv-value">
+                            <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
+                            <button
+                              v-if="definition('actionWords', selectedControl.actionWord)"
+                              class="info-btn"
+                              :class="{ on: openDefs.actionWord }"
+                              @click="openDefs.actionWord = !openDefs.actionWord"
+                              :aria-expanded="openDefs.actionWord"
+                              :title="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                            </button>
+                          </span>
+                          <div v-if="openDefs.actionWord && definition('actionWords', selectedControl.actionWord)" class="def-text">
+                            <p>{{ definition('actionWords', selectedControl.actionWord) }}</p>
+                            <p v-if="namespaceEntry('actionWords', selectedControl.actionWord)?.Synonyme" class="def-meta">Synonyme: {{ namespaceEntry('actionWords', selectedControl.actionWord).Synonyme }}</p>
+                          </div>
+                        </dd>
                         <dd v-else class="muted">–</dd>
                       </div>
                       <div class="kv">
                         <dt>Dokumentation</dt>
-                        <dd v-if="selectedControl.documentation"><button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button></dd>
+                        <dd v-if="selectedControl.documentation">
+                          <span class="kv-value">
+                            <button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button>
+                            <button
+                              v-if="definition('documentation', selectedControl.documentation)"
+                              class="info-btn"
+                              :class="{ on: openDefs.documentation }"
+                              @click="openDefs.documentation = !openDefs.documentation"
+                              :aria-expanded="openDefs.documentation"
+                              :title="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                            </button>
+                          </span>
+                          <div v-if="openDefs.documentation && definition('documentation', selectedControl.documentation)" class="def-text">
+                            <p>{{ definition('documentation', selectedControl.documentation) }}</p>
+                            <p v-if="namespaceEntry('documentation', selectedControl.documentation)?.Kategorie || namespaceEntry('documentation', selectedControl.documentation)?.Zielgruppe" class="def-meta">
+                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie">Kategorie: {{ namespaceEntry('documentation', selectedControl.documentation).Kategorie }}</template>
+                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie && namespaceEntry('documentation', selectedControl.documentation).Zielgruppe"> · </template>
+                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Zielgruppe">Zielgruppe: {{ namespaceEntry('documentation', selectedControl.documentation).Zielgruppe }}</template>
+                            </p>
+                          </div>
+                        </dd>
                         <dd v-else class="muted">Nicht vorgegeben</dd>
                       </div>
                       <div class="kv full">
@@ -1018,16 +1060,16 @@
                           </button>
                           <button
                             v-if="effortDefinition(selectedControl.effortLevel)"
-                            class="effort-info-btn"
-                            :class="{ on: effortDefOpen }"
-                            @click="effortDefOpen = !effortDefOpen"
-                            :aria-expanded="effortDefOpen"
-                            :title="effortDefOpen ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
-                            :aria-label="effortDefOpen ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                            class="info-btn"
+                            :class="{ on: openDefs.effort }"
+                            @click="openDefs.effort = !openDefs.effort"
+                            :aria-expanded="openDefs.effort"
+                            :title="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                            :aria-label="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
                           >
                             <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
                           </button>
-                          <p v-if="effortDefOpen && effortDefinition(selectedControl.effortLevel)" class="effort-def">{{ effortDefinition(selectedControl.effortLevel) }}</p>
+                          <p v-if="openDefs.effort && effortDefinition(selectedControl.effortLevel)" class="def-text">{{ effortDefinition(selectedControl.effortLevel) }}</p>
                         </dd>
                       </div>
                     </dl>

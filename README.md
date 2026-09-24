@@ -17,13 +17,16 @@ gsexplorer/
 │   ├── js/
 │   │   ├── app.js                          # Hauptanwendung (Vue 3, State, Komponentenlogik)
 │   │   ├── diffEngine.js                   # Differenzanalyse & Text-Diffing (Myers/LCS)
+│   │   ├── namespaces.js                   # Lädt die BSI-Namespace-Definitionen (CSV) aus data/namespaces/
 │   │   ├── oscalParser.js                  # BSI OSCAL Katalog- und Mapping-Parser
 │   │   └── storage.js                      # IndexedDB-Persistenzschicht
 │   ├── vendor/
 │   │   └── vue.global.prod.js              # Lokale Vue 3 Runtime (100 % autark & offline-fähig)
 │   └── data/
 │       ├── Grundschutz++-resolved_catalog.json       # Offizieller BSI GS++ Katalog (652 Controls)
-│       └── ITGS-to-GS++-mapping_collection.json      # Offizielles BSI Gefährdungs-Mapping
+│       ├── ITGS-to-GS++-mapping_collection.json      # Offizielles BSI Gefährdungs-Mapping
+│       └── namespaces/                               # BSI-Namespaces (Vokabulare & Definitionen), unverändert aus
+│                                                     # Stand-der-Technik-Bibliothek/documentation/namespaces
 ├── README.md
 └── .gitignore
 ```
