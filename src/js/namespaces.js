@@ -16,6 +16,8 @@ const NAMESPACE_FILES = {
   documentation: { file: 'documentation_guidelines.csv', key: 'Begriff' },
   modalVerbs: { file: 'modal_verbs.csv', key: 'Begriff' },
   securityLevels: { file: 'security_level.csv', key: 'Begriff' },
+  securityTargets: { file: 'security_targets.csv', key: 'Begriff' },
+  securityTargetLevels: { file: 'security_targets_levels.csv', key: 'Wert' },
 };
 
 /**

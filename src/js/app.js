@@ -17,12 +17,24 @@ import {
   clearAllData,
 } from './storage.js';
 
+// Schutzziele: Feld der Anforderung, Anzeige und Begriff im Namespace security_targets.csv
+const SECURITY_TARGETS = [
+  { key: 'confidentiality', short: 'C', label: 'Vertraulichkeit', nsKey: 'Vertraulichkeit (Confidentiality)' },
+  { key: 'integrity', short: 'I', label: 'Integrität', nsKey: 'Integrität (Integrity)' },
+  { key: 'availability', short: 'A', label: 'Verfügbarkeit', nsKey: 'Verfügbarkeit (Availability)' },
+  { key: 'authenticity', short: 'Au', label: 'Authentizität', nsKey: 'Authentizität (Authenticity)' },
+];
+
+// Kurzbezeichnung der Wirkungsstufen (Definition in security_targets_levels.csv)
+const SECURITY_TARGET_LEVEL_LABELS = { 0: 'keine', 1: 'wirkt hin', 2: 'im Zentrum' };
+
 // Einwertige Filter-Facetten: Kategorie → Feld der Anforderung
 const VALUE_FACETS = {
   secLevel: 'secLevel',
   effort: 'effortLevel',
   actionWord: 'actionWord',
   documentation: 'documentation',
+  ...Object.fromEntries(SECURITY_TARGETS.map((t) => [t.key, t.key])),
 };
 
 const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } = window.Vue;
@@ -69,7 +81,7 @@ const app = createApp({
     // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
     const detailScope = ref(null);
     // Ausgeklappte Definitionen (Info-Buttons) in der Detailansicht
-    const openDefs = ref({ effort: false, actionWord: false, documentation: false });
+    const openDefs = ref({ effort: false, actionWord: false, documentation: false, securityTargets: false });
     // Zähler, der nach dem Laden der BSI-Namespaces erhöht wird (macht Definitionen reaktiv)
     const namespacesVersion = ref(0);
 
@@ -109,6 +121,7 @@ const app = createApp({
       effort: false,
       actionWords: true,
       documentation: true,
+      securityTargets: false,
     });
 
     // Suchfelder der langen Werte-Facetten
@@ -191,6 +204,24 @@ const app = createApp({
     function namespaceEntry(name, value) {
       namespacesVersion.value;
       return lookupNamespace(name, value);
+    }
+
+    // Schutzziele einer Anforderung: nur vorhanden, wenn mindestens ein Wert gesetzt ist
+    function hasSecurityTargets(ctrl) {
+      return Boolean(ctrl) && SECURITY_TARGETS.some((t) => ctrl[t.key] !== undefined && ctrl[t.key] !== null && ctrl[t.key] !== '');
+    }
+
+    // Schutzziele, die im Zentrum der Anforderung stehen (Wert 2)
+    function centralSecurityTargets(ctrl) {
+      return ctrl ? SECURITY_TARGETS.filter((t) => String(ctrl[t.key]) === '2') : [];
+    }
+
+    function securityTargetLevelLabel(value) {
+      return SECURITY_TARGET_LEVEL_LABELS[Number(value)] ?? '–';
+    }
+
+    function securityTargetChipLabel(target, value) {
+      return `${target.label}: ${value} (${securityTargetLevelLabel(value)})`;
     }
 
     // Erster Absatz einer Definition (für Tooltips)
@@ -364,6 +395,7 @@ const app = createApp({
     // Counts für Aufwand, Handlungswort, Dokumentation (jeweils ohne eigene Facette)
     const facetCounts = computed(() => {
       const result = { effort: {}, actionWord: {}, documentation: {} };
+      for (const t of SECURITY_TARGETS) result[t.key] = {};
       if (!activeCatalog.value) return result;
       for (const category of Object.keys(result)) {
         const field = VALUE_FACETS[category];
@@ -737,6 +769,7 @@ const app = createApp({
         railCollapsed.value.effort,
         railCollapsed.value.actionWords,
         railCollapsed.value.documentation,
+        railCollapsed.value.securityTargets,
         selectedControlId.value,
       ],
       () => {
@@ -1795,6 +1828,11 @@ const app = createApp({
       effortColor,
       effortDefinition,
       openDefs,
+      SECURITY_TARGETS,
+      hasSecurityTargets,
+      centralSecurityTargets,
+      securityTargetLevelLabel,
+      securityTargetChipLabel,
       definition,
       namespaceEntry,
       shortDefinition,

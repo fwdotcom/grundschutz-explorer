@@ -105,6 +105,13 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, th
   const effortLevel = props.find((p) => p.name === 'effort_level')?.value;
   const altIdentifier = props.find((p) => p.name === 'alt-identifier')?.value;
 
+  // Wirkung auf die Schutzziele (0 = keine, 1 = wirkt hin, 2 = im Zentrum), siehe security_targets_levels.csv
+  const securityTarget = (name) => props.find((p) => p.name === name)?.value;
+  const confidentiality = securityTarget('confidentiality');
+  const integrity = securityTarget('integrity');
+  const availability = securityTarget('availability');
+  const authenticity = securityTarget('authenticity');
+
   // Statement part
   const statementPart = parts.find((p) => p.name === 'statement');
   const statementProps = statementPart?.props || [];
@@ -184,6 +191,10 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, th
     groupPath,
     secLevel,
     effortLevel,
+    confidentiality,
+    integrity,
+    availability,
+    authenticity,
     altIdentifier,
     allProps: props,
     params,

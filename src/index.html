@@ -352,6 +352,43 @@
               </div>
             </template>
 
+            <!-- 2b. Schutzziele -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.securityTargets = !railCollapsed.securityTargets" title="Schutzziele ein-/ausklappen">
+                <span class="rail-heading-title">Schutzziele</span>
+                <span v-if="SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0)" class="rail-active-badge">{{ SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0) }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.securityTargets }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.securityTargets" class="rail-section-body">
+                <div v-for="t in SECURITY_TARGETS" :key="t.key" class="st-rail-row">
+                  <span class="st-rail-label" :title="shortDefinition('securityTargets', t.nsKey)">{{ t.label }}</span>
+                  <div class="st-chips">
+                    <button
+                      v-for="v in ['0', '1', '2']"
+                      :key="v"
+                      class="st-chip"
+                      :class="{
+                        'is-included': getTagMode(t.key, v) === 'include',
+                        'is-excluded': getTagMode(t.key, v) === 'exclude',
+                        'is-empty': !facetCounts[t.key][v]
+                      }"
+                      @click="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'include', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
+                      @contextmenu.prevent="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'exclude', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
+                      :title="t.label + ' ' + v + ' – ' + (definition('securityTargetLevels', v) || securityTargetLevelLabel(v)) + '\n\nKlick: nur diesen Wert · Rechtsklick: ausschließen'"
+                    >
+                      <span class="st-dots sm" :class="'st-level-' + v" aria-hidden="true">
+                        <span class="st-dot" :class="{ on: Number(v) >= 1 }"></span>
+                        <span class="st-dot" :class="{ on: Number(v) >= 2 }"></span>
+                      </span>
+                      <span class="sr-only">{{ v }}</span>
+                      <span class="st-chip-count">{{ facetCounts[t.key][v] || 0 }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- 3. Praktiken -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
@@ -751,6 +788,9 @@
                                 <span v-if="ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
                                   <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ ctrl.elementareGefaehrdungen.length }}
                                 </span>
+                                <span v-if="centralSecurityTargets(ctrl).length" class="st-badges" :title="'Schutzziel im Zentrum: ' + centralSecurityTargets(ctrl).map((t) => t.label).join(', ')">
+                                  <span v-for="t in centralSecurityTargets(ctrl)" :key="t.key" class="st-badge">{{ t.short }}</span>
+                                </span>
                                 <span class="verb-label" :class="verbKey(ctrl.modalVerb)">{{ verbKey(ctrl.modalVerb) ? ctrl.modalVerb : '' }}</span>
                               </span>
                             </div>
@@ -771,6 +811,9 @@
                                     <span v-if="subc.elementareGefaehrdungen?.length" class="meta-num threat" :title="subc.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
                                       <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ subc.elementareGefaehrdungen.length }}
                                     </span>
+                                    <span v-if="centralSecurityTargets(subc).length" class="st-badges" :title="'Schutzziel im Zentrum: ' + centralSecurityTargets(subc).map((t) => t.label).join(', ')">
+                                    <span v-for="t in centralSecurityTargets(subc)" :key="t.key" class="st-badge">{{ t.short }}</span>
+                                </span>
                                     <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
                                   </span>
                                 </div>
@@ -984,7 +1027,50 @@
                   </div>
 
                   <div class="card">
-                    <dl class="kv-grid" style="margin:0">
+                    <dl class="st-box" style="margin:0">
+                      <div class="kv full">
+                        <dt class="st-head">
+                          Schutzziele
+                          <button
+                            v-if="hasSecurityTargets(selectedControl)"
+                            class="info-btn"
+                            :class="{ on: openDefs.securityTargets }"
+                            @click="openDefs.securityTargets = !openDefs.securityTargets"
+                            :aria-expanded="openDefs.securityTargets"
+                            :title="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                            :aria-label="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                          >
+                            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11v6M12 7h.01"/></svg>
+                          </button>
+                        </dt>
+                        <dd v-if="hasSecurityTargets(selectedControl)">
+                          <div class="st-grid">
+                            <button
+                              v-for="t in SECURITY_TARGETS"
+                              :key="t.key"
+                              class="st-row"
+                              :class="'st-level-' + (selectedControl[t.key] ?? 'none')"
+                              @click="selectedControl[t.key] != null && toggleTag(t.key, String(selectedControl[t.key]), 'include', selectedControl[t.key] + ' (' + securityTargetLevelLabel(selectedControl[t.key]) + ')', t.label)"
+                              :title="t.label + ': ' + (definition('securityTargetLevels', selectedControl[t.key]) || 'keine Angabe') + ' – klicken zum Filtern'"
+                            >
+                              <span class="st-label"><span>{{ t.label }}</span></span>
+                              <span class="st-dots" aria-hidden="true">
+                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 1 }"></span>
+                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 2 }"></span>
+                              </span>
+                              <span class="st-level">{{ selectedControl[t.key] != null ? securityTargetLevelLabel(selectedControl[t.key]) : '–' }}</span>
+                            </button>
+                          </div>
+                          <div v-if="openDefs.securityTargets" class="def-text st-defs">
+                            <p class="def-meta">Wirkung der Anforderung auf das Schutzziel:</p>
+                            <p v-for="v in ['0', '1', '2']" :key="v"><strong>{{ v }} – {{ securityTargetLevelLabel(v) }}:</strong> {{ definition('securityTargetLevels', v) }}</p>
+                            <p v-for="t in SECURITY_TARGETS" :key="t.key"><strong>{{ t.label }}:</strong> {{ shortDefinition('securityTargets', t.nsKey) }}</p>
+                          </div>
+                        </dd>
+                        <dd v-else class="muted">Keine Zuordnung im Katalog</dd>
+                      </div>
+                    </dl>
+                    <dl class="kv-grid st-follow" style="margin:0">
                       <div class="kv">
                         <dt>Handlung</dt>
                         <dd v-if="selectedControl.actionWord">
