@@ -49,7 +49,7 @@ const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
 // Handbuch, von scripts/build_manual.py je Version erzeugt
 const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 
 // Stufen der Schriftgröße (Faktor auf alle Schriftgrößen, CSS-Variable --font-scale)
 const FONT_SCALES = [
