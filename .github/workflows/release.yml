@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  # Manuelles Neu-Deployment des aktuellen Stands (z.B. nach Änderung der Pages-Einstellungen)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Immer nur ein Deployment gleichzeitig; ein laufendes wird nicht abgebrochen
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: docs/handbuch/requirements.txt
+
+      - name: Handbuch bauen (src/docs/manual)
+        run: |
+          pip install -r docs/handbuch/requirements.txt
+          python scripts/build_manual.py
+
+      - name: Seite zusammenstellen
+        run: |
+          mkdir -p _site
+          cp -r src/. _site/
+
+      # Die Version wird zentral in APP_VERSION (src/js/app.js) gepflegt; das Release-Tag muss dazu passen.
+      - name: Release-Tag gegen APP_VERSION prüfen
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=$(sed -n "s/^const APP_VERSION = '\(.*\)';\r\?$/\1/p" src/js/app.js)
+          if [ -z "$VERSION" ]; then
+            echo "::error::APP_VERSION in src/js/app.js nicht gefunden."
+            exit 1
+          fi
+          if [ "${TAG#v}" != "$VERSION" ]; then
+            echo "::error::Release-Tag $TAG passt nicht zu APP_VERSION ($VERSION) in src/js/app.js."
+            exit 1
+          fi
+          echo "Version $VERSION"
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

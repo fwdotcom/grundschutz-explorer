@@ -43,6 +43,12 @@ const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } 
 const PRESET_CATALOG_URL =
   'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Grundschutz%2B%2B/Grundschutz%2B%2B-resolved_catalog.json';
 
+// Projektseite auf GitHub (Fußzeile: Projektseite, Lizenz)
+const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
+
+// Handbuch, von scripts/build_manual.py je Version erzeugt
+const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
+
 const APP_VERSION = '1.0.0';
 
 // Stufen der Schriftgröße (Faktor auf alle Schriftgrößen, CSS-Variable --font-scale)
@@ -68,7 +74,9 @@ const app = createApp({
     const isVersionsModalOpen = ref(false);
     const isImpressumModalOpen = ref(false);
     const isDatenschutzModalOpen = ref(false);
+    const isLicenseModalOpen = ref(false);
     const isDarkMode = ref(false);
+    const isHighContrast = ref(false);
     const fontScale = ref(1);
     const isLoadingInitial = ref(true);
     const isLoadingBundle = ref(false);
@@ -679,6 +687,18 @@ const app = createApp({
       return scopePractice.value.subgroups.find((sg) => sg.id === detailScope.value.id) || null;
     });
 
+    // Die Auswahl rechts hat links keinen sichtbaren Eintrag mehr (durch Filter ausgeblendet)
+    const selectionFilteredOut = computed(() => {
+      if (!activeCatalog.value) return false;
+      if (scopeSubgroup.value) return countMatchingControlsInSubgroup(scopeSubgroup.value) === 0;
+      if (scopePractice.value) return countMatchingControlsInPractice(scopePractice.value) === 0;
+      const ctrl = selectedControl.value;
+      if (!ctrl) return false;
+      if (filteredControlIds.value.has(ctrl.id)) return false;
+      // Hauptanforderung, die wegen passender Unteranforderungen in der Baumansicht steht
+      return !(listViewMode.value === 'tree' && !ctrl.parentControlId && isControlVisible(ctrl));
+    });
+
     const scopeStats = computed(() => {
       if (scopeSubgroup.value) return summarizeControls(flattenControls(scopeSubgroup.value.controls));
       if (scopePractice.value) return summarizeControls(scopePractice.value.controls);
@@ -986,6 +1006,14 @@ const app = createApp({
       isDarkMode.value = Boolean(savedDark);
       applyDarkMode(isDarkMode.value);
 
+      // Ohne gespeicherte Wahl der Systemeinstellung "mehr Kontrast" folgen
+      const savedContrast = await getSetting(
+        'high_contrast',
+        window.matchMedia?.('(prefers-contrast: more)').matches ?? false
+      );
+      isHighContrast.value = Boolean(savedContrast);
+      applyHighContrast(isHighContrast.value);
+
       const savedScale = Number(await getSetting('font_scale', 1));
       fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
       applyFontScale(fontScale.value);
@@ -1004,15 +1032,13 @@ const app = createApp({
         await loadCatalogById(lastActiveId, !hasSavedCollapse);
       } else if (storedCatalogs.value.length > 0) {
         await loadCatalogById(storedCatalogs.value[0].id, !hasSavedCollapse);
-      } else {
-        // Auto-load bundle on very first visit so SPA works immediately!
-        await loadOfficialBundle();
       }
+      // Ohne gespeicherten Katalog (erster Start oder Speicher geleert) erscheint die Startseite;
+      // geladen wird erst auf ausdrücklichen Wunsch.
 
-      if (activeCatalog.value && activeCatalog.value.allControls.length > 0) {
-        if (!selectedControlId.value || !activeCatalog.value.controlMap.has(selectedControlId.value)) {
-          selectedControlId.value = activeCatalog.value.allControls[0].id;
-        }
+      // Eine gespeicherte Auswahl, die es im Katalog nicht (mehr) gibt, verwerfen – keine automatische Auswahl
+      if (activeCatalog.value && selectedControlId.value && !activeCatalog.value.controlMap.has(selectedControlId.value)) {
+        selectedControlId.value = '';
       }
 
       scrollSelectedIntoView();
@@ -1040,9 +1066,10 @@ const app = createApp({
         else if (isVersionsModalOpen.value) isVersionsModalOpen.value = false;
         else if (isImpressumModalOpen.value) isImpressumModalOpen.value = false;
         else if (isDatenschutzModalOpen.value) isDatenschutzModalOpen.value = false;
+        else if (isLicenseModalOpen.value) isLicenseModalOpen.value = false;
         return;
       }
-      if (isImportModalOpen.value || isVersionsModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value) return;
+      if (isImportModalOpen.value || isVersionsModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
       const tag = e.target?.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
       if (e.key === '/') {
@@ -1103,6 +1130,16 @@ const app = createApp({
       saveSetting('font_scale', value);
     }
 
+    function applyHighContrast(val) {
+      document.documentElement.classList.toggle('hc', Boolean(val));
+    }
+
+    function toggleHighContrast() {
+      isHighContrast.value = !isHighContrast.value;
+      applyHighContrast(isHighContrast.value);
+      saveSetting('high_contrast', isHighContrast.value);
+    }
+
     function toggleDarkMode() {
       isDarkMode.value = !isDarkMode.value;
       applyDarkMode(isDarkMode.value);
@@ -1119,6 +1156,7 @@ const app = createApp({
       collapseAllRail();
       collapseAll();
       detailScope.value = null;
+      selectedControlId.value = '';
     }
 
     // resetView: Ansicht für neue Daten zurücksetzen (siehe resetViewForNewData)
@@ -1136,10 +1174,9 @@ const app = createApp({
         diffSummary.value = compareCatalogs(comparisonCatalog.value, activeCatalog.value);
       }
 
-      if (parsed.allControls.length > 0) {
-        if (!selectedControlId.value || !parsed.controlMap.has(selectedControlId.value)) {
-          selectedControlId.value = parsed.allControls[0].id;
-        }
+      // Keine automatische Auswahl: eine nicht (mehr) vorhandene Auswahl wird verworfen
+      if (selectedControlId.value && !parsed.controlMap.has(selectedControlId.value)) {
+        selectedControlId.value = '';
       }
 
       if (resetView) {
@@ -1151,8 +1188,9 @@ const app = createApp({
     async function loadOfficialBundle() {
       isLoadingBundle.value = true;
       try {
-        // Katalog laden (GitHub, sonst lokale Kopie)
+        // Katalog laden (GitHub, sonst lokale Kopie); die Herkunft wird in der Version vermerkt
         let catData = null;
+        let sourceName = 'BSI Stand-der-Technik-Bibliothek (GitHub)';
         try {
           const res = await fetch(PRESET_CATALOG_URL);
           if (res.ok) catData = await res.json();
@@ -1160,6 +1198,7 @@ const app = createApp({
         if (!catData) {
           const res = await fetch('data/Grundschutz++-resolved_catalog.json');
           catData = await res.json();
+          sourceName = 'Mitgelieferte Kopie des BSI-Katalogs';
         }
 
         const catObj = catData.catalog || catData;
@@ -1172,7 +1211,7 @@ const app = createApp({
           title: catTitle,
           version: catVersion,
           sourceType: 'preset',
-          sourceName: 'BSI Stand-der-Technik-Bibliothek (Offizieller Bund-Katalog)',
+          sourceName,
           importedAt: new Date().toISOString(),
           catalogData: catData,
         };
@@ -1694,29 +1733,26 @@ const app = createApp({
     }
 
     function countMatchingControlsInPractice(p) {
-      return p.controls.filter((c) => filteredControlIds.value.has(c.id) || c.id === selectedControlId.value || c.subcontrols?.some((sc) => sc.id === selectedControlId.value)).length;
+      return p.controls.filter((c) => filteredControlIds.value.has(c.id)).length;
     }
 
     function countMatchingControlsInSubgroup(sub) {
       let count = 0;
       for (const c of sub.controls) {
-        if (filteredControlIds.value.has(c.id) || c.id === selectedControlId.value) count++;
+        if (filteredControlIds.value.has(c.id)) count++;
         if (c.subcontrols) {
           for (const sc of c.subcontrols) {
-            if (filteredControlIds.value.has(sc.id) || sc.id === selectedControlId.value) count++;
+            if (filteredControlIds.value.has(sc.id)) count++;
           }
         }
       }
       return count;
     }
 
+    // Sichtbar ist, was zu den Filtern passt, sowie eine Anforderung mit passenden Unteranforderungen
     function isControlVisible(ctrl) {
-      if (ctrl.id === selectedControlId.value) return true;
       if (filteredControlIds.value.has(ctrl.id)) return true;
-      if (ctrl.subcontrols && ctrl.subcontrols.some((sc) => filteredControlIds.value.has(sc.id) || sc.id === selectedControlId.value)) {
-        return true;
-      }
-      return false;
+      return Boolean(ctrl.subcontrols?.some((sc) => filteredControlIds.value.has(sc.id)));
     }
 
     // Comparison actions in Versions Modal
@@ -1879,6 +1915,7 @@ const app = createApp({
       isVersionsModalOpen,
       isImpressumModalOpen,
       isDatenschutzModalOpen,
+      isLicenseModalOpen,
       isDarkMode,
       isLoadingInitial,
       isLoadingBundle,
@@ -1918,6 +1955,7 @@ const app = createApp({
       effortColor,
       effortDefinition,
       openDefs,
+      selectionFilteredOut,
       SECURITY_TARGETS,
       hasSecurityTargets,
       centralSecurityTargets,
@@ -1961,6 +1999,8 @@ const app = createApp({
       // Actions
       applyDarkMode,
       toggleDarkMode,
+      isHighContrast,
+      toggleHighContrast,
       FONT_SCALES,
       fontScale,
       setFontScale,
@@ -1989,6 +2029,8 @@ const app = createApp({
       scrollPracticeIntoView,
       scrollSubgroupIntoView,
       appVersion: APP_VERSION,
+      PROJECT_URL,
+      manualUrl: `${MANUAL_PATH}${APP_VERSION}.pdf`,
       toggleControlExpand,
       filterByThreat,
       toggleDiffFilter,

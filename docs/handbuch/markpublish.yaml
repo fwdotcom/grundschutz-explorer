@@ -1,0 +1,44 @@
+# markpublish.yaml – Benutzerhandbuch Grundschutz++ Explorer
+#
+# Bauen (im Verzeichnis docs/handbuch):  markpublish build
+# Das Theme liegt als angepasste Kopie des Default-Themes unter templates/default
+# (Logo auf Deckblatt und in der Kopfzeile, siehe templates/default/pdf/template.typ).
+
+document:
+  title: "Grundschutz++ Explorer"
+  subtitle: "Benutzerhandbuch"
+  summary: "Der Grundschutz++ Explorer macht den Anwenderkatalog Grundschutz++ des BSI im Browser durchsuchbar: Anforderungen finden, nach Modalverb, Schutzbedarf, Aufwand, Schutzzielen und Gefährdungen filtern, Definitionen nachschlagen und Katalogversionen miteinander vergleichen."
+  author: "Frank Winter"
+  version: "1.0.0"
+  date: "auto"
+  copyright: "© 2026 Frank Winter · MIT-Lizenz"
+  language: "de"
+  cover: true
+  document_toc: 3
+  chapter_toc: "none"
+  header: true
+  footer: true
+
+theme: "default"
+
+parts:
+  - part: "Grundlagen"
+    chapters:
+      - file: "01_einfuehrung.md"
+      - file: "02_oberflaeche.md"
+
+  - part: "Arbeiten mit dem Katalog"
+    chapters:
+      - file: "03_navigieren.md"
+      - file: "04_suchen_und_filtern.md"
+      - file: "05_detailansicht.md"
+      - file: "06_daten_und_versionen.md"
+
+  - part: "Anhang"
+    autonum_pattern: "A|.1|+"
+    autonum_reset: true
+    chapter_label: "Anhang"
+    chapters:
+      - file: "a_begriffe.md"
+      - file: "b_tastatur.md"
+      - file: "c_datenquellen.md"

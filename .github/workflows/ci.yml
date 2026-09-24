@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  # Wiederverwendung durch den Release-Workflow (Tests vor dem Deployment)
+  workflow_call:
+
+permissions:
+  contents: read
+
+# github.workflow ist bei Aufruf aus dem Release-Workflow "Release" – so kollidiert dieser Lauf
+# nicht mit der CI des Tag-Pushs. Veraltete Läufe werden nur bei Push/PR abgebrochen.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Syntaxprüfung der JS-Module
+        run: npm run check
+
+      - name: Tests
+        run: npm test
+
+  manual:
+    name: Handbuch bauen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: docs/handbuch/requirements.txt
+
+      - name: markpublish installieren
+        run: pip install -r docs/handbuch/requirements.txt
+
+      - name: Handbuch bauen
+        run: python scripts/build_manual.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: handbuch
+          path: src/docs/manual/*.pdf
+          retention-days: 14
