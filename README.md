@@ -6,7 +6,6 @@
 
 [![Version](https://img.shields.io/github/v/release/fwdotcom/grundschutz-explorer?label=Version)](https://github.com/fwdotcom/grundschutz-explorer/releases/latest)
 [![Lizenz](https://img.shields.io/github/license/fwdotcom/grundschutz-explorer?label=Lizenz)](LICENSE)
-[![CI](https://github.com/fwdotcom/grundschutz-explorer/actions/workflows/ci.yml/badge.svg)](https://github.com/fwdotcom/grundschutz-explorer/actions/workflows/ci.yml)
 
 Den **Grundschutz++-Anwenderkatalog** des BSI im Browser durchsuchen, filtern und Versionen vergleichen – ohne Server, ohne Anmeldung, alle Daten bleiben lokal.
 
@@ -35,7 +34,7 @@ Katalog und Begriffsdefinitionen stammen aus der [Stand-der-Technik-Bibliothek](
 | Grundschutz++-Anwenderkatalog | `control_layer/Grundschutz++/` | `src/data/` (Kopie, Ersatz bei fehlender Verbindung) |
 | Begriffsdefinitionen (Namespaces) | `documentation/namespaces/` | `src/data/namespaces/` (unveränderte Kopie) |
 
-„Offiziellen Katalog laden“ ruft den aktuellen Stand direkt aus der Bibliothek ab. Die Inhalte des BSI stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
+„Offiziellen BSI Grundschutz++ Anwenderkatalog laden“ ruft den aktuellen Stand direkt aus der Bibliothek ab. Die Inhalte des BSI stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
 
 ## Entwicklung
 

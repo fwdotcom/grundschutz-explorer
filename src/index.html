@@ -67,13 +67,9 @@
       </div>
 
       <div class="topbar-actions">
-        <button class="btn btn-ghost" @click="isVersionsModalOpen = true" title="Gespeicherte Versionen und Differenzvergleich">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a4 4 0 0 0 4 4h5"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/></svg>
-          <span class="hide-sm">Versionen</span>
-        </button>
-        <button class="btn btn-secondary" @click="isImportModalOpen = true">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-          <span class="hide-sm">Daten laden</span>
+        <button class="btn btn-secondary" @click="openCatalogDialog()" title="Gespeicherte Versionen, Vergleich und Kataloge laden">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          <span class="hide-sm">Kataloge</span>
         </button>
         <div class="font-size-group hdr-group" role="group" aria-label="Schriftgröße">
           <button
@@ -135,18 +131,21 @@
           <div v-if="importError" class="alert alert-error">{{ importError }}</div>
 
           <div class="actions">
-            <button class="btn btn-primary btn-lg btn-block" @click="loadOfficialBundle" :disabled="isLoadingBundle || importLoading">
-              <div v-if="isLoadingBundle" class="spinner" style="width:16px;height:16px"></div>
-              <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-              <span>Offiziellen Katalog laden</span>
+            <button class="btn btn-primary btn-lg btn-block official-btn" @click="loadOfficialCatalog()" :disabled="importLoading">
+              <svg v-if="!importLoading" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+              <div v-else class="spinner" style="width:16px;height:16px"></div>
+              <span class="official-btn-text">
+                <span>Offiziellen BSI Grundschutz++ Anwenderkatalog laden</span>
+                <small>Quelle: {{ presetCatalogUrlDisplay }}</small>
+              </span>
             </button>
             <div class="welcome-actions-row">
-              <button class="btn btn-secondary btn-lg" @click="$refs.welcomeFileInput.click()" :disabled="isLoadingBundle || importLoading">
+              <button class="btn btn-secondary btn-lg" @click="$refs.welcomeFileInput.click()" :disabled="importLoading">
                 <div v-if="importLoading" class="spinner" style="width:16px;height:16px"></div>
                 <svg v-else class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
                 <span>Datei hochladen</span>
               </button>
-              <button class="btn btn-secondary btn-lg" @click="importModalTab = 'url'; isImportModalOpen = true" :disabled="isLoadingBundle || importLoading">
+              <button class="btn btn-secondary btn-lg" @click="openLoadDialog()" :disabled="importLoading">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
                 <span>Von URL laden</span>
               </button>
@@ -157,7 +156,7 @@
           <div class="welcome-info">
             <h3>Woher die Daten kommen</h3>
             <p>
-              <strong>Offiziellen Katalog laden</strong> ruft den aktuellen Grundschutz++-Anwenderkatalog direkt aus der
+              <strong>Offiziellen BSI Grundschutz++ Anwenderkatalog laden</strong> ruft den aktuellen Grundschutz++-Anwenderkatalog direkt aus der
               <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
               des BSI auf GitHub ab (raw.githubusercontent.com). Ist sie nicht erreichbar, wird die mit dem Explorer ausgelieferte Kopie verwendet.
               Alternativ laden Sie einen eigenen OSCAL-Katalog als Datei oder über eine URL.
@@ -1539,94 +1538,21 @@
       </div>
     </footer>
 
-    <!-- ============ Import Modal ============ -->
-    <div v-if="isImportModalOpen" class="modal-backdrop" @mousedown.self="isImportModalOpen = false">
-      <div class="modal" role="dialog" aria-modal="true">
-        <div class="modal-head">
-          <div style="flex:1">
-            <h2>Daten laden</h2>
-            <p>OSCAL-Katalog importieren</p>
-          </div>
-          <button class="icon-btn" @click="isImportModalOpen = false" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        <div class="modal-tabs">
-          <button class="tab" :class="{ on: importModalTab === 'presets' }" @click="importModalTab = 'presets'">Presets</button>
-          <button class="tab" :class="{ on: importModalTab === 'url' }" @click="importModalTab = 'url'">URL</button>
-          <button class="tab" :class="{ on: importModalTab === 'upload' }" @click="importModalTab = 'upload'">Datei</button>
-        </div>
-
-        <div class="modal-body">
-          <div v-if="importError" class="alert alert-error">{{ importError }}</div>
-          <div v-if="importSuccess" class="alert alert-success">{{ importSuccess }}</div>
-
-          <div v-if="importModalTab === 'presets'" class="stack" style="gap:10px">
-            <div class="option-card">
-              <div class="opt-icon tag-accent">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-              </div>
-              <div class="grow">
-                <h3>Grundschutz++ Anwenderkatalog</h3>
-                <p>Offizieller Katalog (OSCAL), ca. 5,4 MB</p>
-              </div>
-              <button class="btn btn-primary" :disabled="importLoading" @click="fetchFromUrl(PRESET_CATALOG_URL, 'Grundschutz++ Anwenderkatalog', 'data/Grundschutz++-resolved_catalog.json')">Laden</button>
-            </div>
-          </div>
-
-          <div v-else-if="importModalTab === 'url'">
-            <label class="field-label" for="import-url">URL zur JSON-Datei</label>
-            <div class="input-row">
-              <input id="import-url" class="input" type="url" v-model="importUrlInput" placeholder="https://…/katalog.json" @keydown.enter="handleCustomUrlFetch" />
-              <button class="btn btn-primary" style="height:36px" :disabled="importLoading" @click="handleCustomUrlFetch">Abrufen</button>
-            </div>
-          </div>
-
-          <div v-else-if="importModalTab === 'upload'">
-            <div
-              class="dropzone"
-              :class="{ over: isDragOver }"
-              @dragover.prevent="isDragOver = true"
-              @dragleave="isDragOver = false"
-              @drop="isDragOver = false; handleFileDrop($event)"
-              @click="$refs.uploadFileInput.click()"
-            >
-              <input ref="uploadFileInput" type="file" accept=".json" style="display:none" @change="handleFileUpload" />
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
-              <strong>JSON-Datei ablegen oder auswählen</strong>
-              <span>OSCAL-Kataloge</span>
-            </div>
-          </div>
-
-          <label class="check-card">
-            <input type="checkbox" v-model="importIsDiff" />
-            <div>
-              <strong>Als Vergleichsversion laden</strong>
-              <span>Zeigt neue, geänderte und gelöschte Anforderungen gegenüber dem aktuellen Katalog.</span>
-            </div>
-          </label>
-
-          <div v-if="importLoading" class="loading-state"><div class="spinner" style="width:16px;height:16px"></div><span>Wird geladen …</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ Versions Modal ============ -->
-    <div v-if="isVersionsModalOpen" class="modal-backdrop" @mousedown.self="isVersionsModalOpen = false">
-      <div class="modal wide" role="dialog" aria-modal="true">
+    <!-- ============ Kataloge: gespeicherte Versionen ============ -->
+    <div v-if="isCatalogModalOpen" class="modal-backdrop" @mousedown.self="isCatalogModalOpen = false">
+      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
         <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
           <div style="flex:1">
-            <h2>Versionen</h2>
-            <p>Basis wählen und mit einer anderen Version vergleichen</p>
+            <h2 id="catalog-title">Kataloge</h2>
+            <p>Gespeicherte Versionen als Basis wählen, vergleichen oder löschen</p>
           </div>
-          <button class="icon-btn" @click="isVersionsModalOpen = false" title="Schließen">
+          <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
 
         <div class="modal-body" style="gap:8px">
-          <div v-if="storedCatalogs.length === 0" class="empty-box">Noch keine Kataloge gespeichert.</div>
+          <div v-if="storedCatalogs.length === 0" class="empty-box">Keine Kataloge gespeichert.</div>
 
           <div
             v-for="cat in storedCatalogs"
@@ -1654,9 +1580,79 @@
         </div>
 
         <div class="modal-foot">
-          <button v-if="storedCatalogs.length" class="btn-danger-link" @click="clearAll">Gesamten Speicher leeren</button>
+          <button class="btn btn-primary" @click="openLoadDialog()">Katalog laden</button>
           <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isVersionsModalOpen = false">Fertig</button>
+          <button class="btn btn-secondary" @click="isCatalogModalOpen = false">Schließen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Katalog laden (öffnet über "Kataloge" oder der Startseite) ============ -->
+    <div v-if="isLoadModalOpen" class="modal-backdrop" @mousedown.self="closeLoadDialog()">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="load-title">
+        <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <h2 id="load-title">Katalog laden</h2>
+            <p>Der Katalog wird als neue Version gespeichert und als Basis angezeigt.</p>
+          </div>
+          <button class="icon-btn" @click="closeLoadDialog()" title="Schließen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body load-body">
+
+          <button class="btn btn-secondary btn-lg btn-block official-btn" :disabled="importLoading" @click="loadOfficialCatalog()">
+            <svg v-if="!importLoading" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            <div v-else class="spinner" style="width:16px;height:16px"></div>
+            <span class="official-btn-text">
+              <span>Offiziellen BSI Grundschutz++ Anwenderkatalog laden</span>
+              <small>Quelle: {{ presetCatalogUrlDisplay }}</small>
+            </span>
+          </button>
+
+          <div class="load-divider"><span>oder eigenen OSCAL-Katalog</span></div>
+
+          <div>
+            <label class="field-label" for="load-url">URL zur JSON-Datei</label>
+            <input
+              id="load-url"
+              class="input"
+              type="url"
+              v-model="importUrlInput"
+              placeholder="https://…/katalog.json"
+              :disabled="importLoading"
+              @input="loadFile = null"
+              @keydown.enter="submitLoadDialog()"
+            />
+          </div>
+
+          <div>
+            <span class="field-label">JSON-Datei</span>
+            <div
+              class="dropzone compact"
+              :class="{ over: isDragOver, selected: loadFile }"
+              @dragover.prevent="isDragOver = true"
+              @dragleave="isDragOver = false"
+              @drop="isDragOver = false; onLoadFileDrop($event)"
+              @click="$refs.loadFileInput.click()"
+            >
+              <input ref="loadFileInput" type="file" accept=".json,application/json" style="display:none" @change="onLoadFileSelected($event); $event.target.value = ''" />
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+              <strong v-if="loadFile">{{ loadFile.name }}</strong>
+              <strong v-else>Datei ablegen oder auswählen</strong>
+            </div>
+          </div>
+
+          <div v-if="importLoading" class="loading-state"><div class="spinner" style="width:16px;height:16px"></div><span>Wird geladen …</span></div>
+          <p v-if="importError" class="load-msg" role="alert">{{ importError }}</p>
+          <p v-if="loadNotice" class="load-msg" role="alert">{{ loadNotice }}</p>
+        </div>
+
+        <div class="modal-foot">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" :disabled="importLoading" @click="closeLoadDialog()">Abbrechen</button>
+          <button class="btn btn-primary" :disabled="importLoading || (!loadFile && !importUrlInput.trim())" @click="submitLoadDialog()">Laden</button>
         </div>
       </div>
     </div>
@@ -1860,7 +1856,7 @@ SOFTWARE.</pre>
             </p>
             <ul>
               <li>
-                <strong>Offiziellen Katalog laden:</strong> Ihr Browser ruft die Katalogdatei direkt aus der Stand-der-Technik-Bibliothek des BSI
+                <strong>Offiziellen BSI Grundschutz++ Anwenderkatalog laden:</strong> Ihr Browser ruft die Katalogdatei direkt aus der Stand-der-Technik-Bibliothek des BSI
                 auf GitHub ab (raw.githubusercontent.com, ebenfalls ein Dienst der GitHub Inc.). Dabei erhält GitHub die unter 3. genannten technischen Daten.
               </li>
               <li>
@@ -1878,9 +1874,10 @@ SOFTWARE.</pre>
             <h3>5. Lokale Speicherung in Ihrem Browser</h3>
             <p>
               Geladene Kataloge sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
-              Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Sie löschen sie über <strong>Versionen → Gesamten Speicher leeren</strong>
-              oder über die Einstellungen Ihres Browsers.
+              Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
+              Alle Daten löschen Sie mit der folgenden Schaltfläche oder über die Einstellungen Ihres Browsers.
             </p>
+            <p><button class="btn btn-secondary btn-danger" @click="clearAll">Alle lokal gespeicherten Daten löschen</button></p>
           </div>
 
           <div>

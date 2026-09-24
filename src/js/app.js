@@ -70,8 +70,11 @@ const app = createApp({
     const selectedControlId = ref('');
 
     // UI State
-    const isImportModalOpen = ref(false);
-    const isVersionsModalOpen = ref(false);
+    // Dialog "Kataloge": Versionen verwalten und Kataloge laden
+    const isCatalogModalOpen = ref(false);
+    // Dialog "Katalog laden" (über "Kataloge" oder die Startseite)
+    const isLoadModalOpen = ref(false);
+    const loadFile = ref(null);
     const isImpressumModalOpen = ref(false);
     const isDatenschutzModalOpen = ref(false);
     const isLicenseModalOpen = ref(false);
@@ -79,7 +82,6 @@ const app = createApp({
     const isHighContrast = ref(false);
     const fontScale = ref(1);
     const isLoadingInitial = ref(true);
-    const isLoadingBundle = ref(false);
     const detailPaneWidth = ref(46); // Anteil der Detailsicht am Arbeitsbereich (%)
     const isResizing = ref(false);
     const isDragOver = ref(false);
@@ -100,12 +102,12 @@ const app = createApp({
     const namespacesVersion = ref(0);
 
     // Import Modal State
-    const importModalTab = ref('presets');
     const importUrlInput = ref('');
-    const importIsDiff = ref(false);
     const importLoading = ref(false);
     const importError = ref('');
     const importSuccess = ref('');
+    // Hinweis im Dialog "Katalog laden", wenn der Katalog bereits gespeichert ist
+    const loadNotice = ref('');
 
     // Tree Expanded Keys
     const expandedKeys = ref(new Set());
@@ -1062,14 +1064,14 @@ const app = createApp({
         return;
       }
       if (e.key === 'Escape') {
-        if (isImportModalOpen.value) isImportModalOpen.value = false;
-        else if (isVersionsModalOpen.value) isVersionsModalOpen.value = false;
+        if (isLoadModalOpen.value) closeLoadDialog();
+        else if (isCatalogModalOpen.value) isCatalogModalOpen.value = false;
         else if (isImpressumModalOpen.value) isImpressumModalOpen.value = false;
         else if (isDatenschutzModalOpen.value) isDatenschutzModalOpen.value = false;
         else if (isLicenseModalOpen.value) isLicenseModalOpen.value = false;
         return;
       }
-      if (isImportModalOpen.value || isVersionsModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
+      if (isCatalogModalOpen.value || isLoadModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
       const tag = e.target?.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
       if (e.key === '/') {
@@ -1140,6 +1142,58 @@ const app = createApp({
       saveSetting('high_contrast', isHighContrast.value);
     }
 
+    function openCatalogDialog() {
+      isCatalogModalOpen.value = true;
+    }
+
+    function openLoadDialog() {
+      importError.value = '';
+      loadNotice.value = '';
+      importSuccess.value = '';
+      importUrlInput.value = '';
+      loadFile.value = null;
+      isLoadModalOpen.value = true;
+    }
+
+    function closeLoadDialog() {
+      if (importLoading.value) return;
+      isLoadModalOpen.value = false;
+    }
+
+    // Datei und URL schließen sich aus: geladen wird, was zuletzt angegeben wurde
+    function selectLoadFile(file) {
+      if (!file) return;
+      loadFile.value = file;
+      importUrlInput.value = '';
+      importError.value = '';
+      loadNotice.value = '';
+    }
+
+    function onLoadFileSelected(e) {
+      selectLoadFile(e.target.files?.[0]);
+    }
+
+    function onLoadFileDrop(e) {
+      e.preventDefault();
+      selectLoadFile(e.dataTransfer?.files?.[0]);
+    }
+
+    function submitLoadDialog() {
+      if (importLoading.value) return;
+      if (loadFile.value) {
+        readFile(loadFile.value);
+      } else if (importUrlInput.value.trim()) {
+        fetchFromUrl(importUrlInput.value.trim());
+      } else {
+        importError.value = 'Bitte eine URL angeben oder eine Datei auswählen.';
+      }
+    }
+
+    // Offiziellen Katalog laden (Startseite und Dialog "Katalog laden"); ohne Verbindung die mitgelieferte Kopie
+    function loadOfficialCatalog() {
+      fetchFromUrl(PRESET_CATALOG_URL, 'BSI Stand-der-Technik-Bibliothek (GitHub)', 'data/Grundschutz++-resolved_catalog.json', 'Mitgelieferte Kopie des BSI-Katalogs');
+    }
+
     function toggleDarkMode() {
       isDarkMode.value = !isDarkMode.value;
       applyDarkMode(isDarkMode.value);
@@ -1184,52 +1238,10 @@ const app = createApp({
       }
     }
 
-    // 1-Click Loader für den offiziellen Katalog
-    async function loadOfficialBundle() {
-      isLoadingBundle.value = true;
-      try {
-        // Katalog laden (GitHub, sonst lokale Kopie); die Herkunft wird in der Version vermerkt
-        let catData = null;
-        let sourceName = 'BSI Stand-der-Technik-Bibliothek (GitHub)';
-        try {
-          const res = await fetch(PRESET_CATALOG_URL);
-          if (res.ok) catData = await res.json();
-        } catch {}
-        if (!catData) {
-          const res = await fetch('data/Grundschutz++-resolved_catalog.json');
-          catData = await res.json();
-          sourceName = 'Mitgelieferte Kopie des BSI-Katalogs';
-        }
-
-        const catObj = catData.catalog || catData;
-        const catTitle = catObj.metadata?.title || 'Anwenderkatalog Grundschutz++';
-        const catVersion = catObj.metadata?.version || catObj.metadata?.['last-modified'] || '';
-        const newId = crypto.randomUUID();
-
-        const record = {
-          id: newId,
-          title: catTitle,
-          version: catVersion,
-          sourceType: 'preset',
-          sourceName,
-          importedAt: new Date().toISOString(),
-          catalogData: catData,
-        };
-
-        await saveCatalogRecord(record);
-        await refreshStoredCatalogs();
-        await loadCatalogById(newId);
-      } catch (err) {
-        console.error('Error loading official bundle:', err);
-        alert('Fehler beim Laden des offiziellen Pakets: ' + err.message);
-      } finally {
-        isLoadingBundle.value = false;
-      }
-    }
-
     // Fetch per URL (used in import modal)
-    async function fetchFromUrl(targetUrl, presetName = '', fallbackLocalUrl = '') {
+    async function fetchFromUrl(targetUrl, presetName = '', fallbackLocalUrl = '', fallbackName = '') {
       importError.value = '';
+      loadNotice.value = '';
       importSuccess.value = '';
       importLoading.value = true;
 
@@ -1247,6 +1259,7 @@ const app = createApp({
             res = await fetch(fallbackLocalUrl, {
               headers: { Accept: 'application/json' },
             });
+            if (fallbackName) presetName = fallbackName;
           } else {
             throw networkErr;
           }
@@ -1266,29 +1279,15 @@ const app = createApp({
       }
     }
 
-    function handleCustomUrlFetch() {
-      if (!importUrlInput.value.trim()) {
-        importError.value = 'Bitte geben Sie eine gültige URL ein.';
-        return;
-      }
-      fetchFromUrl(importUrlInput.value.trim());
-    }
-
     function handleFileUpload(e) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
       readFile(files[0]);
     }
 
-    function handleFileDrop(e) {
-      e.preventDefault();
-      const files = e.dataTransfer?.files;
-      if (!files || files.length === 0) return;
-      readFile(files[0]);
-    }
-
     function readFile(file) {
       importError.value = '';
+      loadNotice.value = '';
       importSuccess.value = '';
       importLoading.value = true;
 
@@ -1311,6 +1310,13 @@ const app = createApp({
       reader.readAsText(file);
     }
 
+    // SHA-256 über den Katalog-Inhalt; unabhängig von Formatierung und Quelle der Datei
+    async function hashCatalog(jsonData) {
+      const bytes = new TextEncoder().encode(JSON.stringify(jsonData));
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
     async function processImportedJson(jsonData, sourceType, sourceName) {
       const isCatalog = Boolean(
         jsonData?.catalog ||
@@ -1329,38 +1335,54 @@ const app = createApp({
       const catObj = jsonData.catalog || jsonData;
       const catTitle = catObj.metadata?.title || sourceName;
       const catVersion = catObj.metadata?.version || catObj.metadata?.['last-modified'] || '';
-      const newId = crypto.randomUUID();
+      const contentHash = await hashCatalog(jsonData);
 
-      const record = {
-        id: newId,
-        title: catTitle,
-        version: catVersion,
-        sourceType,
-        sourceName,
-        importedAt: new Date().toISOString(),
-        catalogData: jsonData,
-      };
-
-      await saveCatalogRecord(record);
+      // Dublettenprüfung: identischer Inhalt ist bereits gespeichert
       await refreshStoredCatalogs();
-
-      if (importIsDiff.value && activeCatalog.value) {
-        comparisonRecordId.value = newId;
-        const parsedNew = parseOscalCatalog(jsonData);
-        diffSummary.value = compareCatalogs(activeCatalog.value, parsedNew);
-        comparisonCatalog.value = activeCatalog.value;
-        activeCatalog.value = parsedNew;
-        activeRecordId.value = newId;
-        resetViewForNewData();
-        importSuccess.value = `Vergleichsversion geladen. Differenzanalyse aktiv!`;
-      } else {
-        await loadCatalogById(newId);
-        importSuccess.value = `OSCAL-Katalog erfolgreich importiert (${sourceName})`;
+      let duplicate = null;
+      for (const rec of storedCatalogs.value) {
+        if ((rec.contentHash || (await hashCatalog(rec.catalogData))) === contentHash) {
+          duplicate = rec;
+          break;
+        }
       }
 
-      setTimeout(() => {
-        isImportModalOpen.value = false;
-      }, 600);
+      // Aus dem Dialog "Katalog laden": Hinweis dort anzeigen, nichts laden
+      if (duplicate && isLoadModalOpen.value) {
+        loadNotice.value = `Dieser Katalog ist bereits geladen: „${duplicate.title}“, importiert ${formatDate(duplicate.importedAt)}.`;
+        importLoading.value = false;
+        return;
+      }
+
+      let newId;
+      if (duplicate) {
+        newId = duplicate.id;
+      } else {
+        newId = crypto.randomUUID();
+        await saveCatalogRecord({
+          id: newId,
+          title: catTitle,
+          version: catVersion,
+          sourceType,
+          sourceName,
+          importedAt: new Date().toISOString(),
+          contentHash,
+          catalogData: jsonData,
+        });
+        await refreshStoredCatalogs();
+      }
+
+      // Der neue Katalog wird Basis; ein laufender Vergleich endet (Vergleiche über die Versionsliste)
+      if (detailActiveTab.value === 'diff') detailActiveTab.value = 'overview';
+      comparisonRecordId.value = '';
+      comparisonCatalog.value = null;
+      diffSummary.value = null;
+      await loadCatalogById(newId);
+
+      importLoading.value = false;
+      const fromLoadDialog = isLoadModalOpen.value;
+      isLoadModalOpen.value = false;
+      isCatalogModalOpen.value = fromLoadDialog;
     }
 
     function selectControl(ctrl) {
@@ -1808,7 +1830,8 @@ const app = createApp({
         expandedKeys.value = new Set();
         resetFilters();
         await refreshStoredCatalogs();
-        isVersionsModalOpen.value = false;
+        isCatalogModalOpen.value = false;
+        isDatenschutzModalOpen.value = false;
       }
     }
 
@@ -1911,14 +1934,22 @@ const app = createApp({
       guidanceDiffTokens,
 
       // UI
-      isImportModalOpen,
-      isVersionsModalOpen,
+      isCatalogModalOpen,
+      openCatalogDialog,
+      isLoadModalOpen,
+      openLoadDialog,
+      closeLoadDialog,
+      loadFile,
+      onLoadFileSelected,
+      onLoadFileDrop,
+      submitLoadDialog,
+      loadOfficialCatalog,
+      presetCatalogUrlDisplay: decodeURIComponent(PRESET_CATALOG_URL),
       isImpressumModalOpen,
       isDatenschutzModalOpen,
       isLicenseModalOpen,
       isDarkMode,
       isLoadingInitial,
-      isLoadingBundle,
       detailPaneWidth,
       isResizing,
       isDragOver,
@@ -1930,12 +1961,11 @@ const app = createApp({
       expandedKeys,
 
       // Import Modal
-      importModalTab,
       importUrlInput,
-      importIsDiff,
       importLoading,
       importError,
       importSuccess,
+      loadNotice,
       PRESET_CATALOG_URL,
 
       // Filters & Tags
@@ -2005,11 +2035,8 @@ const app = createApp({
       fontScale,
       setFontScale,
       loadCatalogById,
-      loadOfficialBundle,
       fetchFromUrl,
-      handleCustomUrlFetch,
       handleFileUpload,
-      handleFileDrop,
       selectControl,
       selectControlById,
       navigateToPractice,

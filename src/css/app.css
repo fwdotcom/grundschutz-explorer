@@ -169,8 +169,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .btn-secondary:hover:not(:disabled) { background: var(--surface-hover); }
 .btn-ghost { color: var(--text-2); }
 .btn-ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
-.btn-danger-link { color: var(--muss); font-size: calc(13px * var(--font-scale)); }
-.btn-danger-link:hover { text-decoration: underline; }
+.btn-danger { color: var(--muss); }
+.btn-danger:hover { border-color: var(--muss-border); background: var(--muss-soft); }
 .btn-lg { height: 42px; padding: 0 18px; font-size: calc(14px * var(--font-scale)); font-weight: 600; }
 .btn-block { width: 100%; }
 .icon-btn {
@@ -1002,6 +1002,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .alert { padding: 10px 12px; border-radius: var(--radius); font-size: calc(13px * var(--font-scale)); }
 .alert-error { background: var(--muss-soft); color: var(--muss); border: 1px solid var(--muss-border); }
 .alert-success { background: var(--added-soft); color: var(--added); border: 1px solid var(--added-border); }
+/* Meldung im Dialog "Katalog laden": rot, ohne Rahmen, direkt über der Fußzeile */
+.load-msg { margin: 0; color: var(--muss); font-size: calc(13px * var(--font-scale)); line-height: 1.45; }
 
 .check-card { display: flex; gap: 12px; padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; }
 .check-card input { margin-top: 3px; accent-color: var(--accent); width: 15px; height: 15px; }
@@ -1262,3 +1264,18 @@ ul { margin: 0; padding: 0; list-style: none; }
 .legal-body p + p, .legal-body ul + p { margin-top: 8px; }
 .legal-body ul { margin: 6px 0 0; padding-left: 18px; list-style: disc; display: grid; gap: 4px; }
 .legal-body a { color: var(--accent-text); text-decoration: underline; }
+
+/* Dialog "Katalog laden" */
+.load-body { gap: 16px; }
+.load-divider { display: flex; align-items: center; gap: 10px; color: var(--text-3); font-size: calc(12px * var(--font-scale)); }
+.load-divider::before, .load-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.dropzone.compact { padding: 14px 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.dropzone.compact strong { display: inline; }
+.dropzone.selected { border-style: solid; border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent-text); }
+.load-body .field-label { display: block; }
+.dropzone.compact .icon { width: 20px; height: 20px; margin-bottom: 0; }
+
+/* Button "Offiziellen BSI Grundschutz++ Anwenderkatalog laden" mit Quelle darunter */
+.official-btn { height: auto; min-height: 42px; padding-top: 8px; padding-bottom: 8px; white-space: normal; }
+.official-btn-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; text-align: left; }
+.official-btn-text small { font-size: calc(11px * var(--font-scale)); font-weight: 400; opacity: 0.85; word-break: break-all; line-height: 1.35; }

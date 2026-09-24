@@ -5,8 +5,8 @@
  * Pure JavaScript IndexedDB Storage Layer (No npm dependencies, zero-build)
  */
 
-const DB_NAME = 'bsi_gs_explorer_db';
-const DB_VERSION = 2;
+const DB_NAME = 'grundschutz_explorer';
+const DB_VERSION = 1;
 
 let dbPromise = null;
 
@@ -21,10 +21,6 @@ function openDatabase() {
       if (!db.objectStoreNames.contains('catalogs')) {
         const catStore = db.createObjectStore('catalogs', { keyPath: 'id' });
         catStore.createIndex('importedAt', 'importedAt');
-      }
-      // Version 2: gespeichertes Gefährdungs-Mapping wird nicht mehr verwendet
-      if (db.objectStoreNames.contains('threats')) {
-        db.deleteObjectStore('threats');
       }
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' });

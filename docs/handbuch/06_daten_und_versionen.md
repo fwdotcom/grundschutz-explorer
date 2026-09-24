@@ -2,44 +2,41 @@
 
 Der Explorer kann mehrere Stände des Grundschutz++-Katalogs speichern und jeweils zwei davon miteinander vergleichen.
 
-## Daten laden
+## Kataloge laden
 
-![Dialog „Daten laden“](bilder/daten-laden.png)
+![Dialog „Katalog laden“](bilder/kataloge-laden.png)
 
-Über **Daten laden** in der Kopfzeile öffnen Sie den Dialog zum Laden eines Katalogs. Er bietet drei Wege:
+Über **Kataloge → Katalog laden** in der Kopfzeile öffnen Sie den Dialog zum Laden eines Katalogs. Auf der Startseite erreichen Sie ihn über **Von URL laden**. Es gibt drei Wege:
 
-| Registerkarte | Verwendung |
+| Weg | Verwendung |
 | :--- | :--- |
-| Presets | Lädt den aktuellen offiziellen Grundschutz++-Anwenderkatalog aus der Stand-der-Technik-Bibliothek des BSI. |
-| URL | Lädt einen OSCAL-Katalog von einer beliebigen Internetadresse. |
-| Datei | Importiert einen OSCAL-Katalog als JSON-Datei von Ihrem Rechner, per Auswahl oder durch Ablegen mit der Maus. |
+| Offiziellen BSI Grundschutz++ Anwenderkatalog laden | Lädt sofort den aktuellen offiziellen Katalog aus der Stand-der-Technik-Bibliothek des BSI. |
+| URL zur JSON-Datei | Lädt einen OSCAL-Katalog von einer beliebigen Internetadresse. |
+| JSON-Datei | Lädt einen OSCAL-Katalog von Ihrem Rechner, per Auswahl oder durch Ablegen mit der Maus. |
 
-Ist der offizielle Katalog beim BSI gerade nicht erreichbar, verwendet der Explorer die mitgelieferte Kopie.
+Für URL und Datei geben Sie die Quelle an und bestätigen mit **Laden**. Wählen Sie eine Datei, wird eine eingegebene URL verworfen und umgekehrt. Ist der offizielle Katalog beim BSI gerade nicht erreichbar, verwendet der Explorer die mitgelieferte Kopie.
 
-Nach dem Laden setzt der Explorer die Ansicht zurück: Alle Filter werden aufgehoben und alle Bereiche eingeklappt, damit Sie im neuen Katalog neu beginnen.
+Ist ein Katalog mit identischem Inhalt bereits geladen, legt der Explorer ihn nicht erneut an und weist im Dialog **Katalog laden** darauf hin. Andernfalls wird der geladene Katalog als neue Version gespeichert und als Basis angezeigt; ein laufender Vergleich endet dabei. Danach kehrt der Explorer zur Liste der Kataloge zurück, sodass Sie zum Beispiel gleich einen Vergleich starten können. Laden Sie über die Startseite, gelangen Sie direkt in den Katalog. Der Explorer setzt außerdem die Ansicht zurück: Alle Filter werden aufgehoben und alle Bereiche eingeklappt, damit Sie im neuen Katalog neu beginnen.
 
 > [!IMPORTANT]
 > Der Explorer versteht Kataloge im Format OSCAL, wie sie das BSI veröffentlicht. Andere Dateien lehnt er mit einer Fehlermeldung ab.
 
 ## Versionen verwalten
 
-![Dialog „Versionen“](bilder/versionen.png)
+![Dialog „Kataloge“ im Vergleichsmodus](bilder/kataloge-versionen.png)
 
-Jeder geladene Katalog wird als Version in Ihrem Browser gespeichert. Der Dialog **Versionen** listet sie mit Titel, Stand und Importdatum. Pro Version stehen zur Wahl:
+Jeder geladene Katalog wird als Version in Ihrem Browser gespeichert. Der Dialog **Kataloge** in der Kopfzeile listet sie mit Titel, Stand und Importdatum; solange keiner gespeichert ist, steht dort „Keine Kataloge gespeichert.“ Pro Version stehen zur Wahl:
 
 - **Als Basis:** Diese Version wird zum aktuell angezeigten Katalog.
 - **Vergleichen:** Diese Version wird mit der Basis verglichen.
 - **Vergleich lösen:** Beendet den Vergleich.
 - **Papierkorb:** Löscht die Version aus dem Speicher.
 
-**Gesamten Speicher leeren** entfernt alle Versionen und Einstellungen aus Ihrem Browser.
+Alle Versionen und Einstellungen zusammen entfernen Sie in der **Datenschutzerklärung** (Fußzeile) mit **Alle lokal gespeicherten Daten löschen**.
 
 ## Zwei Versionen vergleichen
 
-Es gibt zwei Wege in den Vergleichsmodus:
-
-1. Im Dialog **Versionen** bei einer gespeicherten Version **Vergleichen** wählen.
-2. Beim Laden eines neuen Katalogs im Dialog **Daten laden** die Option **Als Vergleichsversion laden** aktivieren.
+Laden Sie zunächst beide Stände, zum Beispiel den offiziellen Katalog und eine ältere Version als Datei. Wählen Sie dann unter **Kataloge** den neueren Stand mit **Als Basis** und beim älteren Stand **Vergleichen**.
 
 Im Vergleichsmodus erscheint unter der Kopfzeile ein Hinweisbalken mit der Zahl der neuen, geänderten und gelöschten Anforderungen. Zusätzlich:
 

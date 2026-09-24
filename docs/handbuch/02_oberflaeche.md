@@ -14,8 +14,7 @@ Von links nach rechts finden Sie:
 | :--- | :--- |
 | Logo und Titel | Zeigt den geladenen Katalog und seinen Stand. |
 | Suchfeld | Durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen und Gefährdungen. |
-| Versionen | Öffnet die Verwaltung der gespeicherten Katalogversionen und den Vergleich. |
-| Daten laden | Lädt den offiziellen Katalog oder importiert einen Katalog aus einer URL oder Datei. |
+| Kataloge | Listet die gespeicherten Katalogversionen, startet den Vergleich und lädt neue Kataloge. |
 | A A A | Stellt die Schriftgröße ein: normal, groß oder sehr groß. |
 | Mond / Sonne | Wechselt zwischen hellem und dunklem Design. |
 | Halbkreis | Schaltet den hohen Kontrast ein und aus. |
