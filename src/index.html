@@ -169,7 +169,7 @@
             <div class="feature">
               <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
               <h3>Datenschutz</h3>
-              <p>Kataloge und Einstellungen bleiben lokal in Ihrem Browser. Keine Cookies, kein Tracking, keine Analysedienste.</p>
+              <p>Kataloge, Listen, Notizen und Einstellungen bleiben lokal in Ihrem Browser. Keine Cookies, kein Tracking, keine Analysedienste.</p>
             </div>
           </section>
 
@@ -193,9 +193,21 @@
         >
           <div class="rail-header">
             <span class="rail-header-title">Filter</span>
-            <button v-if="hasActiveFilters" class="link-btn xs" @click="resetFilters" title="Alle Filter zurücksetzen">Zurücksetzen</button>
             <span class="spacer"></span>
+            <button class="icon-btn sm btn-outline" :disabled="!hasActiveFilters" @click="resetFilters" title="Alle Filter zurücksetzen" aria-label="Alle Filter zurücksetzen">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
             <div class="btn-group">
+              <button
+                class="icon-btn sm btn-outline"
+                :class="{ active: railOnlyMatching }"
+                :aria-pressed="railOnlyMatching"
+                @click="railOnlyMatching = !railOnlyMatching"
+                :title="railOnlyMatching ? 'Werte ohne Treffer wieder anzeigen' : 'Werte ohne Treffer ausblenden'"
+                aria-label="Werte ohne Treffer ausblenden"
+              >
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+              </button>
               <button class="icon-btn sm btn-outline" @click="expandAllRail" title="Alle Filterbereiche aufklappen">
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
               </button>
@@ -324,10 +336,11 @@
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.modalVerbs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
               </div>
               <div v-show="!railCollapsed.modalVerbs" class="rail-section-body">
+                <p v-if="railSectionEmpty('modalVerb', ['MUSS', 'SOLLTE', 'KANN'], modalVerbCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
                   v-for="v in ['MUSS', 'SOLLTE', 'KANN']"
                   :key="v"
-                  v-show="!hasCategoryInclude('modalVerb') || getTagMode('modalVerb', v) === 'include'"
+                  v-show="railRowVisible('modalVerb', v, modalVerbCounts[v] || 0)"
                   class="rail-row"
                   :class="{
                     'is-included': getTagMode('modalVerb', v) === 'include',
@@ -402,10 +415,11 @@
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
               </div>
               <div v-show="!railCollapsed.secLevels" class="rail-section-body">
+                <p v-if="railSectionEmpty('secLevel', availableSecLevels, secLevelCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
                   v-for="lvl in availableSecLevels"
                   :key="lvl"
-                  v-show="!hasCategoryInclude('secLevel') || getTagMode('secLevel', lvl) === 'include'"
+                  v-show="railRowVisible('secLevel', lvl, secLevelCounts[lvl] || 0)"
                   class="rail-row"
                   :class="{
                     'is-included': getTagMode('secLevel', lvl) === 'include',
@@ -540,7 +554,7 @@
                         </template>
                       </div>
                     </div>
-                    <p v-if="fs.search && facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">Keine Treffer</p>
+                    <p v-if="facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">{{ facetSearch[fs.cat] ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
                   </div>
                 </div>
               </div>
@@ -592,23 +606,11 @@
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
               </div>
               <div v-show="!railCollapsed.practices" class="rail-section-body">
-                <div
-                  v-show="!hasCategoryInclude('practice')"
-                  class="rail-row rail-all-row"
-                  :class="{ 'is-all-active': !activeTagCountFor('practice') }"
-                  @click="clearTagsForCategory('practice')"
-                  title="Alle Praktiken anzeigen"
-                >
-                  <div class="rail-row-main">
-                    <span class="rail-row-label">Alle Praktiken</span>
-                    <span class="rail-row-count">{{ practiceCounts.__all }}</span>
-                  </div>
-                </div>
-                <div v-show="!hasCategoryInclude('practice')" class="rail-divider"></div>
+                <p v-if="railSectionEmpty('practice', activeCatalog.practices.map((p) => p.id), practiceCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
                   v-for="p in activeCatalog.practices"
                   :key="p.id"
-                  v-show="!hasCategoryInclude('practice') || getTagMode('practice', p.id) === 'include'"
+                  v-show="railRowVisible('practice', p.id, practiceCounts[p.id] || 0)"
                   class="rail-row"
                   :class="{
                     'is-included': getTagMode('practice', p.id) === 'include',
@@ -688,16 +690,7 @@
                     placeholder="Gefährdung suchen (z.B. G 0.14)..."
                   />
                 </div>
-                <div class="rail-subfilter-row">
-                  <button
-                    class="chip-toggle xs"
-                    :class="{ on: threatShowOnlyMatching }"
-                    @click="threatShowOnlyMatching = !threatShowOnlyMatching"
-                    title="Nur Gefährdungen mit Treffern anzeigen"
-                  >
-                    Nur mit Treffern ({{ threatsWithMatchesCount }})
-                  </button>
-                </div>
+                <p v-if="displayedThreatOptions.length === 0" class="rail-empty-note">{{ threatRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
                 <div class="rail-threats-scroll">
                   <div
                     v-for="t in displayedThreatOptions"
@@ -762,10 +755,6 @@
                     </div>
                   </div>
                 </div>
-                <div v-if="hasCategoryInclude('threat') && !threatRailSearch" class="rail-subfilter-row" style="margin-top: 4px;">
-                  <button v-if="!threatShowAll" class="link-btn xs" @click="threatShowAll = true">&plus; Weitere Gef&auml;hrdung ausw&auml;hlen</button>
-                  <button v-else class="link-btn xs" @click="threatShowAll = false">Nur ausgew&auml;hlte Gef&auml;hrdungen anzeigen</button>
-                </div>
               </div>
             </div>
 
@@ -775,22 +764,11 @@
                 <span class="rail-heading-title">Tags</span>
                 <span v-if="activeTagCountFor('tags')" class="rail-active-badge">{{ activeTagCountFor('tags') }}</span>
                 <span class="spacer"></span>
-                <button
-                  v-if="activeTagCountFor('tags')"
-                  class="rail-clear-btn"
-                  title="Tag-Filter zurücksetzen"
-                  @click.stop="clearTagsForCategory('tags')"
-                >
-                  <svg class="icon-chip-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                  </svg>
-                </button>
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.tags }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
               </div>
 
               <div v-show="!railCollapsed.tags" class="rail-section-body">
-                <div class="rail-search-box">
-                  <svg class="icon-xs rail-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <div class="rail-threat-search">
                   <input
                     type="search"
                     class="rail-search-input"
@@ -798,11 +776,9 @@
                     placeholder="Tag suchen …"
                     @keydown.esc="tagRailSearch = ''"
                   />
-                  <button v-if="tagRailSearch" class="rail-search-clear" @click="tagRailSearch = ''" title="Suche leeren">
-                    <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                  </button>
                 </div>
 
+                <p v-if="displayedTagOptions.length === 0" class="rail-empty-note">{{ tagRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
                 <div class="rail-threat-scroll">
                   <div
                     v-for="item in displayedTagOptions"
@@ -879,6 +855,7 @@
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.diffs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
               </div>
               <div v-show="!railCollapsed.diffs" class="rail-section-body">
+                <p v-if="railSectionEmpty('diff', ['added', 'modified', 'deleted'], diffCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
                   v-for="st in [
                     { id: 'added', label: 'Neu', count: diffCounts.added, cls: 'diff-added' },
@@ -886,7 +863,7 @@
                     { id: 'deleted', label: 'Gelöscht', count: diffCounts.deleted, cls: 'diff-deleted' }
                   ]"
                   :key="st.id"
-                  v-show="!hasCategoryInclude('diff') || getTagMode('diff', st.id) === 'include'"
+                  v-show="railRowVisible('diff', st.id, st.count || 0)"
                   class="rail-row"
                   :class="{
                     'is-included': getTagMode('diff', st.id) === 'include',
@@ -970,19 +947,13 @@
                         'is-search': chip.type === 'search'
                       }"
                     >
-                      <!-- Modus-Umschalter für Facetten (Haken / Kreuz) -->
-                      <button
+                      <span
                         v-if="chip.type === 'facet'"
                         class="chip-mode-badge"
                         :class="chip.mode === 'exclude' ? 'badge-exclude' : 'badge-include'"
-                        @click="toggleChipMode(chip)"
-                        :title="'Modus umschalten: aktuell ' + (chip.mode === 'exclude' ? 'NICHT (Ausschluss)' : 'NUR (Einschluss)')"
                       >
-                        <svg v-if="chip.mode === 'exclude'" class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        <svg v-else class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         <span class="chip-mode-text">{{ chip.mode === 'exclude' ? 'NICHT' : 'NUR' }}</span>
-                      </button>
-
+                      </span>
                       <span v-else-if="chip.type === 'search'" class="chip-mode-badge badge-search">Suche</span>
                       <span v-else class="chip-mode-badge badge-include">
                         <svg class="icon-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -991,7 +962,12 @@
 
                       <!-- Kategorie & Bezeichnung -->
                       <span class="chip-category">{{ chip.categoryLabel }}:</span>
-                      <span class="chip-label" :title="chip.label">{{ chip.label }}</span>
+                      <span class="chip-label" :title="chip.label">
+                        <template v-if="chip.values">
+                          <template v-for="(value, i) in chip.values" :key="i"><span v-if="i" class="chip-sep">{{ chip.mode === 'include' ? ' oder ' : ', ' }}</span>{{ value }}</template>
+                        </template>
+                        <template v-else>{{ chip.label }}</template>
+                      </span>
 
                       <!-- Filter entfernen Button (Papierkorb) -->
                       <button
@@ -1993,8 +1969,8 @@ SOFTWARE.</pre>
           <h3>1. Datenschutz auf einen Blick</h3>
           <p>
             Der Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
-            setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien und
-            Vergleiche verlassen Ihr Gerät nicht.
+            setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien,
+            Vergleiche sowie Ihre Listen und Notizen verlassen Ihr Gerät nicht.
           </p>
         </div>
 
@@ -2046,7 +2022,18 @@ SOFTWARE.</pre>
           <h3>5. Lokale Speicherung in Ihrem Browser</h3>
           <p>
             Geladene Kataloge, Ihre Listen mit Notizen sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
-            Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
+            Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht.
+          </p>
+          <p>
+            Beim <strong>Export</strong> von Listen erzeugt Ihr Browser eine JSON-Datei auf Ihrem Gerät; sie enthält die Listen mit allen Notizen im Klartext.
+            Wenn Sie diese Datei weitergeben, geben Sie auch die Notizen weiter. Beim <strong>Import</strong> wird die Datei ausschließlich lokal gelesen und nicht übertragen.
+          </p>
+          <p>
+            Was Sie in Notizen schreiben, bestimmen Sie selbst. Ich habe auf diese Inhalte keinen Zugriff. Tragen Sie dort personenbezogene Daten ein,
+            etwa Namen von Teilnehmenden einer Besprechung, sind Sie für deren Verarbeitung selbst verantwortlich.
+          </p>
+          <p>
+            Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
             Alle Daten löschen Sie mit der folgenden Schaltfläche oder über die Einstellungen Ihres Browsers.
           </p>
           <p><button class="btn btn-secondary btn-danger" @click="clearAll">Alle lokal gespeicherten Daten löschen</button></p>

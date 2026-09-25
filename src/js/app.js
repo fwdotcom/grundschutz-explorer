@@ -8,6 +8,7 @@
 import { parseOscalCatalog, formatBsiThreat } from './oscalParser.js';
 import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition } from './namespaces.js';
 import { compareCatalogs, computeWordDiff } from './diffEngine.js';
+import { matchesFacets } from './filters.js';
 import {
   saveCatalogRecord,
   getCatalogRecord,
@@ -43,7 +44,7 @@ const SECURITY_TARGETS = [
 // Kurzbezeichnung der Wirkungsstufen (Definition in security_targets_levels.csv)
 const SECURITY_TARGET_LEVEL_LABELS = { 0: 'keine', 1: 'wirkt hin', 2: 'im Zentrum' };
 
-// Einwertige Filter-Facetten: Kategorie → Feld der Anforderung
+// Filter-Facetten mit einem Wert je Anforderung: Kategorie → Feld der Anforderung
 const VALUE_FACETS = {
   secLevel: 'secLevel',
   effort: 'effortLevel',
@@ -154,8 +155,8 @@ const app = createApp({
 
     // Mini-Suche für Gefährdungen in der Left Rail
     const threatRailSearch = ref('');
-    const threatShowOnlyMatching = ref(false);
-    const threatShowAll = ref(false);
+    // Werte ohne Treffer in der Filterleiste ausblenden (Umschalter im Kopf der Filterleiste)
+    const railOnlyMatching = ref(false);
 
     // Flache Trefferliste vs. Baumansicht ('tree' | 'flat')
     const listViewMode = ref('tree');
@@ -257,14 +258,14 @@ const app = createApp({
       return nums.length ? Math.max(...nums) : 0;
     });
 
-    // Gefilterte Optionslisten für Handlungswort/Dokumentation (Suchfeld im Rail)
+    // Optionslisten für Aufwand, Handlungswort und Dokumentation; in den langen Listen mit Suchfeld stehen gesetzte Werte oben
     function facetOptionsFiltered(category) {
       const q = (facetSearch.value[category] || '').trim().toLowerCase();
-      const list = facetOptions.value[category] || [];
+      const counts = facetCounts.value[category] || {};
+      const list = (facetOptions.value[category] || []).filter((v) => railRowVisible(category, v, counts[v] || 0));
+      if (category === 'effort') return list;
       const selected = list.filter((v) => getTagMode(category, v));
       const rest = list.filter((v) => !getTagMode(category, v) && (!q || v.toLowerCase().includes(q)));
-      // Bei aktivem Einschluss nur die gewählten Werte zeigen (analog Schutzniveau)
-      if (hasCategoryInclude(category) && !q) return selected;
       return [...selected, ...rest];
     }
 
@@ -364,85 +365,35 @@ const app = createApp({
         if (!isSelf && !isChild && !isParent) return false;
       }
 
-      // 3. Facets (STRICT AND CONJUNCTION)
-      const spec = activeFilterSpec.value;
+      // 3. Facetten: zwischen den Bereichen und, innerhalb eines Bereichs oder (filters.js)
+      return matchesFacets(activeFilterSpec.value, (category) => facetValues(ctrl, category), ignoreCategory);
+    }
 
-      // Practice
-      if (ignoreCategory !== 'practice') {
-        if (spec.exc.practice.has(ctrl.groupId)) return false;
-        if (spec.inc.practice.size > 0) {
-          for (const reqP of spec.inc.practice) {
-            if (ctrl.groupId !== reqP) return false;
-          }
-        }
+    // Werte einer Anforderung je Filterbereich, als Liste
+    function facetValues(ctrl, category) {
+      if (category in VALUE_FACETS) {
+        const value = ctrl[VALUE_FACETS[category]];
+        return [value === undefined || value === null ? '' : String(value)];
       }
-
-      // Modal Verb
-      if (ignoreCategory !== 'modalVerb') {
-        if (spec.exc.modalVerb.has(ctrl.modalVerb)) return false;
-        if (spec.inc.modalVerb.size > 0) {
-          for (const reqV of spec.inc.modalVerb) {
-            if (ctrl.modalVerb !== reqV) return false;
-          }
+      switch (category) {
+        case 'practice':
+          return [ctrl.groupId];
+        case 'modalVerb':
+          return [ctrl.modalVerb];
+        case 'threat':
+          return ctrl.elementareGefaehrdungen.map((t) => splitThreat(t).code);
+        case 'tags':
+          return ctrl.tags || [];
+        case 'list':
+          return (entriesByControl.value.get(ctrl.id) || []).map((e) => e.listId);
+        case 'diff': {
+          // „Alle Änderungen“ passt auf jede neue, geänderte oder gelöschte Anforderung
+          const status = ctrl.diff?.status || 'unchanged';
+          return status === 'unchanged' ? [status] : [status, 'all_diffs'];
         }
+        default:
+          return [];
       }
-
-      // Einwertige Facetten: Schutzniveau, Aufwand, Handlungswort, Dokumentation
-      for (const [category, field] of Object.entries(VALUE_FACETS)) {
-        if (ignoreCategory === category) continue;
-        const value = ctrl[field] === undefined || ctrl[field] === null ? '' : String(ctrl[field]);
-        if (spec.exc[category].has(value)) return false;
-        for (const req of spec.inc[category]) {
-          if (value !== req) return false;
-        }
-      }
-
-      // Threat
-      if (ignoreCategory !== 'threat') {
-        if (spec.exc.threat.size > 0 && ctrl.elementareGefaehrdungen.some((t) => spec.exc.threat.has(splitThreat(t).code))) {
-          return false;
-        }
-        // Mehrere ✓ innerhalb der Kategorie: mindestens eine muss passen (oder)
-        if (spec.inc.threat.size > 0 && !ctrl.elementareGefaehrdungen.some((t) => spec.inc.threat.has(splitThreat(t).code))) {
-          return false;
-        }
-      }
-
-      // Diff
-      if (ignoreCategory !== 'diff') {
-        const status = ctrl.diff?.status || 'unchanged';
-        if (spec.exc.diff.has(status)) return false;
-        if (spec.inc.diff.size > 0) {
-          for (const reqDiff of spec.inc.diff) {
-            if (reqDiff === 'all_diffs') {
-              if (status === 'unchanged') return false;
-            } else if (status !== reqDiff) {
-              return false;
-            }
-          }
-        }
-      }
-
-      // Tags (mehrwertig aus tags.csv)
-      if (ignoreCategory !== 'tags') {
-        if (spec.exc.tags?.size > 0 && (ctrl.tags || []).some((tag) => spec.exc.tags.has(tag))) {
-          return false;
-        }
-        if (spec.inc.tags?.size > 0 && !(ctrl.tags || []).some((tag) => spec.inc.tags.has(tag))) {
-          return false;
-        }
-      }
-
-      // Eigene Listen: ✓ = steht in der Liste, ✕ = steht nicht darin
-      if (ignoreCategory !== 'list' && (spec.inc.list.size > 0 || spec.exc.list.size > 0)) {
-        const inLists = new Set((entriesByControl.value.get(ctrl.id) || []).map((e) => e.listId));
-        for (const id of spec.exc.list) {
-          if (inLists.has(id)) return false;
-        }
-        if (spec.inc.list.size > 0 && ![...spec.inc.list].some((id) => inLists.has(id))) return false;
-      }
-
-      return true;
     }
 
     function matchesFilters(ctrl) {
@@ -472,12 +423,11 @@ const app = createApp({
 
     // Practice Counts (ignoring practice facet)
     const practiceCounts = computed(() => {
-      const counts = { __all: 0 };
+      const counts = {};
       if (!activeCatalog.value) return counts;
       for (const ctrl of activeCatalog.value.allControls) {
         if (!matchesFilterCategory(ctrl, 'practice')) continue;
         counts[ctrl.groupId] = (counts[ctrl.groupId] || 0) + 1;
-        counts.__all++;
       }
       return counts;
     });
@@ -557,20 +507,19 @@ const app = createApp({
       return counts;
     });
 
-    const threatsWithMatchesCount = computed(() => {
-      let count = 0;
-      for (const [code, c] of Object.entries(threatCounts.value)) {
-        if (c > 0) count++;
-      }
-      return count;
-    });
+    // Zeile in der Filterleiste zeigen: immer, wenn der Wert gesetzt ist (✓/✕) oder Treffer hat; sonst nur ohne „Werte ohne Treffer ausblenden“
+    function railRowVisible(category, value, count) {
+      return !railOnlyMatching.value || count > 0 || Boolean(getTagMode(category, value));
+    }
+
+    function railSectionEmpty(category, values, counts) {
+      return values.every((v) => !railRowVisible(category, v, counts[v] || 0));
+    }
 
     // Gefährdungen für die Left Rail (gefiltert nach Suchbegriff und Treffer-Option)
     const displayedThreatOptions = computed(() => {
       const list = [];
       const q = threatRailSearch.value.trim().toLowerCase();
-      const onlyMatches = threatShowOnlyMatching.value;
-      const hasInclude = hasCategoryInclude('threat');
 
       namespacesVersion.value;
       const nsCodes = Object.keys(namespaces.basethreats).sort(
@@ -582,14 +531,8 @@ const app = createApp({
         const title = namespaces.basethreats[code]?.Begriff || `Gefährdung ${code.replace(/^G /, '')}`;
         const count = threatCounts.value[code] || 0;
         const isActive = isTagActive('threat', code);
-        const isIncluded = isTagActive('threat', code, 'include');
 
-        // Wenn "Nur" gewählt ist, andere Gefährdungen ausblenden (außer bei Suche oder Klick auf "Weitere anzeigen")
-        if (hasInclude && !threatShowAll.value && !q) {
-          if (!isIncluded) continue;
-        }
-
-        if (onlyMatches && count === 0 && !isActive) {
+        if (!railRowVisible('threat', code, count)) {
           continue;
         }
 
@@ -609,9 +552,11 @@ const app = createApp({
           title,
           label: `${code}: ${title}`,
           definition: namespaces.basethreats[code]?.Definition?.split(/\n\s*\n/)[0] || '',
+          isActive,
         });
       }
-      return list;
+      // Gesetzte Gefährdungen (✓ oder ✕) oben
+      return [...list.filter((t) => t.isActive), ...list.filter((t) => !t.isActive)];
     });
 
     // Tags (kontrolliertes Vokabular aus tags.csv)
@@ -643,6 +588,7 @@ const app = createApp({
       const list = [];
       for (const tag of allCatalogTags.value) {
         if (q && !tag.toLowerCase().includes(q)) continue;
+        if (!railRowVisible('tags', tag, tagCounts.value[tag] || 0)) continue;
         list.push({
           tag,
           count: tagCounts.value[tag] || 0,
@@ -651,7 +597,8 @@ const app = createApp({
           isExcluded: isTagActive('tags', tag, 'exclude'),
         });
       }
-      return list;
+      // Gesetzte Tags (✓ oder ✕) oben
+      return [...list.filter((i) => i.isActive), ...list.filter((i) => !i.isActive)];
     });
 
     function activeTagCountFor(category) {
@@ -684,12 +631,19 @@ const app = createApp({
         });
       }
 
-      // 2. Tag-basierte Filter (Praktik, Modalverb, Niveau, Gefährdung, Diff)
+      // 2. Facettenfilter: ein Chip je Bereich und Modus. Die Werte eines NUR-Chips verknüpfen mit „oder“,
+      //    die Chips untereinander mit „und“ (filters.js)
+      const groups = new Map();
       for (const tag of activeTags.value) {
-        chips.push({
-          ...tag,
-          type: 'facet',
-        });
+        const key = `${tag.category}:${tag.mode}`;
+        if (!groups.has(key)) {
+          groups.set(key, { key, type: 'facet', category: tag.category, mode: tag.mode, categoryLabel: tag.categoryLabel, labels: [] });
+        }
+        groups.get(key).labels.push(tag.label);
+      }
+      for (const group of groups.values()) {
+        const { labels, ...chip } = group;
+        chips.push({ ...chip, values: labels, label: labels.join(chip.mode === 'include' ? ' oder ' : ', ') });
       }
 
       // 3. Teilbereich-Drilldown
@@ -942,8 +896,7 @@ const app = createApp({
             // Reaktive Proxys lassen sich nicht in IndexedDB klonen → einfache Kopien speichern
             activeTags: activeTags.value.map((t) => ({ ...t })),
             threatRailSearch: threatRailSearch.value,
-            threatShowOnlyMatching: threatShowOnlyMatching.value,
-            threatShowAll: threatShowAll.value,
+            railOnlyMatching: railOnlyMatching.value,
             tagRailSearch: tagRailSearch.value,
           });
         } catch (err) {
@@ -1027,8 +980,7 @@ const app = createApp({
         filters.value.controlFilter,
         activeTags.value,
         threatRailSearch.value,
-        threatShowOnlyMatching.value,
-        threatShowAll.value,
+        railOnlyMatching.value,
       ],
       () => {
         scheduleSaveFilters();
@@ -1135,11 +1087,10 @@ const app = createApp({
           if (typeof savedFilterState.threatRailSearch === 'string') {
             threatRailSearch.value = savedFilterState.threatRailSearch;
           }
-          if (typeof savedFilterState.threatShowOnlyMatching === 'boolean') {
-            threatShowOnlyMatching.value = savedFilterState.threatShowOnlyMatching;
-          }
-          if (typeof savedFilterState.threatShowAll === 'boolean') {
-            threatShowAll.value = savedFilterState.threatShowAll;
+          // threatShowOnlyMatching: frühere Einstellung, galt nur für die Gefährdungen
+          const onlyMatching = savedFilterState.railOnlyMatching ?? savedFilterState.threatShowOnlyMatching;
+          if (typeof onlyMatching === 'boolean') {
+            railOnlyMatching.value = onlyMatching;
           }
           if (typeof savedFilterState.tagRailSearch === 'string') {
             tagRailSearch.value = savedFilterState.tagRailSearch;
@@ -1729,17 +1680,11 @@ const app = createApp({
         const current = activeTags.value[idx];
         if (current.mode === targetMode) {
           activeTags.value.splice(idx, 1);
-          if (category === 'threat' && !hasCategoryInclude('threat')) threatShowAll.value = false;
           return;
         } else {
           current.mode = targetMode;
           return;
         }
-      }
-
-      // Wenn 'include' (Nur) in einer Einzelauswahl-Kategorie gewählt wird, eventuell vorhandene andere Includes ablösen
-      if (targetMode === 'include' && ['modalVerb', 'practice', 'diff', ...Object.keys(VALUE_FACETS)].includes(category)) {
-        activeTags.value = activeTags.value.filter((t) => !(t.category === category && t.mode === 'include'));
       }
 
       activeTags.value.push({
@@ -1752,27 +1697,11 @@ const app = createApp({
       });
     }
 
-    function hasCategoryInclude(category) {
-      return activeTags.value.some((t) => t.category === category && t.mode === 'include');
-    }
-
     function removeTag(category, value) {
       const idx = activeTags.value.findIndex((t) => t.category === category && t.value === value);
       if (idx >= 0) {
         activeTags.value.splice(idx, 1);
       }
-      if (category === 'threat' && !hasCategoryInclude('threat')) {
-        threatShowAll.value = false;
-      }
-    }
-
-    function toggleTagMode(tag) {
-      tag.mode = tag.mode === 'include' ? 'exclude' : 'include';
-    }
-
-    function clearTagsForCategory(category) {
-      activeTags.value = activeTags.value.filter((t) => t.category !== category);
-      if (category === 'threat') threatShowAll.value = false;
     }
 
     function activeTagCountFor(category) {
@@ -1787,13 +1716,8 @@ const app = createApp({
       } else if (chip.type === 'control') {
         filters.value.controlFilter = '';
       } else if (chip.type === 'facet') {
-        removeTag(chip.category, chip.value);
-      }
-    }
-
-    function toggleChipMode(chip) {
-      if (chip.type === 'facet') {
-        toggleTagMode(chip);
+        // Ein Chip fasst alle Werte eines Bereichs im selben Modus zusammen
+        activeTags.value = activeTags.value.filter((t) => !(t.category === chip.category && t.mode === chip.mode));
       }
     }
 
@@ -1817,7 +1741,6 @@ const app = createApp({
       filters.value.subgroupFilter = '';
       filters.value.controlFilter = '';
       activeTags.value = [];
-      threatShowAll.value = false;
       scheduleSaveFilters();
     }
 
@@ -2682,8 +2605,9 @@ const app = createApp({
       diffCounts,
       displayedThreatOptions,
       threatRailSearch,
-      threatShowOnlyMatching,
-      threatsWithMatchesCount,
+      railOnlyMatching,
+      railRowVisible,
+      railSectionEmpty,
       allCatalogTags,
       tagCounts,
       tagRailSearch,
@@ -2698,17 +2622,12 @@ const app = createApp({
       // Tag Helpers
       getTagMode,
       isTagActive,
-      hasCategoryInclude,
-      threatShowAll,
       setTag,
       toggleTag,
       removeTag,
-      toggleTagMode,
-      clearTagsForCategory,
       activeTagCountFor,
       countTagsForCategory,
       removeChip,
-      toggleChipMode,
 
       // Actions
       applyDarkMode,

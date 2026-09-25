@@ -31,7 +31,7 @@ Von links nach rechts finden Sie:
 
 ## Filterleiste
 
-Die Filterleiste links enthält alle Filter, gegliedert in aufklappbare Abschnitte. Ein Klick auf die Überschrift eines Abschnitts klappt ihn auf oder zu. Die beiden Schaltflächen oben rechts klappen alle Abschnitte gemeinsam auf oder zu. Sobald ein Filter aktiv ist, erscheint daneben **Zurücksetzen**; es hebt alle Filter auf. Eine blaue Zahl neben einer Überschrift zeigt, wie viele Filter in diesem Abschnitt aktiv sind.
+Die Filterleiste links enthält alle Filter, gegliedert in aufklappbare Abschnitte. Ein Klick auf die Überschrift eines Abschnitts klappt ihn auf oder zu. Die Schaltflächen oben rechts heben alle Filter auf (Pfeil im Kreis, nur bei aktiven Filtern), blenden Werte ohne Treffer aus (Trichter) und klappen alle Abschnitte gemeinsam auf oder zu. Eine blaue Zahl neben einer Überschrift zeigt, wie viele Filter in diesem Abschnitt aktiv sind.
 
 Wie Sie filtern, beschreibt das Kapitel **Suchen und filtern**.
 

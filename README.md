@@ -23,7 +23,7 @@ Das Benutzerhandbuch (PDF) ist in der App über die Fußzeile erreichbar.
 - **Definitionen des BSI** direkt an der Anforderung: Aufwandsstufen, Handlungswörter, Dokumentationsvorgaben, Schutzziele, Gefährdungen und Tags.
 - **Versionsvergleich** zweier Katalogstände mit neuen, geänderten und gelöschten Anforderungen und Wort-für-Wort-Unterschieden.
 - **Barrierearm:** drei Schriftgrößen, helles und dunkles Design, hoher Kontrast, vollständig per Tastatur bedienbar.
-- **Datenschutz:** Die App läuft vollständig im Browser; geladene Kataloge und Einstellungen werden nur lokal gespeichert.
+- **Datenschutz:** Die App läuft vollständig im Browser; geladene Kataloge, Listen mit Notizen und Einstellungen werden nur lokal gespeichert.
 
 ## Datenquellen
 

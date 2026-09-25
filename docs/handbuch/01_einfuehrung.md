@@ -34,10 +34,10 @@ Beim ersten Aufruf erscheint eine Startseite. Dort öffnen Sie mit **Katalog lad
 
 ## Datenschutz
 
-Der Explorer läuft vollständig in Ihrem Browser. Kataloge, Filter und Einstellungen speichert er ausschließlich lokal in der Datenbank Ihres Browsers. Es gibt kein Benutzerkonto, und es werden keine Inhalte an einen Server übertragen.
+Der Explorer läuft vollständig in Ihrem Browser. Kataloge, Listen mit Notizen, Filter und Einstellungen speichert er ausschließlich lokal in der Datenbank Ihres Browsers. Es gibt kein Benutzerkonto, und es werden keine Inhalte an einen Server übertragen.
 
 > [!TIP]
-> Einzelne Kataloge löschen Sie unter **Kataloge** über den Papierkorb. Alle gespeicherten Kataloge und Einstellungen entfernen Sie in der **Datenschutzerklärung** mit **Alle lokal gespeicherten Daten löschen**.
+> Einzelne Kataloge löschen Sie unter **Kataloge** über den Papierkorb. Alle gespeicherten Kataloge, Listen und Einstellungen entfernen Sie in der **Datenschutzerklärung** mit **Alle lokal gespeicherten Daten löschen**.
 
 ## Aufbau dieses Handbuchs
 

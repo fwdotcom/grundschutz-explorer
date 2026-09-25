@@ -13,10 +13,13 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
 ### Geändert
 
-- Mehrere ✓ innerhalb von **Gefährdungen**, **Tags** und **Listen** verknüpfen jetzt mit „oder“: Es genügt, wenn einer der Werte passt. Bisher mussten alle zutreffen.
+- Eine Regel für alle Filterbereiche: Mehrere ✓ im selben Bereich verknüpfen mit „oder“, verschiedene Bereiche mit „und“, ✕ schließt immer aus. Damit sind jetzt auch „MUSS oder SOLLTE“, mehrere Aufwandsstufen oder Praktiken und bei den Schutzzielen mehrere Stufen zugleich möglich; ein neues ✓ ersetzt das bisherige nicht mehr. Bei Gefährdungen, Tags und Listen mussten bisher alle ✓ zutreffen.
+- Aktive Filter erscheinen als ein Chip je Bereich („NUR Handlung: aktivieren oder analysieren“); der Papierkorb am Chip hebt alle Werte darin auf. Die Umschaltung zwischen NUR und NICHT am Chip entfällt, ebenso die Zeile „Alle Praktiken“ und „Weitere Gefährdung auswählen“. Gesetzte Werte bleiben in der Filterleiste sichtbar und stehen in den langen Listen oben.
+- Kopf der Filterleiste: „Werte ohne Treffer ausblenden“ (Trichter) gilt jetzt für alle Bereiche außer Schutzzielen und Listen und ersetzt „Nur mit Treffern“ bei den Gefährdungen. „Zurücksetzen“ ist dort ein Symbol und immer an derselben Stelle.
 - Buttons heben sich im hellen und dunklen Design mit einem dezenten Verlauf vom Hintergrund ab.
 - Die Fußzeile blendet App-Name und Version aus, wenn sie sonst umbrechen würde.
 - „Alle lokal gespeicherten Daten löschen“ löscht auch die Listen und weist vorher darauf hin.
+- Datenschutzerklärung und Startseite nennen Listen und Notizen; die Datenschutzerklärung beschreibt zusätzlich Export und Import von Listen.
 - Neue `security.txt` unter `/.well-known/`.
 - Die Registerkarte **OSCAL** in der Detailansicht entfällt. Ihre Rohdaten zeigt die Übersicht bereits lesbar, Parameter sind in den Anforderungstext eingesetzt; die UUID steht jetzt klein am Ende der Übersicht.
 - Handbuch: Abbildungen sind nummeriert und beschriftet; Abstände und Beschriftungen folgen dem Default-Theme von markpublish 2.2.0.

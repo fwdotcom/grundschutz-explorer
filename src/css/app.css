@@ -385,11 +385,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .rail-heading:hover { background: var(--surface-hover); color: var(--text-2); }
 .rail-heading-title { flex: 1; min-width: 0; }
+/* Zahl aktiver Filter: zart getönt und eckig, damit sie nicht wie das runde Info-„i“ wirkt */
 .rail-active-badge {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
-  background: var(--accent); color: #ffffff;
-  font-size: calc(10px * var(--font-scale)); font-weight: 700; line-height: 1;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 4px;
+  background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 0 0 0 1px var(--accent-border);
+  font-size: calc(10px * var(--font-scale)); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums;
+  letter-spacing: 0; text-transform: none;
 }
 .rail-heading .chev { transition: transform 0.15s ease; color: var(--text-3); }
 .rail-heading .chev.open { transform: rotate(90deg); }
@@ -408,17 +410,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 .rail-search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
 .rail-subfilter-row { padding: 0 4px 6px; display: flex; }
-.chip-toggle.xs {
-  font-size: calc(10.5px * var(--font-scale)); padding: 3px 8px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text-3);
-  cursor: pointer; transition: all 0.1s;
-}
-.chip-toggle.xs:hover { color: var(--text-2); border-color: var(--border-strong); }
-.chip-toggle.xs.on {
-  background: var(--accent-soft); color: var(--accent-text);
-  border-color: var(--accent-border); font-weight: 600;
-}
-
 .rail-threats-scroll {
   max-height: 260px; overflow-y: auto; padding-right: 2px;
   display: flex; flex-direction: column; gap: 2px;
@@ -470,8 +461,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .rail-row.is-included .threat-pill-code { color: inherit; }
 
-.rail-all-row { cursor: pointer; }
-.rail-all-row.is-all-active { background: var(--surface-hover); color: var(--text); font-weight: 600; }
 
 .rail-row-actions {
   display: inline-flex;
@@ -603,7 +592,6 @@ ul { margin: 0; padding: 0; list-style: none; }
   padding: 2px 4px;
 }
 
-.rail-divider { height: 1px; background: var(--border); margin: 6px 4px; }
 
 /* ---------- Eigene Listen (Filterleiste) ---------- */
 .list-rows { display: flex; flex-direction: column; gap: 2px; }
@@ -717,14 +705,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .chip-mode-badge {
   display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 6px;
-  border-radius: 4px; font-size: calc(10.5px * var(--font-scale)); font-weight: 700; cursor: pointer; border: none;
-  user-select: none; transition: filter 0.1s, transform 0.05s;
+  border-radius: 4px; font-size: calc(10.5px * var(--font-scale)); font-weight: 700; border: none;
+  user-select: none;
 }
-.chip-mode-badge:hover { filter: brightness(1.1); }
-.chip-mode-badge:active { transform: scale(0.97); }
 .chip-mode-badge.badge-include { background: var(--accent); color: #ffffff; }
 .chip-mode-badge.badge-exclude { background: #dc2626; color: #ffffff; }
-.chip-mode-badge.badge-search { background: var(--text-3); color: #ffffff; cursor: default; }
+.chip-mode-badge.badge-search { background: var(--text-3); color: #ffffff; }
 
 .icon-chip-svg {
   width: 10.5px; height: 10.5px; display: block; flex-shrink: 0;
@@ -738,6 +724,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   font-weight: 600; color: var(--text); max-width: 240px; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
+.chip-sep { font-weight: 400; color: var(--text-2); }
 .tag-chip.is-exclude .chip-label { color: #b91c1c; }
 .dark .tag-chip.is-exclude .chip-label { color: #fca5a5; }
 
@@ -1404,11 +1391,9 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
 .hc .kv-link, .hc .threat-link, .hc .st-label > span { border-bottom-style: solid; border-bottom-color: var(--text-3); }
 /* Schrift auf farbigen Flächen: im dunklen Design sind die Flächen hell, daher dunkle Schrift */
 .dark .btn-primary,
-.dark .rail-active-badge,
 .dark .chip-mode-badge.badge-include,
 .dark .chip-mode-badge.badge-search { color: #0c0e13; }
 .dark.hc .btn-primary,
-.dark.hc .rail-active-badge,
 .dark.hc .chip-mode-badge.badge-include,
 .dark.hc .chip-mode-badge.badge-search { color: #000000; }
 /* Aufwand: leere Segmente nur als Umriss, damit sie nicht wie gefüllte aussehen */
