@@ -8,6 +8,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/webp" href="media/gsexplorer_logo.webp" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'none'; form-action 'none'" />
   <title>Grundschutz++ Explorer</title>
   <meta name="description" content="Den Grundschutz++-Anwenderkatalog durchsuchen, filtern und Versionen vergleichen – direkt im Browser, ohne Anmeldung, Open Source." />
   <link rel="canonical" href="https://www.grundschutz-explorer.de/" />
@@ -34,7 +35,7 @@
   <div id="app" v-cloak class="app">
 
     <!-- ============ Topbar ============ -->
-    <header class="topbar">
+    <header class="topbar" :inert="isRailOpen || null">
       <div class="brand">
         <div class="brand-mark">
           <img src="media/gsexplorer_logo.webp" alt="Grundschutz++ Logo" class="brand-logo" />
@@ -101,7 +102,7 @@
     </header>
 
     <!-- ============ Diff Banner ============ -->
-    <div v-if="diffSummary?.hasDiff" class="diff-banner">
+    <div v-if="diffSummary?.hasDiff" class="diff-banner" :inert="isRailOpen || null">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a4 4 0 0 0 4 4h5"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/></svg>
       <strong>Vergleichsmodus</strong>
       <span class="tag diff-added">+{{ diffSummary.addedCount }} neu</span>
@@ -180,7 +181,16 @@
 
       <template v-else>
         <!-- ---------- Rail: Facetten-Filter (Modalverben, Niveau, Praktiken, Gefährdungen, Diff) ---------- -->
-        <aside class="rail">
+        <!-- Unter 980px als ausklappbare Leiste (Drawer) über den Button "Filter" in der Liste -->
+        <div v-if="isRailOpen" class="rail-backdrop" @click="closeRail"></div>
+        <aside
+          id="filter-rail"
+          class="rail"
+          :class="{ open: isRailOpen }"
+          :role="isRailOpen ? 'dialog' : null"
+          :aria-modal="isRailOpen ? 'true' : null"
+          :aria-label="isRailOpen ? 'Filter' : null"
+        >
           <div class="rail-header">
             <span class="rail-header-title">Filter</span>
             <button v-if="hasActiveFilters" class="link-btn xs" @click="resetFilters" title="Alle Filter zurücksetzen">Zurücksetzen</button>
@@ -193,6 +203,9 @@
                 <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
               </button>
             </div>
+            <button ref="railCloseBtn" class="icon-btn sm only-narrow" @click="closeRail" title="Filter schließen" aria-label="Filter schließen">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
           </div>
           <div class="rail-scroll">
 
@@ -938,7 +951,7 @@
           </div>
         </aside>
 
-        <div class="split" ref="splitEl">
+        <div class="split" ref="splitEl" :inert="isRailOpen || null">
           <!-- ---------- List pane ---------- -->
           <section class="list-pane">
             <div class="filterbar">
@@ -999,6 +1012,18 @@
               </div>
 
               <div class="list-meta">
+                <button
+                  ref="railToggleBtn"
+                  class="btn btn-secondary rail-toggle only-narrow"
+                  @click="openRail"
+                  aria-controls="filter-rail"
+                  :aria-expanded="isRailOpen"
+                  :aria-label="'Filter' + (allActiveChips.length ? ' (' + allActiveChips.length + ' aktiv)' : '')"
+                >
+                  <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+                  Filter
+                  <span v-if="allActiveChips.length" class="rail-active-badge" aria-hidden="true">{{ allActiveChips.length }}</span>
+                </button>
                 <span><strong>{{ filteredControlIds.size }}</strong> von {{ activeCatalog.allControls.length }} Anforderungen</span>
                 <button v-if="hasActiveFilters" class="link-btn" @click="resetFilters">Filter zurücksetzen</button>
                 <span class="spacer"></span>
@@ -1131,10 +1156,24 @@
             </div>
           </section>
 
-          <div class="resizer" :class="{ active: isResizing }" @mousedown.prevent="startResize" title="Breite anpassen"></div>
+          <div
+            class="resizer"
+            :class="{ active: isResizing }"
+            role="separator"
+            tabindex="0"
+            aria-orientation="vertical"
+            aria-controls="detail-pane"
+            aria-label="Breite der Anforderungsliste"
+            :aria-valuemin="100 - DETAIL_PANE_MAX"
+            :aria-valuemax="100 - DETAIL_PANE_MIN"
+            :aria-valuenow="Math.round(100 - detailPaneWidth)"
+            @pointerdown="startResize"
+            @keydown="onResizerKeydown"
+            title="Breite anpassen (auch mit Pfeiltasten)"
+          ></div>
 
           <!-- ---------- Detail pane ---------- -->
-          <section class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
+          <section id="detail-pane" class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
             <!-- Links ist keine gültige Zeile gewählt: noch nichts ausgewählt oder Auswahl durch Filter ausgeblendet -->
             <div v-if="(!selectedControl && !scopePractice) || selectionFilteredOut" class="detail-empty">
               <div>
@@ -1313,13 +1352,14 @@
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 
-                <div class="tabs">
-                  <button class="tab" :class="{ on: detailActiveTab === 'overview' }" @click="detailActiveTab = 'overview'">
+                <div class="tabs" role="tablist" aria-label="Detailansicht" @keydown="onTabsKeydown">
+                  <button class="tab" role="tab" id="tab-overview" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'overview'" :tabindex="detailActiveTab === 'overview' ? 0 : -1" :class="{ on: detailActiveTab === 'overview' }" @click="detailActiveTab = 'overview'">
                     Übersicht
                   </button>
-                  <button class="tab" :class="{ on: detailActiveTab === 'guidance' }" @click="detailActiveTab = 'guidance'">Hilfestellung</button>
+                  <button class="tab" role="tab" id="tab-guidance" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'guidance'" :tabindex="detailActiveTab === 'guidance' ? 0 : -1" :class="{ on: detailActiveTab === 'guidance' }" @click="detailActiveTab = 'guidance'">Hilfestellung</button>
                   <button
                     class="tab"
+                    role="tab" id="tab-notes" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'notes'" :tabindex="detailActiveTab === 'notes' ? 0 : -1"
                     :class="{ on: detailActiveTab === 'notes' }"
                     @click="detailActiveTab = 'notes'"
                     :aria-label="'Notizen' + (selectedNoteState === 'here' ? ' (Notiz in aktiver Liste)' : selectedNoteState === 'other' ? ' (Notiz in anderer Liste)' : '')"
@@ -1327,12 +1367,12 @@
                     Notizen
                     <span v-if="selectedNoteState" class="note-dot" :class="'note-dot-' + selectedNoteState" aria-hidden="true"></span>
                   </button>
-                  <button v-if="diffSummary?.hasDiff" class="tab" :class="{ on: detailActiveTab === 'diff' }" @click="detailActiveTab = 'diff'">Änderungen</button>
-                  <button class="tab" :class="{ on: detailActiveTab === 'props' }" @click="detailActiveTab = 'props'">OSCAL</button>
+                  <button v-if="diffSummary?.hasDiff" class="tab" role="tab" id="tab-diff" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'diff'" :tabindex="detailActiveTab === 'diff' ? 0 : -1" :class="{ on: detailActiveTab === 'diff' }" @click="detailActiveTab = 'diff'">Änderungen</button>
+                  <button class="tab" role="tab" id="tab-props" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'props'" :tabindex="detailActiveTab === 'props' ? 0 : -1" :class="{ on: detailActiveTab === 'props' }" @click="detailActiveTab = 'props'">OSCAL</button>
                 </div>
               </div>
 
-              <div class="detail-body" ref="detailBody">
+              <div class="detail-body" ref="detailBody" id="detail-tabpanel" role="tabpanel" :aria-labelledby="'tab-' + detailActiveTab" tabindex="0">
 
                 <!-- Übersicht -->
                 <div v-if="detailActiveTab === 'overview'" class="stack">
@@ -1657,7 +1697,7 @@
     </main>
 
     <!-- ============ Footer ============ -->
-    <footer class="app-footer">
+    <footer class="app-footer" :inert="isRailOpen || null">
       <div class="footer-left">
         <span class="footer-links" ref="footerLinks">
           <span class="footer-brand footer-meta">Grundschutz++ Explorer</span>
@@ -1704,222 +1744,215 @@
     </dialog>
 
     <!-- ============ Kataloge: gespeicherte Versionen ============ -->
-    <div v-if="isCatalogModalOpen" class="modal-backdrop" @mousedown.self="isCatalogModalOpen = false">
-      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
-        <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
-          <div style="flex:1">
-            <h2 id="catalog-title">Kataloge</h2>
-            <p>Gespeicherte Versionen als Basis wählen, vergleichen oder löschen</p>
-          </div>
-          <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+    <dialog v-if="isCatalogModalOpen" v-modal="() => isCatalogModalOpen = false" class="modal wide" aria-labelledby="catalog-title">
+      <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <h2 id="catalog-title">Kataloge</h2>
+          <p>Gespeicherte Versionen als Basis wählen, vergleichen oder löschen</p>
         </div>
+        <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
 
-        <div class="modal-body" style="gap:8px">
-          <div v-if="storedCatalogs.length === 0" class="empty-box">Keine Kataloge gespeichert.</div>
+      <div class="modal-body" style="gap:8px">
+        <div v-if="storedCatalogs.length === 0" class="empty-box">Keine Kataloge gespeichert.</div>
 
-          <div
-            v-for="cat in storedCatalogs"
-            :key="cat.id"
-            class="version-item"
-            :class="{ 'is-base': cat.id === activeRecordId, 'is-comp': cat.id === comparisonRecordId }"
-          >
-            <div class="grow">
-              <h3>
-                {{ cat.title }}
-                <span v-if="cat.id === activeRecordId" class="tag tag-accent">Basis</span>
-                <span v-if="cat.id === comparisonRecordId" class="tag diff-modified">Vergleich</span>
-              </h3>
-              <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
-            </div>
-            <div class="acts">
-              <button v-if="cat.id !== activeRecordId" class="btn btn-secondary" @click="loadCatalogById(cat.id)">Als Basis</button>
-              <button v-if="cat.id !== activeRecordId && cat.id !== comparisonRecordId" class="btn btn-secondary" @click="selectComparison(cat.id)">Vergleichen</button>
-              <button v-if="cat.id === comparisonRecordId" class="btn btn-ghost" @click="clearComparison">Vergleich lösen</button>
-              <button class="icon-btn sm" @click="deleteCatalog(cat.id)" title="Version löschen">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-              </button>
-            </div>
+        <div
+          v-for="cat in storedCatalogs"
+          :key="cat.id"
+          class="version-item"
+          :class="{ 'is-base': cat.id === activeRecordId, 'is-comp': cat.id === comparisonRecordId }"
+        >
+          <div class="grow">
+            <h3>
+              {{ cat.title }}
+              <span v-if="cat.id === activeRecordId" class="tag tag-accent">Basis</span>
+              <span v-if="cat.id === comparisonRecordId" class="tag diff-modified">Vergleich</span>
+            </h3>
+            <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
           </div>
-        </div>
-
-        <div class="modal-foot">
-          <button class="btn btn-primary" @click="openLoadDialog()">Katalog laden</button>
-          <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isCatalogModalOpen = false">Schließen</button>
+          <div class="acts">
+            <button v-if="cat.id !== activeRecordId" class="btn btn-secondary" @click="loadCatalogById(cat.id)">Als Basis</button>
+            <button v-if="cat.id !== activeRecordId && cat.id !== comparisonRecordId" class="btn btn-secondary" @click="selectComparison(cat.id)">Vergleichen</button>
+            <button v-if="cat.id === comparisonRecordId" class="btn btn-ghost" @click="clearComparison">Vergleich lösen</button>
+            <button class="icon-btn sm" @click="deleteCatalog(cat.id)" title="Version löschen">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div class="modal-foot">
+        <button class="btn btn-primary" @click="openLoadDialog()">Katalog laden</button>
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" @click="isCatalogModalOpen = false">Schließen</button>
+      </div>
+    </dialog>
 
     <!-- ============ Katalog laden (öffnet über "Kataloge" oder der Startseite) ============ -->
-    <div v-if="isLoadModalOpen" class="modal-backdrop" @mousedown.self="closeLoadDialog()">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="load-title">
-        <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
-          <div style="flex:1">
-            <h2 id="load-title">Katalog laden</h2>
-            <p>Der Katalog wird als neue Version gespeichert und als Basis angezeigt.</p>
-          </div>
-          <button class="icon-btn" @click="closeLoadDialog()" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+    <dialog v-if="isLoadModalOpen" v-modal="closeLoadDialog" class="modal" aria-labelledby="load-title">
+      <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <h2 id="load-title">Katalog laden</h2>
+          <p>Der Katalog wird als neue Version gespeichert und als Basis angezeigt.</p>
         </div>
-
-        <div class="modal-body load-body">
-
-          <button class="btn btn-secondary btn-lg btn-block official-btn" :disabled="importLoading" @click="loadOfficialCatalog()">
-            <svg v-if="!importLoading" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            <div v-else class="spinner" style="width:16px;height:16px"></div>
-            <span class="official-btn-text">
-              <span>Offiziellen BSI Grundschutz++ Anwenderkatalog laden</span>
-              <small>Quelle: {{ presetCatalogUrlDisplay }}</small>
-            </span>
-          </button>
-
-          <div class="load-divider"><span>oder eigenen OSCAL-Katalog</span></div>
-
-          <div>
-            <label class="field-label" for="load-url">URL zur JSON-Datei</label>
-            <input
-              id="load-url"
-              class="input"
-              type="url"
-              v-model="importUrlInput"
-              placeholder="https://…/katalog.json"
-              :disabled="importLoading"
-              @input="loadFile = null"
-              @keydown.enter="submitLoadDialog()"
-            />
-          </div>
-
-          <div>
-            <span class="field-label">JSON-Datei</span>
-            <div
-              class="dropzone compact"
-              :class="{ over: isDragOver, selected: loadFile }"
-              @dragover.prevent="isDragOver = true"
-              @dragleave="isDragOver = false"
-              @drop="isDragOver = false; onLoadFileDrop($event)"
-              @click="$refs.loadFileInput.click()"
-            >
-              <input ref="loadFileInput" type="file" accept=".json,application/json" style="display:none" @change="onLoadFileSelected($event); $event.target.value = ''" />
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
-              <strong v-if="loadFile">{{ loadFile.name }}</strong>
-              <strong v-else>Datei ablegen oder auswählen</strong>
-            </div>
-          </div>
-
-          <div v-if="importLoading" class="loading-state"><div class="spinner" style="width:16px;height:16px"></div><span>Wird geladen …</span></div>
-          <p v-if="importError" class="load-msg" role="alert">{{ importError }}</p>
-          <p v-if="loadNotice" class="load-msg" role="alert">{{ loadNotice }}</p>
-        </div>
-
-        <div class="modal-foot">
-          <span class="spacer"></span>
-          <button class="btn btn-secondary" :disabled="importLoading" @click="closeLoadDialog()">Abbrechen</button>
-          <button class="btn btn-primary" :disabled="importLoading || (!loadFile && !importUrlInput.trim())" @click="submitLoadDialog()">Laden</button>
-        </div>
+        <button class="icon-btn" @click="closeLoadDialog()" title="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
       </div>
-    </div>
+
+      <div class="modal-body load-body">
+
+        <button class="btn btn-secondary btn-lg btn-block official-btn" :disabled="importLoading" @click="loadOfficialCatalog()">
+          <svg v-if="!importLoading" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <div v-else class="spinner" style="width:16px;height:16px"></div>
+          <span class="official-btn-text">
+            <span>Offiziellen BSI Grundschutz++ Anwenderkatalog laden</span>
+            <small>Quelle: {{ presetCatalogUrlDisplay }}</small>
+          </span>
+        </button>
+
+        <div class="load-divider"><span>oder eigenen OSCAL-Katalog</span></div>
+
+        <div>
+          <label class="field-label" for="load-url">URL zur JSON-Datei</label>
+          <input
+            id="load-url"
+            class="input"
+            type="url"
+            v-model="importUrlInput"
+            placeholder="https://…/katalog.json"
+            :disabled="importLoading"
+            @input="loadFile = null"
+            @keydown.enter="submitLoadDialog()"
+          />
+        </div>
+
+        <div>
+          <span class="field-label">JSON-Datei</span>
+          <div
+            class="dropzone compact"
+            :class="{ over: isDragOver, selected: loadFile }"
+            @dragover.prevent="isDragOver = true"
+            @dragleave="isDragOver = false"
+            @drop="isDragOver = false; onLoadFileDrop($event)"
+            @click="$refs.loadFileInput.click()"
+          >
+            <input ref="loadFileInput" type="file" accept=".json,application/json" style="display:none" @change="onLoadFileSelected($event); $event.target.value = ''" />
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+            <strong v-if="loadFile">{{ loadFile.name }}</strong>
+            <strong v-else>Datei ablegen oder auswählen</strong>
+          </div>
+        </div>
+
+        <div v-if="importLoading" class="loading-state"><div class="spinner" style="width:16px;height:16px"></div><span>Wird geladen …</span></div>
+        <p v-if="importError" class="load-msg" role="alert">{{ importError }}</p>
+        <p v-if="loadNotice" class="load-msg" role="alert">{{ loadNotice }}</p>
+      </div>
+
+      <div class="modal-foot">
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" :disabled="importLoading" @click="closeLoadDialog()">Abbrechen</button>
+        <button class="btn btn-primary" :disabled="importLoading || (!loadFile && !importUrlInput.trim())" @click="submitLoadDialog()">Laden</button>
+      </div>
+    </dialog>
 
     <!-- ============ Impressum Modal ============ -->
-    <div v-if="isImpressumModalOpen" class="modal-backdrop" @mousedown.self="isImpressumModalOpen = false">
-      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="impressum-title">
-        <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
-          <div style="flex:1">
-            <h2 id="impressum-title">Impressum</h2>
-            <p>Anbieterkennzeichnung und rechtliche Hinweise</p>
-          </div>
-          <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+    <dialog v-if="isImpressumModalOpen" v-modal="() => isImpressumModalOpen = false" class="modal wide" aria-labelledby="impressum-title">
+      <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <h2 id="impressum-title">Impressum</h2>
+          <p>Anbieterkennzeichnung und rechtliche Hinweise</p>
+        </div>
+        <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body legal-body">
+        <div>
+          <h3>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</h3>
+          <p>
+            <strong>Frank Winter</strong><br />
+            Wilhelmstr. 5A<br />
+            03046 Cottbus<br />
+            E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
+          </p>
         </div>
 
-        <div class="modal-body legal-body">
-          <div>
-            <h3>Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</h3>
-            <p>
-              <strong>Frank Winter</strong><br />
-              Wilhelmstr. 5A<br />
-              03046 Cottbus<br />
-              E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
-            </p>
-          </div>
-
-          <div>
-            <h3>Haftung für Inhalte</h3>
-            <p>
-              Als Diensteanbieter bin ich gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
-              Nach §§ 8 bis 10 DDG bin ich als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
-              oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
-            </p>
-          </div>
-
-          <div>
-            <h3>Haftung für Links</h3>
-            <p>
-              Mein Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe. Deshalb kann ich für diese fremden Inhalte
-              keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
-            </p>
-          </div>
-
-          <div>
-            <h3>Urheberrecht &amp; Open Source</h3>
-            <p>
-              Die von mir erstellten Inhalte und Werke auf diesen Seiten unterliegen dem Urheberrecht. Das Softwareprojekt Grundschutz++ Explorer
-              ist unter der freien <strong>MIT-Lizenz</strong> lizenziert.
-            </p>
-          </div>
-
-          <div>
-            <h3>Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
-            <p>
-              Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der
-              Informationstechnik (BSI).
-            </p>
-            <p>
-              Die angezeigten Katalogdaten (Grundschutz++-Anwenderkatalog) und Begriffsdefinitionen stammen aus der öffentlich zugänglichen
-              <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
-              des BSI und stehen unter der Lizenz
-              <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>.
-              Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
-            </p>
-          </div>
-
-          <div>
-            <h3>Keine Gewähr für die angezeigten Inhalte</h3>
-            <p>
-              Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt, übernehme jedoch keine Gewähr für die Richtigkeit, Vollständigkeit
-              oder Aktualität der dargestellten Inhalte oder für Fehler bei ihrer maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung.
-              Maßgeblich sind ausschließlich die amtlichen Veröffentlichungen des BSI.
-            </p>
-          </div>
+        <div>
+          <h3>Haftung für Inhalte</h3>
+          <p>
+            Als Diensteanbieter bin ich gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+            Nach §§ 8 bis 10 DDG bin ich als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen
+            oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
+          </p>
         </div>
 
-        <div class="modal-foot">
-          <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isImpressumModalOpen = false">Schließen</button>
+        <div>
+          <h3>Haftung für Links</h3>
+          <p>
+            Mein Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte ich keinen Einfluss habe. Deshalb kann ich für diese fremden Inhalte
+            keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
+          </p>
+        </div>
+
+        <div>
+          <h3>Urheberrecht &amp; Open Source</h3>
+          <p>
+            Die von mir erstellten Inhalte und Werke auf diesen Seiten unterliegen dem Urheberrecht. Das Softwareprojekt Grundschutz++ Explorer
+            ist unter der freien <strong>MIT-Lizenz</strong> lizenziert.
+          </p>
+        </div>
+
+        <div>
+          <h3>Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
+          <p>
+            Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der
+            Informationstechnik (BSI).
+          </p>
+          <p>
+            Die angezeigten Katalogdaten (Grundschutz++-Anwenderkatalog) und Begriffsdefinitionen stammen aus der öffentlich zugänglichen
+            <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
+            des BSI und stehen unter der Lizenz
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>.
+            Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
+          </p>
+        </div>
+
+        <div>
+          <h3>Keine Gewähr für die angezeigten Inhalte</h3>
+          <p>
+            Ich erstelle und pflege diese Anwendung mit größtmöglicher Sorgfalt, übernehme jedoch keine Gewähr für die Richtigkeit, Vollständigkeit
+            oder Aktualität der dargestellten Inhalte oder für Fehler bei ihrer maschinellen Darstellung. Die Nutzung erfolgt auf eigene Verantwortung.
+            Maßgeblich sind ausschließlich die amtlichen Veröffentlichungen des BSI.
+          </p>
         </div>
       </div>
-    </div>
+
+      <div class="modal-foot">
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" @click="isImpressumModalOpen = false">Schließen</button>
+      </div>
+    </dialog>
 
     <!-- ============ Lizenz Modal ============ -->
-    <div v-if="isLicenseModalOpen" class="modal-backdrop" @mousedown.self="isLicenseModalOpen = false">
-      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="license-title">
-        <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
-          <div style="flex:1">
-            <h2 id="license-title">Lizenz</h2>
-            <p>Der Grundschutz++ Explorer steht unter der MIT-Lizenz</p>
-          </div>
-          <button class="icon-btn" @click="isLicenseModalOpen = false" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+    <dialog v-if="isLicenseModalOpen" v-modal="() => isLicenseModalOpen = false" class="modal wide" aria-labelledby="license-title">
+      <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <h2 id="license-title">Lizenz</h2>
+          <p>Der Grundschutz++ Explorer steht unter der MIT-Lizenz</p>
         </div>
+        <button class="icon-btn" @click="isLicenseModalOpen = false" title="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
 
-        <div class="modal-body license-body">
-          <p class="license-note">Rechtlich maßgeblich ist der folgende englische Originaltext der Lizenz.</p>
-          <!-- Wörtlich aus der Datei LICENSE im Projekt; ein Test prüft die Übereinstimmung -->
-          <pre class="license-text" id="license-text">MIT License
+      <div class="modal-body license-body">
+        <p class="license-note">Rechtlich maßgeblich ist der folgende englische Originaltext der Lizenz.</p>
+        <!-- Wörtlich aus der Datei LICENSE im Projekt; ein Test prüft die Übereinstimmung -->
+        <pre class="license-text" id="license-text">MIT License
 
 Copyright (c) 2026 Frank Winter
 
@@ -1941,135 +1974,132 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.</pre>
 
-          <div>
-            <h3>Verwendete Inhalte und Komponenten</h3>
-            <ul class="license-list">
-              <li>
-                <strong>Grundschutz++-Katalog und Begriffsdefinitionen</strong> – Bundesamt für Sicherheit in der Informationstechnik (BSI),
-                <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>,
-                lizenziert unter <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Die Inhalte werden unverändert angezeigt.
-              </li>
-              <li>
-                <strong>Vue.js</strong> – © Yuxi (Evan) You und Vue-Mitwirkende,
-                <a href="https://github.com/vuejs/core/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT-Lizenz</a>.
-              </li>
-              <li>
-                <strong>Schrift Open Sans</strong> – © The Open Sans Project Authors,
-                <a href="css/fonts/OFL.txt" target="_blank" rel="noopener">SIL Open Font License 1.1</a>.
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="modal-foot">
-          <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isLicenseModalOpen = false">Schließen</button>
+        <div>
+          <h3>Verwendete Inhalte und Komponenten</h3>
+          <ul class="license-list">
+            <li>
+              <strong>Grundschutz++-Katalog und Begriffsdefinitionen</strong> – Bundesamt für Sicherheit in der Informationstechnik (BSI),
+              <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>,
+              lizenziert unter <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Die Inhalte werden unverändert angezeigt.
+            </li>
+            <li>
+              <strong>Vue.js</strong> – © Yuxi (Evan) You und Vue-Mitwirkende,
+              <a href="https://github.com/vuejs/core/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT-Lizenz</a>.
+            </li>
+            <li>
+              <strong>Schrift Open Sans</strong> – © The Open Sans Project Authors,
+              <a href="css/fonts/OFL.txt" target="_blank" rel="noopener">SIL Open Font License 1.1</a>.
+            </li>
+          </ul>
         </div>
       </div>
-    </div>
+
+      <div class="modal-foot">
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" @click="isLicenseModalOpen = false">Schließen</button>
+      </div>
+    </dialog>
 
     <!-- ============ Datenschutz Modal ============ -->
-    <div v-if="isDatenschutzModalOpen" class="modal-backdrop" @mousedown.self="isDatenschutzModalOpen = false">
-      <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="datenschutz-title">
-        <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
-          <div style="flex:1">
-            <h2 id="datenschutz-title">Datenschutzerklärung</h2>
-            <p>Informationen zur Verarbeitung Ihrer Daten</p>
-          </div>
-          <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
+    <dialog v-if="isDatenschutzModalOpen" v-modal="() => isDatenschutzModalOpen = false" class="modal wide" aria-labelledby="datenschutz-title">
+      <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <h2 id="datenschutz-title">Datenschutzerklärung</h2>
+          <p>Informationen zur Verarbeitung Ihrer Daten</p>
+        </div>
+        <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body legal-body">
+        <div>
+          <h3>1. Datenschutz auf einen Blick</h3>
+          <p>
+            Der Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
+            setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien und
+            Vergleiche verlassen Ihr Gerät nicht.
+          </p>
         </div>
 
-        <div class="modal-body legal-body">
-          <div>
-            <h3>1. Datenschutz auf einen Blick</h3>
-            <p>
-              Der Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
-              setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien und
-              Vergleiche verlassen Ihr Gerät nicht.
-            </p>
-          </div>
-
-          <div>
-            <h3>2. Verantwortlicher</h3>
-            <p>
-              Frank Winter, Wilhelmstr. 5A, 03046 Cottbus<br />
-              E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
-            </p>
-          </div>
-
-          <div>
-            <h3>3. Hosting via GitHub Pages</h3>
-            <p>
-              Diese Webanwendung wird als statische Seite über <strong>GitHub Pages</strong> bereitgestellt. Anbieter ist die GitHub Inc.,
-              88 Colin P Kelly Jr St, San Francisco, CA 94107, USA.
-            </p>
-            <p>
-              Beim Aufruf erfasst GitHub automatisch technische Server-Logfiles (u. a. IP-Adresse, Datum und Uhrzeit des Abrufs, Browsertyp,
-              Betriebssystem und Referrer-URL). Dies ist technisch erforderlich, um die Anwendung sicher und stabil bereitzustellen
-              (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO, berechtigtes Interesse an einer verlässlichen Bereitstellung). Ich habe auf diese
-              Logfiles keinen Zugriff. Weitere Informationen finden Sie in der
-              <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von GitHub</a>.
-            </p>
-          </div>
-
-          <div>
-            <h3>4. Laden von Katalogen</h3>
-            <p>
-              Die Anwendung stellt nur dann eine Verbindung zu weiteren Servern her, wenn Sie selbst einen Katalog laden:
-            </p>
-            <ul>
-              <li>
-                <strong>Offiziellen BSI Grundschutz++ Anwenderkatalog laden:</strong> Ihr Browser ruft die Katalogdatei direkt aus der Stand-der-Technik-Bibliothek des BSI
-                auf GitHub ab (raw.githubusercontent.com, ebenfalls ein Dienst der GitHub Inc.). Dabei erhält GitHub die unter 3. genannten technischen Daten.
-              </li>
-              <li>
-                <strong>Laden über eine URL:</strong> Ihr Browser ruft die Datei direkt von dem Server ab, dessen Adresse Sie angeben. Dessen Betreiber
-                erhält dabei technische Daten wie Ihre IP-Adresse; es gelten seine Datenschutzbestimmungen.
-              </li>
-              <li>
-                <strong>Datei hochladen:</strong> Die Datei wird ausschließlich lokal in Ihrem Browser gelesen und nicht übertragen.
-              </li>
-            </ul>
-            <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; der Abruf erfolgt nur auf Ihre ausdrückliche Anforderung.</p>
-          </div>
-
-          <div>
-            <h3>5. Lokale Speicherung in Ihrem Browser</h3>
-            <p>
-              Geladene Kataloge, Ihre Listen mit Notizen sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
-              Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
-              Alle Daten löschen Sie mit der folgenden Schaltfläche oder über die Einstellungen Ihres Browsers.
-            </p>
-            <p><button class="btn btn-secondary btn-danger" @click="clearAll">Alle lokal gespeicherten Daten löschen</button></p>
-          </div>
-
-          <div>
-            <h3>6. Externe Links</h3>
-            <p>
-              Die Anwendung verlinkt auf externe Websites, etwa die GitHub-Projektseite, die Stand-der-Technik-Bibliothek des BSI und Lizenztexte.
-              Mit dem Aufruf eines solchen Links verlassen Sie diese Anwendung; es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.
-            </p>
-          </div>
-
-          <div>
-            <h3>7. Ihre Rechte als betroffene Person</h3>
-            <p>
-              Sie haben nach der Datenschutz-Grundverordnung (DSGVO) das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO),
-              Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO) bezüglich etwaiger personenbezogener Daten sowie das Recht,
-              sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO). Bei Fragen zum Datenschutz können Sie mich jederzeit unter der
-              oben angegebenen E-Mail-Adresse kontaktieren.
-            </p>
-          </div>
+        <div>
+          <h3>2. Verantwortlicher</h3>
+          <p>
+            Frank Winter, Wilhelmstr. 5A, 03046 Cottbus<br />
+            E-Mail: <a href="mailto:studio@frankwinter.com">studio@frankwinter.com</a>
+          </p>
         </div>
 
-        <div class="modal-foot">
-          <span class="spacer"></span>
-          <button class="btn btn-secondary" @click="isDatenschutzModalOpen = false">Schließen</button>
+        <div>
+          <h3>3. Hosting via GitHub Pages</h3>
+          <p>
+            Diese Webanwendung wird als statische Seite über <strong>GitHub Pages</strong> bereitgestellt. Anbieter ist die GitHub Inc.,
+            88 Colin P Kelly Jr St, San Francisco, CA 94107, USA.
+          </p>
+          <p>
+            Beim Aufruf erfasst GitHub automatisch technische Server-Logfiles (u. a. IP-Adresse, Datum und Uhrzeit des Abrufs, Browsertyp,
+            Betriebssystem und Referrer-URL). Dies ist technisch erforderlich, um die Anwendung sicher und stabil bereitzustellen
+            (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO, berechtigtes Interesse an einer verlässlichen Bereitstellung). Ich habe auf diese
+            Logfiles keinen Zugriff. Weitere Informationen finden Sie in der
+            <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">Datenschutzerklärung von GitHub</a>.
+          </p>
+        </div>
+
+        <div>
+          <h3>4. Laden von Katalogen</h3>
+          <p>
+            Die Anwendung stellt nur dann eine Verbindung zu weiteren Servern her, wenn Sie selbst einen Katalog laden:
+          </p>
+          <ul>
+            <li>
+              <strong>Offiziellen BSI Grundschutz++ Anwenderkatalog laden:</strong> Ihr Browser ruft die Katalogdatei direkt aus der Stand-der-Technik-Bibliothek des BSI
+              auf GitHub ab (raw.githubusercontent.com, ebenfalls ein Dienst der GitHub Inc.). Dabei erhält GitHub die unter 3. genannten technischen Daten.
+            </li>
+            <li>
+              <strong>Laden über eine URL:</strong> Ihr Browser ruft die Datei direkt von dem Server ab, dessen Adresse Sie angeben. Dessen Betreiber
+              erhält dabei technische Daten wie Ihre IP-Adresse; es gelten seine Datenschutzbestimmungen.
+            </li>
+            <li>
+              <strong>Datei hochladen:</strong> Die Datei wird ausschließlich lokal in Ihrem Browser gelesen und nicht übertragen.
+            </li>
+          </ul>
+          <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; der Abruf erfolgt nur auf Ihre ausdrückliche Anforderung.</p>
+        </div>
+
+        <div>
+          <h3>5. Lokale Speicherung in Ihrem Browser</h3>
+          <p>
+            Geladene Kataloge, Ihre Listen mit Notizen sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
+            Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
+            Alle Daten löschen Sie mit der folgenden Schaltfläche oder über die Einstellungen Ihres Browsers.
+          </p>
+          <p><button class="btn btn-secondary btn-danger" @click="clearAll">Alle lokal gespeicherten Daten löschen</button></p>
+        </div>
+
+        <div>
+          <h3>6. Externe Links</h3>
+          <p>
+            Die Anwendung verlinkt auf externe Websites, etwa die GitHub-Projektseite, die Stand-der-Technik-Bibliothek des BSI und Lizenztexte.
+            Mit dem Aufruf eines solchen Links verlassen Sie diese Anwendung; es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.
+          </p>
+        </div>
+
+        <div>
+          <h3>7. Ihre Rechte als betroffene Person</h3>
+          <p>
+            Sie haben nach der Datenschutz-Grundverordnung (DSGVO) das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO),
+            Löschung (Art. 17 DSGVO) und Einschränkung der Verarbeitung (Art. 18 DSGVO) bezüglich etwaiger personenbezogener Daten sowie das Recht,
+            sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO). Bei Fragen zum Datenschutz können Sie mich jederzeit unter der
+            oben angegebenen E-Mail-Adresse kontaktieren.
+          </p>
         </div>
       </div>
-    </div>
+
+      <div class="modal-foot">
+        <span class="spacer"></span>
+        <button class="btn btn-secondary" @click="isDatenschutzModalOpen = false">Schließen</button>
+      </div>
+    </dialog>
 
   </div>
 

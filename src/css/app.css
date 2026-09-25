@@ -913,9 +913,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .list-empty p + p { margin-top: 4px; }
 
 /* Resizer */
-.resizer { width: 1px; background: var(--border); position: relative; flex-shrink: 0; cursor: col-resize; }
+.resizer { width: 1px; background: var(--border); position: relative; flex-shrink: 0; cursor: col-resize; touch-action: none; }
 .resizer::after { content: ''; position: absolute; inset: 0 -4px; z-index: 5; }
 .resizer:hover, .resizer.active { background: var(--accent); }
+.resizer:focus-visible { outline: none; background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
 /* Detail pane */
 .detail-pane { flex-shrink: 0; min-width: 380px; display: flex; flex-direction: column; background: var(--bg); min-height: 0; }
@@ -944,6 +945,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   border-bottom: 2px solid transparent; margin-bottom: -1px; display: inline-flex; align-items: center; gap: 6px;
 }
 .tab:hover { color: var(--text); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px 4px 0 0; }
 .tab.on { color: var(--text); border-bottom-color: var(--accent); }
 .tab .tab-count { font-size: calc(11px * var(--font-scale)); padding: 0 6px; height: 17px; line-height: 17px; border-radius: 9px; background: var(--surface-hover); color: var(--text-2); }
 
@@ -1119,12 +1121,10 @@ ul { margin: 0; padding: 0; list-style: none; }
   .welcome-cta { width: 100%; justify-content: center; }
 }
 
-/* ---------- Modal ---------- */
-.modal-backdrop {
-  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
-  background: var(--overlay); backdrop-filter: blur(3px);
-  animation: fade 0.12s ease-out;
-}
+/* ---------- Modal (natives <dialog>, geöffnet per showModal) ---------- */
+dialog.modal { width: calc(100% - 32px); margin: auto; padding: 0; color: var(--text); }
+dialog.modal:not([open]) { display: none; }
+dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--overlay); backdrop-filter: blur(3px); animation: fade 0.12s ease-out; }
 .modal {
   width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column;
   background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg);
@@ -1138,10 +1138,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .modal-body { padding: 20px; overflow-y: auto; display: grid; gap: 14px; }
 .modal-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 .modal-foot .spacer { flex: 1; }
-/* Bestätigungsdialog auf Basis von <dialog> */
-.confirm-dialog { max-width: 440px; width: calc(100% - 32px); margin: auto; padding: 0; color: var(--text); }
-.confirm-dialog:not([open]) { display: none; }
-.confirm-dialog::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--overlay); backdrop-filter: blur(3px); animation: fade 0.12s ease-out; }
+/* Bestätigungsdialog */
+.confirm-dialog { max-width: 440px; }
 .confirm-dialog form { display: flex; flex-direction: column; min-height: 0; }
 .confirm-dialog .modal-body { gap: 8px; }
 .confirm-message { margin: 0; font-size: calc(13.5px * var(--font-scale)); line-height: 1.5; color: var(--text-2); }
@@ -1253,8 +1251,17 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* ---------- Responsive ---------- */
 .only-narrow { display: none; }
+.rail-toggle .rail-active-badge { margin-left: 2px; }
 @media (max-width: 980px) {
-  .rail { display: none; }
+  /* Filterleiste als Drawer von links, geöffnet über den Button "Filter" */
+  .rail {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 45;
+    width: min(calc(300px * var(--font-scale)), 88vw); box-shadow: var(--shadow-lg);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 0.18s ease-out, visibility 0s linear 0.18s;
+  }
+  .rail.open { transform: none; visibility: visible; transition: transform 0.18s ease-out; }
+  .rail-backdrop { position: fixed; inset: 0; z-index: 44; background: var(--overlay); animation: fade 0.12s ease-out; }
   .only-narrow { display: inline-flex; }
   .topbar { grid-template-columns: auto minmax(200px, 1fr) auto; }
   .brand-sub { display: none; }

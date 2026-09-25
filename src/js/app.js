@@ -104,6 +104,13 @@ const app = createApp({
     const fontScale = ref(1);
     const isLoadingInitial = ref(true);
     const detailPaneWidth = ref(46); // Anteil der Detailsicht am Arbeitsbereich (%)
+    const DETAIL_PANE_MIN = 28;
+    const DETAIL_PANE_MAX = 70;
+    // Filterleiste als Drawer (nur unter 980px Breite)
+    const isRailOpen = ref(false);
+    const railToggleBtn = ref(null);
+    const railCloseBtn = ref(null);
+    const narrowQuery = window.matchMedia?.('(max-width: 980px)');
     const isResizing = ref(false);
     const isDragOver = ref(false);
 
@@ -1167,6 +1174,7 @@ const app = createApp({
     // Lifecycle Mount
     onMounted(async () => {
       window.addEventListener('keydown', handleGlobalKeydown);
+      narrowQuery?.addEventListener('change', onNarrowChange);
       const savedDark = await getSetting(
         'dark_mode',
         window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
@@ -1235,6 +1243,7 @@ const app = createApp({
 
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', handleGlobalKeydown);
+      narrowQuery?.removeEventListener('change', onNarrowChange);
       window.removeEventListener('click', closeListMenuOnOutsideClick);
       window.removeEventListener('pagehide', flushNoteSaves);
       document.removeEventListener('visibilitychange', flushNoteSaves);
@@ -1289,12 +1298,9 @@ const app = createApp({
         return;
       }
       if (e.key === 'Escape') {
+        // Modale Dialoge (<dialog>) schließen sich über ihr cancel-Ereignis selbst
         if (listMenuId.value) listMenuId.value = '';
-        else if (isLoadModalOpen.value) closeLoadDialog();
-        else if (isCatalogModalOpen.value) isCatalogModalOpen.value = false;
-        else if (isImpressumModalOpen.value) isImpressumModalOpen.value = false;
-        else if (isDatenschutzModalOpen.value) isDatenschutzModalOpen.value = false;
-        else if (isLicenseModalOpen.value) isLicenseModalOpen.value = false;
+        else if (isRailOpen.value) closeRail();
         return;
       }
       if (isCatalogModalOpen.value || isLoadModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
@@ -1310,6 +1316,38 @@ const app = createApp({
         e.preventDefault();
         stepSelection(-1);
       }
+    }
+
+    function openRail() {
+      isRailOpen.value = true;
+      nextTick(() => railCloseBtn.value?.focus());
+    }
+
+    function closeRail() {
+      if (!isRailOpen.value) return;
+      isRailOpen.value = false;
+      nextTick(() => railToggleBtn.value?.focus());
+    }
+
+    // Wird das Fenster breiter, ist die Leiste wieder fest eingeblendet
+    function onNarrowChange(e) {
+      if (!e.matches) isRailOpen.value = false;
+    }
+
+    // Reiter der Detailansicht: Pfeiltasten, Pos1 und Ende wechseln den Reiter (WAI-ARIA Tabs)
+    function onTabsKeydown(e) {
+      const tabs = [...e.currentTarget.querySelectorAll('[role="tab"]')];
+      const idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      let next;
+      if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = tabs.length - 1;
+      else return;
+      e.preventDefault();
+      tabs[next].focus();
+      tabs[next].click();
     }
 
     function stepSelection(delta) {
@@ -2416,26 +2454,46 @@ const app = createApp({
     }
 
     // Resizer: Breite der Detailsicht in % des Split-Bereichs
-    function startResize() {
+    function setDetailPaneWidth(pct) {
+      detailPaneWidth.value = Math.round(Math.max(DETAIL_PANE_MIN, Math.min(DETAIL_PANE_MAX, pct)) * 10) / 10;
+    }
+
+    // Pointer-Events decken Maus, Touch und Stift ab; die Pointer-Capture hält das Ziehen am Trenner
+    function startResize(e) {
       const container = splitEl.value;
-      if (!container) return;
+      if (!container || e.button !== 0) return;
+      e.preventDefault();
+      const handle = e.currentTarget;
+      handle.setPointerCapture(e.pointerId);
       isResizing.value = true;
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
-      const handleMouseMove = (ev) => {
+      const handleMove = (ev) => {
         const rect = container.getBoundingClientRect();
-        const pct = ((rect.right - ev.clientX) / rect.width) * 100;
-        detailPaneWidth.value = Math.round(Math.max(28, Math.min(70, pct)) * 10) / 10;
+        setDetailPaneWidth(((rect.right - ev.clientX) / rect.width) * 100);
       };
       const stopResize = () => {
         isResizing.value = false;
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', stopResize);
+        handle.removeEventListener('pointermove', handleMove);
+        handle.removeEventListener('pointerup', stopResize);
+        handle.removeEventListener('pointercancel', stopResize);
       };
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', stopResize);
+      handle.addEventListener('pointermove', handleMove);
+      handle.addEventListener('pointerup', stopResize);
+      handle.addEventListener('pointercancel', stopResize);
+    }
+
+    // Tastatur am Trenner: Pfeiltasten 1 % (mit Umschalt 5 %), Pos1/Ende an die Grenzen
+    function onResizerKeydown(e) {
+      const step = e.shiftKey ? 5 : 1;
+      if (e.key === 'ArrowLeft') setDetailPaneWidth(detailPaneWidth.value + step);
+      else if (e.key === 'ArrowRight') setDetailPaneWidth(detailPaneWidth.value - step);
+      else if (e.key === 'Home') setDetailPaneWidth(DETAIL_PANE_MAX);
+      else if (e.key === 'End') setDetailPaneWidth(DETAIL_PANE_MIN);
+      else return;
+      e.preventDefault();
     }
 
     function formatDate(isoStr) {
@@ -2568,6 +2626,15 @@ const app = createApp({
       isDarkMode,
       isLoadingInitial,
       detailPaneWidth,
+      DETAIL_PANE_MIN,
+      DETAIL_PANE_MAX,
+      onResizerKeydown,
+      isRailOpen,
+      railToggleBtn,
+      railCloseBtn,
+      openRail,
+      closeRail,
+      onTabsKeydown,
       isResizing,
       isDragOver,
       detailActiveTab,
@@ -2706,6 +2773,38 @@ const app = createApp({
       verbKey,
       diffLabel,
     };
+  },
+});
+
+// Modaler Dialog für <dialog v-if="…" v-modal="schließen">: öffnet per showModal() (Fokusfalle, inerter Hintergrund),
+// leitet Escape und Klick auf den Hintergrund an die Schließen-Funktion weiter und gibt den Fokus danach zurück
+app.directive('modal', {
+  mounted(el, { value }) {
+    el._modalClose = value;
+    el._modalReturnFocus = document.activeElement;
+    el.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      el._modalClose();
+    });
+    // Schließt der Browser den Dialog doch selbst (z. B. wiederholtes Escape), Zustand angleichen;
+    // lehnt die Schließen-Funktion ab (Laden läuft), den Dialog wieder öffnen
+    el.addEventListener('close', () => {
+      el._modalClose();
+      window.Vue.nextTick(() => {
+        if (el.isConnected && !el.open) el.showModal();
+      });
+    });
+    el.addEventListener('mousedown', (e) => {
+      if (e.target === el) el._modalClose();
+    });
+    el.showModal();
+  },
+  updated(el, { value }) {
+    el._modalClose = value;
+  },
+  unmounted(el) {
+    const target = el._modalReturnFocus;
+    if (target?.isConnected) target.focus();
   },
 });
 
