@@ -102,14 +102,18 @@
     </header>
 
     <!-- ============ Diff Banner ============ -->
-    <div v-if="diffSummary?.hasDiff" class="diff-banner" :inert="isRailOpen || null">
+    <div v-if="comparisonCatalog" class="diff-banner" :inert="isRailOpen || null">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a4 4 0 0 0 4 4h5"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/></svg>
-      <strong>Vergleichsmodus</strong>
-      <span class="tag diff-added">+{{ diffSummary.addedCount }} neu</span>
-      <span class="tag diff-modified">{{ diffSummary.modifiedCount }} geändert</span>
-      <span class="tag diff-deleted">−{{ diffSummary.deletedCount }} gelöscht</span>
+      <strong>Vergleich</strong>
+      <span>{{ catalogLabel(activeRecordId) }} gegenüber {{ catalogLabel(comparisonRecordId) }}</span>
+      <template v-if="diffSummary?.hasDiff">
+        <span class="tag diff-added">+{{ diffSummary.addedCount }} neu</span>
+        <span class="tag diff-modified">{{ diffSummary.modifiedCount }} geändert</span>
+        <span class="tag diff-deleted">−{{ diffSummary.deletedCount }} gelöscht</span>
+      </template>
+      <span v-else>– keine Unterschiede</span>
       <span class="spacer"></span>
-      <button class="link-btn" @click="clearComparison">Vergleich beenden</button>
+      <button class="link-btn" @click="openCatalogDialog()">Kataloge …</button>
     </div>
 
     <!-- ============ Workspace ============ -->
@@ -137,6 +141,8 @@
             <p class="welcome-lead">
               Anforderungen, elementare Gefährdungen und Versionsunterschiede des Grundschutz++-Anwenderkatalogs durchsuchen und vergleichen.
             </p>
+
+            <p v-if="startupError" class="welcome-error" role="alert">{{ startupError }}</p>
 
             <button class="btn btn-primary welcome-cta" @click="openLoadDialog(false)" :disabled="importLoading">
               <div v-if="importLoading" class="spinner" style="width:18px;height:18px"></div>
@@ -1212,7 +1218,7 @@
                         </dd>
                       </div>
                       <div v-if="diffSummary?.hasDiff" class="kv full">
-                        <dt>Änderungen gegenüber Vergleichsversion</dt>
+                        <dt>Änderungen gegenüber dem Vergleichsstand</dt>
                         <dd class="scope-counts">
                           <span class="tag diff-added">Neu {{ scopeStats.added }}</span>
                           <span class="tag diff-modified">Geändert {{ scopeStats.modified }}</span>
@@ -1619,13 +1625,21 @@
                         {{ selectedControl.diff.status === 'unchanged' ? 'Unverändert' : diffLabel(selectedControl.diff.status, true) }}
                       </span>
                     </div>
+                    <p v-if="selectedControl.diff.status === 'added'" class="diff-note">Im Vergleichsstand noch nicht enthalten.</p>
+                    <p v-else-if="selectedControl.diff.status === 'deleted'" class="diff-note">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</p>
                     <ul v-if="selectedControl.diff.changes.length" class="change-list">
                       <li v-for="ch in selectedControl.diff.changes" :key="ch.field">
                         <strong>{{ ch.label }}</strong>
-                        <span>
-                          <span v-if="ch.oldValue" class="old">{{ ch.oldValue }}</span>
-                          <span v-if="ch.oldValue && ch.newValue"> → </span>
-                          <span v-if="ch.newValue" class="new">{{ ch.newValue }}</span>
+                        <span v-if="ch.kind === 'prose'" class="muted">geändert, siehe unten</span>
+                        <span v-else-if="ch.kind === 'list'">
+                          <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                          <span v-if="ch.removed.length && ch.added.length"> · </span>
+                          <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                        </span>
+                        <span v-else>
+                          <span class="old">{{ formatChangeValue(ch.field, ch.oldValue) }}</span>
+                          <span> → </span>
+                          <span class="new">{{ formatChangeValue(ch.field, ch.newValue) }}</span>
                         </span>
                       </li>
                     </ul>
@@ -1690,6 +1704,7 @@
         <div class="modal-foot">
           <span class="spacer"></span>
           <button class="btn btn-secondary" value="cancel" :data-autofocus="confirmState.danger ? '' : null">{{ confirmState.cancelLabel }}</button>
+          <button v-if="confirmState.altLabel" class="btn btn-secondary" value="alt">{{ confirmState.altLabel }}</button>
           <button class="btn" :class="confirmState.danger ? 'btn-danger-solid' : 'btn-primary'" value="confirm" :data-autofocus="confirmState.danger ? null : ''">{{ confirmState.confirmLabel }}</button>
         </div>
       </form>
@@ -1700,7 +1715,7 @@
       <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
         <div style="flex:1">
           <h2 id="catalog-title">Kataloge</h2>
-          <p>Gespeicherte Versionen als Basis wählen, vergleichen oder löschen</p>
+          <p>Gespeicherte Stände anzeigen, vergleichen oder löschen</p>
         </div>
         <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1710,29 +1725,51 @@
       <div class="modal-body" style="gap:8px">
         <div v-if="storedCatalogs.length === 0" class="empty-box">Keine Kataloge gespeichert.</div>
 
-        <div
-          v-for="cat in storedCatalogs"
-          :key="cat.id"
-          class="version-item"
-          :class="{ 'is-base': cat.id === activeRecordId, 'is-comp': cat.id === comparisonRecordId }"
-        >
-          <div class="grow">
-            <h3>
-              {{ cat.title }}
-              <span v-if="cat.id === activeRecordId" class="tag tag-accent">Basis</span>
-              <span v-if="cat.id === comparisonRecordId" class="tag diff-modified">Vergleich</span>
-            </h3>
-            <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
+        <template v-else>
+          <div class="cat-grid-head" aria-hidden="true">
+            <span>Anzeigen</span>
+            <span>Vergleich</span>
+            <span>Katalog</span>
           </div>
-          <div class="acts">
-            <button v-if="cat.id !== activeRecordId" class="btn btn-secondary" @click="loadCatalogById(cat.id)">Als Basis</button>
-            <button v-if="cat.id !== activeRecordId && cat.id !== comparisonRecordId" class="btn btn-secondary" @click="selectComparison(cat.id)">Vergleichen</button>
-            <button v-if="cat.id === comparisonRecordId" class="btn btn-ghost" @click="clearComparison">Vergleich lösen</button>
-            <button class="icon-btn sm" @click="deleteCatalog(cat.id)" title="Version löschen">
+          <div
+            v-for="cat in storedCatalogs"
+            :key="cat.id"
+            class="version-item"
+            :class="{ 'is-base': cat.id === activeRecordId, 'is-comp': cat.id === comparisonRecordId }"
+          >
+            <span class="cat-radio-cell">
+              <button
+                class="cat-radio"
+                :aria-pressed="cat.id === activeRecordId"
+                :aria-label="'Anzeigen: ' + cat.title + (cat.version ? ', ' + formatVersion(cat.version) : '')"
+                :title="cat.id === activeRecordId ? 'Wird angezeigt' : 'Diesen Katalog anzeigen'"
+                @click="chooseActiveCatalog(cat.id)"
+              ><span class="cat-radio-dot"></span></button>
+            </span>
+            <span class="cat-radio-cell">
+              <button
+                class="cat-radio is-comp"
+                :aria-pressed="cat.id === comparisonRecordId"
+                :disabled="cat.id === activeRecordId"
+                :aria-label="'Vergleichen mit: ' + cat.title + (cat.version ? ', ' + formatVersion(cat.version) : '')"
+                :title="cat.id === activeRecordId ? 'Der angezeigte Katalog kann nicht zugleich Vergleichsstand sein' : (cat.id === comparisonRecordId ? 'Vergleichsstand – Klicken beendet den Vergleich' : 'Mit diesem Stand vergleichen')"
+                @click="chooseComparisonCatalog(cat.id)"
+              ><span class="cat-radio-dot"></span></button>
+            </span>
+            <div class="grow">
+              <h3>{{ cat.title }}</h3>
+              <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
+            </div>
+            <button class="icon-btn sm" @click="deleteCatalog(cat)" title="Katalog löschen" :aria-label="'Katalog löschen: ' + cat.title">
               <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
             </button>
           </div>
-        </div>
+          <p class="cat-hint">
+            Angezeigt wird der blau markierte Katalog. Wählen Sie einen zweiten, älteren Stand zum Vergleich: Die Anforderungen
+            werden dann als neu, geändert oder gelöscht gegenüber diesem Stand gekennzeichnet. Ein erneuter Klick beendet den Vergleich.
+          </p>
+        </template>
+        <p v-if="catalogError" class="load-msg" role="alert">{{ catalogError }}</p>
       </div>
 
       <div class="modal-foot">
@@ -1747,7 +1784,7 @@
       <div class="modal-head" style="padding-bottom:16px; border-bottom:1px solid var(--border)">
         <div style="flex:1">
           <h2 id="load-title">Katalog laden</h2>
-          <p>Der Katalog wird als neue Version gespeichert und als Basis angezeigt.</p>
+          <p>Der Katalog wird in Ihrem Browser gespeichert und angezeigt.</p>
         </div>
         <button class="icon-btn" @click="closeLoadDialog()" title="Schließen">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>

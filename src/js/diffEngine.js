@@ -73,177 +73,149 @@ export function computeWordDiff(oldText = '', newText = '') {
 }
 
 /**
- * Compares two NormalizedCatalogs
+ * Verglichene Felder einer Anforderung, in der Reihenfolge der Detailansicht.
+ * kind: 'value' (Einzelwert), 'list' (Menge, Reihenfolge egal), 'prose' (Text, Wortvergleich in der Detailansicht)
+ */
+export const COMPARED_FIELDS = [
+  { field: 'title', label: 'Titel', kind: 'value' },
+  { field: 'placement', label: 'Einordnung', kind: 'value' },
+  { field: 'modalVerb', label: 'Modalverb', kind: 'value' },
+  { field: 'secLevel', label: 'Schutzbedarf', kind: 'value' },
+  { field: 'statementProse', label: 'Anforderungstext', kind: 'prose' },
+  { field: 'confidentiality', label: 'Vertraulichkeit', kind: 'value' },
+  { field: 'integrity', label: 'Integrität', kind: 'value' },
+  { field: 'availability', label: 'Verfügbarkeit', kind: 'value' },
+  { field: 'authenticity', label: 'Authentizität', kind: 'value' },
+  { field: 'actionWord', label: 'Handlungswort', kind: 'value' },
+  { field: 'documentation', label: 'Dokumentation', kind: 'value' },
+  { field: 'result', label: 'Gefordertes Ergebnis', kind: 'value' },
+  { field: 'resultSpecification', label: 'Spezifikation', kind: 'value' },
+  { field: 'effortLevel', label: 'Aufwand', kind: 'value' },
+  { field: 'tags', label: 'Tags', kind: 'list' },
+  { field: 'elementareGefaehrdungen', label: 'Elementare Gefährdungen', kind: 'list' },
+  { field: 'guidanceProse', label: 'Hilfestellung', kind: 'prose' },
+  { field: 'altIdentifier', label: 'UUID', kind: 'value' },
+];
+
+// Wert eines Feldes; „Einordnung“ ist die übergeordnete Anforderung, sonst der Teilbereich bzw. die Praktik
+function fieldValue(ctrl, field) {
+  if (field === 'placement') return ctrl.parentControlId || ctrl.subgroupId || ctrl.groupId || '';
+  const v = ctrl[field];
+  if (Array.isArray(v)) return v;
+  return v === undefined || v === null ? '' : String(v).trim();
+}
+
+// Unterschiede zweier Fassungen einer Anforderung, je Feld ein Eintrag
+export function compareControls(baseCtrl, newCtrl) {
+  const changes = [];
+  for (const { field, label, kind } of COMPARED_FIELDS) {
+    const oldValue = fieldValue(baseCtrl, field);
+    const newValue = fieldValue(newCtrl, field);
+    if (kind === 'list') {
+      const oldSet = new Set(oldValue);
+      const newSet = new Set(newValue);
+      const removed = [...oldSet].filter((v) => !newSet.has(v));
+      const added = [...newSet].filter((v) => !oldSet.has(v));
+      if (removed.length || added.length) changes.push({ field, label, kind, removed, added });
+    } else if (oldValue !== newValue) {
+      changes.push({ field, label, kind, oldValue, newValue });
+    }
+  }
+  return changes;
+}
+
+/**
+ * Vergleicht einen älteren Stand (base) mit dem angezeigten (current). Verändert keinen der Kataloge.
+ * deletedControls: Anforderungen, die es nur im älteren Stand gibt (Objekte aus base).
  */
 export function compareCatalogs(baseCatalog, newCatalog) {
   const diffsByControlId = new Map();
-
+  const deletedControls = [];
   let addedCount = 0;
   let modifiedCount = 0;
   let deletedCount = 0;
   let unchangedCount = 0;
 
-  const baseMap = baseCatalog.controlMap;
-  const newMap = newCatalog.controlMap;
-
-  // 1. Check all controls in newCatalog against baseCatalog
-  for (const [id, newCtrl] of newMap.entries()) {
-    const baseCtrl = baseMap.get(id);
-
+  for (const [id, newCtrl] of newCatalog.controlMap) {
+    const baseCtrl = baseCatalog.controlMap.get(id);
     if (!baseCtrl) {
-      // Control is new (added)
-      const diffInfo = {
-        status: 'added',
-        changes: [
-          {
-            field: 'all',
-            label: 'Neue Anforderung',
-            oldValue: '',
-            newValue: `Neu hinzugefügt: ${newCtrl.id} - ${newCtrl.title}`,
-          },
-        ],
-      };
-      newCtrl.diff = diffInfo;
-      diffsByControlId.set(id, diffInfo);
+      diffsByControlId.set(id, { status: 'added', changes: [] });
       addedCount++;
-    } else {
-      // Check for modifications
-      const changes = [];
-
-      if ((baseCtrl.title || '').trim() !== (newCtrl.title || '').trim()) {
-        changes.push({
-          field: 'title',
-          label: 'Titel',
-          oldValue: baseCtrl.title || '',
-          newValue: newCtrl.title || '',
-        });
-      }
-
-      if ((baseCtrl.modalVerb || '') !== (newCtrl.modalVerb || '')) {
-        changes.push({
-          field: 'modalVerb',
-          label: 'Modalverb',
-          oldValue: baseCtrl.modalVerb || 'UNBEKANNT',
-          newValue: newCtrl.modalVerb || 'UNBEKANNT',
-        });
-      }
-
-      if ((baseCtrl.secLevel || '') !== (newCtrl.secLevel || '')) {
-        changes.push({
-          field: 'secLevel',
-          label: 'Sicherheitsniveau (sec_level)',
-          oldValue: baseCtrl.secLevel || '-',
-          newValue: newCtrl.secLevel || '-',
-        });
-      }
-
-      if ((baseCtrl.effortLevel || '') !== (newCtrl.effortLevel || '')) {
-        changes.push({
-          field: 'effortLevel',
-          label: 'Aufwandsklasse (effort_level)',
-          oldValue: baseCtrl.effortLevel || '-',
-          newValue: newCtrl.effortLevel || '-',
-        });
-      }
-
-      if ((baseCtrl.statementProse || '').trim() !== (newCtrl.statementProse || '').trim()) {
-        changes.push({
-          field: 'statementProse',
-          label: 'Anforderungstext (Statement)',
-          oldValue: baseCtrl.statementProse || '',
-          newValue: newCtrl.statementProse || '',
-        });
-      }
-
-      if ((baseCtrl.guidanceProse || '').trim() !== (newCtrl.guidanceProse || '').trim()) {
-        changes.push({
-          field: 'guidanceProse',
-          label: 'Erläuterung & Hilfestellung (Guidance)',
-          oldValue: baseCtrl.guidanceProse || '',
-          newValue: newCtrl.guidanceProse || '',
-        });
-      }
-
-      // Check Elementare Gefährdungen diff
-      const oldThreats = [...baseCtrl.elementareGefaehrdungen].sort().join(';');
-      const newThreats = [...newCtrl.elementareGefaehrdungen].sort().join(';');
-      if (oldThreats !== newThreats) {
-        changes.push({
-          field: 'elementareGefaehrdungen',
-          label: 'Elementare Gefährdungen',
-          oldValue: baseCtrl.elementareGefaehrdungen.join(', ') || 'Keine',
-          newValue: newCtrl.elementareGefaehrdungen.join(', ') || 'Keine',
-        });
-      }
-
-      if (changes.length > 0) {
-        const diffInfo = {
-          status: 'modified',
-          changes,
-        };
-        newCtrl.diff = diffInfo;
-        diffsByControlId.set(id, diffInfo);
-        modifiedCount++;
-      } else {
-        const diffInfo = {
-          status: 'unchanged',
-          changes: [],
-        };
-        newCtrl.diff = diffInfo;
-        diffsByControlId.set(id, diffInfo);
-        unchangedCount++;
-      }
+      continue;
     }
+    const changes = compareControls(baseCtrl, newCtrl);
+    diffsByControlId.set(id, { status: changes.length ? 'modified' : 'unchanged', changes });
+    if (changes.length) modifiedCount++;
+    else unchangedCount++;
   }
 
-  // 2. Check for deleted controls (in base but not in new)
-  for (const [id, baseCtrl] of baseMap.entries()) {
-    if (!newMap.has(id)) {
-      const diffInfo = {
-        status: 'deleted',
-        changes: [
-          {
-            field: 'all',
-            label: 'Entfallene Anforderung',
-            oldValue: `${baseCtrl.id} - ${baseCtrl.title}`,
-            newValue: 'In neuer Version nicht mehr vorhanden',
-          },
-        ],
-      };
-      diffsByControlId.set(id, diffInfo);
-      deletedCount++;
-
-      const deletedControl = {
-        ...baseCtrl,
-        diff: diffInfo,
-      };
-
-      const targetPractice = newCatalog.practices.find((p) => p.id === baseCtrl.groupId);
-      if (targetPractice) {
-        if (baseCtrl.subgroupId) {
-          const targetSub = targetPractice.subgroups.find((s) => s.id === baseCtrl.subgroupId);
-          if (targetSub) {
-            targetSub.controls.push(deletedControl);
-          } else {
-            targetPractice.controls.push(deletedControl);
-          }
-        } else {
-          targetPractice.controls.push(deletedControl);
-        }
-      }
-      newCatalog.allControls.push(deletedControl);
-      newCatalog.controlMap.set(id, deletedControl);
-    }
+  for (const [id, baseCtrl] of baseCatalog.controlMap) {
+    if (newCatalog.controlMap.has(id)) continue;
+    diffsByControlId.set(id, { status: 'deleted', changes: [] });
+    deletedControls.push(baseCtrl);
+    deletedCount++;
   }
 
   return {
     hasDiff: addedCount > 0 || modifiedCount > 0 || deletedCount > 0,
-    baseCatalogTitle: `${baseCatalog.title} (${baseCatalog.version || 'Basis'})`,
-    comparedCatalogTitle: `${newCatalog.title} (${newCatalog.version || 'Neu'})`,
     addedCount,
     modifiedCount,
     deletedCount,
     unchangedCount,
     diffsByControlId,
+    deletedControls,
   };
+}
+
+/**
+ * Überträgt einen Vergleich auf den angezeigten Katalog: setzt ctrl.diff und fügt die gelöschten Anforderungen
+ * an ihrer früheren Stelle ein – Unteranforderungen unter ihrer übergeordneten Anforderung, sonst im Teilbereich.
+ * Verändert den Katalog; gedacht für einen frisch geparsten Katalog, der nur der Anzeige dient.
+ */
+export function applyDiff(catalog, diff) {
+  for (const [id, ctrl] of catalog.controlMap) ctrl.diff = diff.diffsByControlId.get(id) || null;
+
+  const deletedIds = new Set(diff.deletedControls.map((c) => c.id));
+  // Kopie einer gelöschten Anforderung; ihre Unteranforderungen nur, soweit sie ebenfalls gelöscht sind
+  const copyDeleted = (baseCtrl) => {
+    const copy = {
+      ...baseCtrl,
+      diff: diff.diffsByControlId.get(baseCtrl.id),
+      subcontrols: (baseCtrl.subcontrols || []).filter((sc) => deletedIds.has(sc.id)).map(copyDeleted),
+    };
+    catalog.controlMap.set(copy.id, copy);
+    catalog.allControls.push(copy);
+    return copy;
+  };
+
+  for (const baseCtrl of diff.deletedControls) {
+    // Unter einer ebenfalls gelöschten Anforderung: wird mit ihr eingefügt
+    if (baseCtrl.parentControlId && deletedIds.has(baseCtrl.parentControlId)) continue;
+    const copy = copyDeleted(baseCtrl);
+
+    let practice = catalog.practices.find((p) => p.id === baseCtrl.groupId);
+    if (!practice) {
+      practice = { id: baseCtrl.groupId, title: baseCtrl.groupTitle || baseCtrl.groupId, subgroups: [], controls: [] };
+      catalog.practices.push(practice);
+    }
+    // Die Praktik führt alle ihre Anforderungen flach (für Zählungen), einschließlich Unteranforderungen
+    const addFlat = (c) => {
+      practice.controls.push(c);
+      for (const sc of c.subcontrols) addFlat(sc);
+    };
+    addFlat(copy);
+
+    const parent = baseCtrl.parentControlId ? catalog.controlMap.get(baseCtrl.parentControlId) : null;
+    if (parent) {
+      parent.subcontrols = [...(parent.subcontrols || []), copy];
+    } else if (baseCtrl.subgroupId) {
+      let sub = practice.subgroups.find((s) => s.id === baseCtrl.subgroupId);
+      if (!sub) {
+        sub = { id: baseCtrl.subgroupId, title: baseCtrl.subgroupTitle || baseCtrl.subgroupId, controls: [] };
+        practice.subgroups.push(sub);
+      }
+      sub.controls.push(copy);
+    }
+  }
+  return catalog;
 }

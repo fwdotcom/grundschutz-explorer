@@ -7,7 +7,7 @@
 
 import { parseOscalCatalog, formatBsiThreat } from './oscalParser.js';
 import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition } from './namespaces.js';
-import { compareCatalogs, computeWordDiff } from './diffEngine.js';
+import { compareCatalogs, applyDiff, computeWordDiff } from './diffEngine.js';
 import { matchesFacets } from './filters.js';
 import {
   saveCatalogRecord,
@@ -53,7 +53,7 @@ const VALUE_FACETS = {
   ...Object.fromEntries(SECURITY_TARGETS.map((t) => [t.key, t.key])),
 };
 
-const { createApp, ref, computed, onMounted, onBeforeUnmount, watch, nextTick } = window.Vue;
+const { createApp, ref, shallowRef, computed, onMounted, onBeforeUnmount, watch, nextTick } = window.Vue;
 
 const PRESET_CATALOG_URL =
   'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Grundschutz%2B%2B/Grundschutz%2B%2B-resolved_catalog.json';
@@ -79,11 +79,18 @@ const FONT_SCALES = [
 const app = createApp({
   setup() {
     // Core State
-    const activeCatalog = ref(null);
+    // Angezeigter Katalog und optional ein älterer Stand zum Vergleich. Gemerkt werden nur die beiden IDs;
+    // activeCatalog ist immer frisch geparst und trägt das Ergebnis des Vergleichs (siehe showCatalogs).
+    // shallowRef: die Katalogdaten ändern sich nach dem Parsen nicht mehr; tiefe Reaktivität kostete bei
+    // jedem Zugriff (Zählungen über alle Anforderungen) spürbar Zeit
+    const activeCatalog = shallowRef(null);
     const activeRecordId = ref('');
-    const comparisonCatalog = ref(null);
+    const comparisonCatalog = shallowRef(null);
     const comparisonRecordId = ref('');
     const diffSummary = ref(null);
+    // Fehler beim Start bzw. beim Wechsel des Katalogs (Startseite bzw. Dialog „Kataloge“)
+    const startupError = ref('');
+    const catalogError = ref('');
     const storedCatalogs = ref([]);
     const selectedControlId = ref('');
 
@@ -136,7 +143,6 @@ const app = createApp({
     const importUrlInput = ref('');
     const importLoading = ref(false);
     const importError = ref('');
-    const importSuccess = ref('');
     // Hinweis im Dialog "Katalog laden", wenn der Katalog bereits gespeichert ist
     const loadNotice = ref('');
 
@@ -149,6 +155,20 @@ const app = createApp({
       subgroupFilter: '',
       controlFilter: '',
     });
+
+    // Suchbegriff, nach dem gefiltert wird: folgt der Eingabe mit kurzer Verzögerung, damit nicht jeder Tastendruck
+    // alle Zählungen neu berechnet; ein geleertes Suchfeld wirkt sofort
+    const searchTerm = ref('');
+    let searchTimer = null;
+    watch(
+      () => filters.value.searchQuery,
+      (q) => {
+        clearTimeout(searchTimer);
+        const term = q.trim().toLowerCase();
+        if (!term) searchTerm.value = '';
+        else searchTimer = setTimeout(() => (searchTerm.value = term), 150);
+      }
+    );
 
     // Tag-based Facet Filters: Array of { key, category, value, mode: 'include'|'exclude', label, categoryLabel }
     const activeTags = ref([]);
@@ -342,18 +362,9 @@ const app = createApp({
     function matchesFilterCategory(ctrl, ignoreCategory = null) {
       const f = filters.value;
 
-      // 1. Text Search Query
-      const query = f.searchQuery.trim().toLowerCase();
-      if (query) {
-        const queryMatches =
-          ctrl.id.toLowerCase().includes(query) ||
-          ctrl.title.toLowerCase().includes(query) ||
-          (ctrl.statementProse || '').toLowerCase().includes(query) ||
-          (ctrl.guidanceProse || '').toLowerCase().includes(query) ||
-          ctrl.elementareGefaehrdungen.some((t) => t.toLowerCase().includes(query)) ||
-          (ctrl.tags || []).some((t) => t.toLowerCase().includes(query));
-        if (!queryMatches) return false;
-      }
+      // 1. Volltextsuche
+      const query = searchTerm.value;
+      if (query && !searchText(ctrl).includes(query)) return false;
 
       // 2. Drilldowns (Subgroup & Control)
       if (f.subgroupFilter && ctrl.subgroupId !== f.subgroupFilter) return false;
@@ -367,6 +378,21 @@ const app = createApp({
 
       // 3. Facetten: zwischen den Bereichen und, innerhalb eines Bereichs oder (filters.js)
       return matchesFacets(activeFilterSpec.value, (category) => facetValues(ctrl, category), ignoreCategory);
+    }
+
+    // Durchsuchbarer Text je Anforderung, einmal berechnet: Kennung, Titel, Anforderungstext, Hilfestellung,
+    // Gefährdungen und Tags (Zeilenumbruch als Trenner, damit kein Treffer über Feldgrenzen entsteht)
+    const searchTexts = new WeakMap();
+    function searchText(ctrl) {
+      let text = searchTexts.get(ctrl);
+      if (text === undefined) {
+        text = [ctrl.id, ctrl.title, ctrl.statementProse, ctrl.guidanceProse, ...ctrl.elementareGefaehrdungen, ...(ctrl.tags || [])]
+          .filter(Boolean)
+          .join('\n')
+          .toLowerCase();
+        searchTexts.set(ctrl, text);
+      }
+      return text;
     }
 
     // Werte einer Anforderung je Filterbereich, als Liste
@@ -626,7 +652,7 @@ const app = createApp({
           type: 'search',
           category: 'search',
           categoryLabel: 'Suche',
-          label: `"${filters.value.searchQuery.trim()}"`,
+          label: `„${filters.value.searchQuery.trim()}“`,
           mode: 'include',
         });
       }
@@ -847,17 +873,21 @@ const app = createApp({
 
     // Word diffs
     const statementDiffTokens = computed(() => {
-      if (!diffSummary.value?.hasDiff || !selectedControl.value) return [];
+      if (selectedControl.value?.diff?.status !== 'modified') return [];
       const oldText = baseControlForDiff.value?.statementProse || '';
       const newText = selectedControl.value.statementProse || '';
-      return computeWordDiff(oldText, newText);
+      // Nur geänderte Texte zeigen
+      const tokens = computeWordDiff(oldText, newText);
+      return tokens.some((tok) => tok.added || tok.removed) ? tokens : [];
     });
 
     const guidanceDiffTokens = computed(() => {
-      if (!diffSummary.value?.hasDiff || !selectedControl.value) return [];
+      if (selectedControl.value?.diff?.status !== 'modified') return [];
       const oldText = baseControlForDiff.value?.guidanceProse || '';
       const newText = selectedControl.value.guidanceProse || '';
-      return computeWordDiff(oldText, newText);
+      // Nur geänderte Texte zeigen
+      const tokens = computeWordDiff(oldText, newText);
+      return tokens.some((tok) => tok.added || tok.removed) ? tokens : [];
     });
 
     // Reihenfolge der sichtbaren Einträge (für Pfeiltasten-Navigation)
@@ -1078,6 +1108,7 @@ const app = createApp({
         if (savedFilterState) {
           if (savedFilterState.filters) {
             filters.value.searchQuery = savedFilterState.filters.searchQuery || '';
+            searchTerm.value = filters.value.searchQuery.trim().toLowerCase();
             filters.value.subgroupFilter = savedFilterState.filters.subgroupFilter || '';
             filters.value.controlFilter = savedFilterState.filters.controlFilter || '';
           }
@@ -1126,22 +1157,17 @@ const app = createApp({
     onMounted(async () => {
       window.addEventListener('keydown', handleGlobalKeydown);
       narrowQuery?.addEventListener('change', onNarrowChange);
-      const savedDark = await getSetting(
-        'dark_mode',
-        window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
-      );
+      // Darstellung: ohne gespeicherte Wahl (oder ohne lesbaren Speicher) den Systemeinstellungen folgen
+      const setting = (key, fallback) => getSetting(key, fallback).catch(() => fallback);
+      const savedDark = await setting('dark_mode', window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false);
       isDarkMode.value = Boolean(savedDark);
       applyDarkMode(isDarkMode.value);
 
-      // Ohne gespeicherte Wahl der Systemeinstellung "mehr Kontrast" folgen
-      const savedContrast = await getSetting(
-        'high_contrast',
-        window.matchMedia?.('(prefers-contrast: more)').matches ?? false
-      );
+      const savedContrast = await setting('high_contrast', window.matchMedia?.('(prefers-contrast: more)').matches ?? false);
       isHighContrast.value = Boolean(savedContrast);
       applyHighContrast(isHighContrast.value);
 
-      const savedScale = Number(await getSetting('font_scale', 1));
+      const savedScale = Number(await setting('font_scale', 1));
       fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
       applyFontScale(fontScale.value);
 
@@ -1157,39 +1183,56 @@ const app = createApp({
       window.addEventListener('pagehide', flushNoteSaves);
       document.addEventListener('visibilitychange', flushNoteSaves);
 
-      await loadLists();
+      // Der Start darf nie im Ladezustand hängen bleiben: Fehler erscheinen als Hinweis auf der Startseite
+      try {
+        await loadLists();
 
-      // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
-      await loadNamespaces();
-      namespacesVersion.value++;
+        // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
+        await loadNamespaces();
+        namespacesVersion.value++;
 
-      await refreshStoredCatalogs();
+        await refreshStoredCatalogs();
 
-      const restored = await restorePersistedState();
-      dropUnknownListTags();
-      const hasSavedCollapse = Boolean(restored?.savedCollapseState && Array.isArray(restored.savedCollapseState.expandedKeys));
+        const restored = await restorePersistedState();
+        dropUnknownListTags();
+        const hasSavedCollapse = Boolean(restored?.savedCollapseState && Array.isArray(restored.savedCollapseState.expandedKeys));
 
-      const lastActiveId = await getSetting('last_active_catalog_id');
-      if (lastActiveId && storedCatalogs.value.some((c) => c.id === lastActiveId)) {
-        await loadCatalogById(lastActiveId, !hasSavedCollapse);
-      } else if (storedCatalogs.value.length > 0) {
-        await loadCatalogById(storedCatalogs.value[0].id, !hasSavedCollapse);
+        // Ohne gespeicherten Katalog (erster Start oder Speicher geleert) erscheint die Startseite;
+        // geladen wird erst auf ausdrücklichen Wunsch.
+        const known = (id) => storedCatalogs.value.some((c) => c.id === id);
+        const lastActiveId = await getSetting('last_active_catalog_id');
+        const savedComparisonId = await getSetting('comparison_catalog_id', '');
+        // Zuerst den zuletzt angezeigten Katalog samt Vergleich; lässt er sich nicht öffnen, ohne Vergleich,
+        // danach die übrigen gespeicherten Kataloge
+        const attempts = [];
+        if (known(lastActiveId)) {
+          if (known(savedComparisonId)) attempts.push([lastActiveId, savedComparisonId]);
+          attempts.push([lastActiveId, '']);
+        }
+        for (const c of storedCatalogs.value) if (c.id !== lastActiveId) attempts.push([c.id, '']);
+        const lastError = await showFirstOpenable(attempts, { resetView: !hasSavedCollapse });
+        if (lastError) {
+          startupError.value =
+            `Die gespeicherten Kataloge lassen sich nicht öffnen (${lastError.message}). ` +
+            'Löschen Sie sie unter „Kataloge“ und laden Sie den Katalog neu.';
+        }
+
+        // Eine gespeicherte Auswahl, die es im Katalog nicht (mehr) gibt, verwerfen – keine automatische Auswahl
+        if (activeCatalog.value && selectedControlId.value && !activeCatalog.value.controlMap.has(selectedControlId.value)) {
+          selectedControlId.value = '';
+        }
+        scrollSelectedIntoView();
+      } catch (err) {
+        console.error('Fehler beim Start:', err);
+        startupError.value =
+          'Die im Browser gespeicherten Daten konnten nicht gelesen werden. Möglicherweise erlaubt Ihr Browser ' +
+          'in diesem Fenster keinen lokalen Speicher, etwa im privaten Modus.';
+      } finally {
+        isLoadingInitial.value = false;
+        setTimeout(() => {
+          isRestoringState.value = false;
+        }, 200);
       }
-      // Ohne gespeicherten Katalog (erster Start oder Speicher geleert) erscheint die Startseite;
-      // geladen wird erst auf ausdrücklichen Wunsch.
-
-      // Eine gespeicherte Auswahl, die es im Katalog nicht (mehr) gibt, verwerfen – keine automatische Auswahl
-      if (activeCatalog.value && selectedControlId.value && !activeCatalog.value.controlMap.has(selectedControlId.value)) {
-        selectedControlId.value = '';
-      }
-
-      scrollSelectedIntoView();
-
-      isLoadingInitial.value = false;
-
-      setTimeout(() => {
-        isRestoringState.value = false;
-      }, 200);
     });
 
     onBeforeUnmount(() => {
@@ -1214,10 +1257,11 @@ const app = createApp({
       el.classList.toggle('is-compact', last.top > first.top + first.height / 2);
     }
 
-    // Zeigt einen modalen Bestätigungsdialog und liefert true (bestätigt) oder false (abgebrochen, Escape, Klick daneben)
-    function askConfirm({ title, message, hint = '', confirmLabel = 'OK', cancelLabel = 'Abbrechen', danger = false }) {
+    // Zeigt einen modalen Bestätigungsdialog und liefert true (bestätigt) oder false (abgebrochen, Escape, Klick daneben);
+    // mit altLabel gibt es einen dritten Knopf, der 'alt' liefert
+    function askConfirm({ title, message, hint = '', confirmLabel = 'OK', cancelLabel = 'Abbrechen', altLabel = '', danger = false }) {
       confirmResolve?.(false);
-      confirmState.value = { title, message, hint, confirmLabel, cancelLabel, danger };
+      confirmState.value = { title, message, hint, confirmLabel, cancelLabel, altLabel, danger };
       return new Promise((resolve) => {
         confirmResolve = resolve;
         nextTick(() => {
@@ -1231,12 +1275,12 @@ const app = createApp({
 
     function onConfirmDialogClose() {
       const dialog = confirmDialogEl.value;
-      const confirmed = dialog.returnValue === 'confirm';
+      const result = dialog.returnValue === 'confirm' ? true : dialog.returnValue === 'alt' ? 'alt' : false;
       dialog.returnValue = '';
       confirmState.value = null;
       const resolve = confirmResolve;
       confirmResolve = null;
-      resolve?.(confirmed);
+      resolve?.(result);
     }
 
     function handleGlobalKeydown(e) {
@@ -1368,7 +1412,6 @@ const app = createApp({
       loadReturnToList = returnToList;
       importError.value = '';
       loadNotice.value = '';
-      importSuccess.value = '';
       importUrlInput.value = '';
       loadFile.value = null;
       isLoadModalOpen.value = true;
@@ -1432,80 +1475,147 @@ const app = createApp({
       selectedControlId.value = '';
     }
 
-    // resetView: Ansicht für neue Daten zurücksetzen (siehe resetViewForNewData)
-    async function loadCatalogById(id, resetView = true) {
-      const record = await getCatalogRecord(id);
-      if (!record) return;
+    /**
+     * Zeigt einen Katalog an, optional verglichen mit einem älteren Stand. Beide werden frisch geparst, der
+     * Vergleich wird auf den angezeigten Katalog übertragen (applyDiff); die gespeicherten Daten bleiben unberührt.
+     * resetView: Ansicht für neue Daten zurücksetzen (siehe resetViewForNewData)
+     */
+    async function showCatalogs(activeId, comparisonId = '', { resetView = false } = {}) {
+      if (comparisonId === activeId) comparisonId = '';
+      const [record, comparisonRecord] = await Promise.all([
+        getCatalogRecord(activeId),
+        comparisonId ? getCatalogRecord(comparisonId) : null,
+      ]);
+      if (!record) throw new Error('Der Katalog ist nicht mehr gespeichert.');
 
-      activeRecordId.value = id;
-      await saveSetting('last_active_catalog_id', id);
-
-      const parsed = parseOscalCatalog(record.catalogData);
-      activeCatalog.value = parsed;
-
-      if (comparisonCatalog.value) {
-        diffSummary.value = compareCatalogs(comparisonCatalog.value, activeCatalog.value);
+      const catalog = parseOscalCatalog(record.catalogData);
+      let comparison = null;
+      let diff = null;
+      if (comparisonRecord) {
+        comparison = parseOscalCatalog(comparisonRecord.catalogData);
+        diff = compareCatalogs(comparison, catalog);
+        applyDiff(catalog, diff);
       }
 
+      activeCatalog.value = catalog;
+      activeRecordId.value = activeId;
+      comparisonCatalog.value = comparison;
+      comparisonRecordId.value = comparison ? comparisonId : '';
+      diffSummary.value = diff;
+      await Promise.all([
+        saveSetting('last_active_catalog_id', activeId),
+        saveSetting('comparison_catalog_id', comparisonRecordId.value),
+      ]);
+
+      // Ohne Unterschiede gibt es weder Änderungsfilter noch den Reiter "Änderungen"
+      if (!diff?.hasDiff) {
+        if (activeTags.value.some((t) => t.category === 'diff')) activeTags.value = activeTags.value.filter((t) => t.category !== 'diff');
+        if (detailActiveTab.value === 'diff') detailActiveTab.value = 'overview';
+      }
       // Keine automatische Auswahl: eine nicht (mehr) vorhandene Auswahl wird verworfen
-      if (selectedControlId.value && !parsed.controlMap.has(selectedControlId.value)) {
+      if (selectedControlId.value && !catalog.controlMap.has(selectedControlId.value)) {
         selectedControlId.value = '';
       }
+      if (resetView) resetViewForNewData();
+    }
 
-      if (resetView) {
-        resetViewForNewData();
+    // Wechsel im Dialog "Kataloge"; Fehler erscheinen dort
+    async function runCatalogChange(activeId, comparisonId) {
+      catalogError.value = '';
+      try {
+        await showCatalogs(activeId, comparisonId);
+        startupError.value = '';
+      } catch (err) {
+        console.error('Katalogwechsel fehlgeschlagen:', err);
+        catalogError.value = `Der Katalog lässt sich nicht öffnen: ${err.message || err}`;
       }
     }
 
-    // Fetch per URL (used in import modal)
+    // Probiert [angezeigt, Vergleich]-Paare der Reihe nach, bis sich eines öffnen lässt. Liefert den letzten Fehler,
+    // wenn keines geht; dann ist kein Katalog angezeigt (Startseite).
+    async function showFirstOpenable(attempts, options = {}) {
+      let lastError = null;
+      for (const [activeId, comparisonId] of attempts) {
+        try {
+          await showCatalogs(activeId, comparisonId, options);
+          return null;
+        } catch (err) {
+          console.error('Katalog konnte nicht geöffnet werden:', err);
+          lastError = err;
+        }
+      }
+      clearShownCatalog();
+      return lastError;
+    }
+
+    function clearShownCatalog() {
+      activeCatalog.value = null;
+      activeRecordId.value = '';
+      comparisonCatalog.value = null;
+      comparisonRecordId.value = '';
+      diffSummary.value = null;
+      selectedControlId.value = '';
+      saveSetting('last_active_catalog_id', '').catch(() => {});
+      saveSetting('comparison_catalog_id', '').catch(() => {});
+    }
+
+    // Angezeigten Katalog wählen; war er der Vergleichsstand, tauschen beide die Rollen
+    function chooseActiveCatalog(id) {
+      if (id === activeRecordId.value && activeCatalog.value) return;
+      const comparisonId = comparisonRecordId.value === id ? activeRecordId.value : comparisonRecordId.value;
+      return runCatalogChange(id, comparisonId);
+    }
+
+    // Vergleichsstand wählen; ein weiterer Klick auf den gewählten hebt den Vergleich auf
+    function chooseComparisonCatalog(id) {
+      if (id === activeRecordId.value || !activeCatalog.value) return;
+      return runCatalogChange(activeRecordId.value, comparisonRecordId.value === id ? '' : id);
+    }
+
+    // Katalog über eine URL laden (Dialog "Katalog laden")
     async function fetchFromUrl(targetUrl, presetName = '') {
       importError.value = '';
       loadNotice.value = '';
-      importSuccess.value = '';
       importLoading.value = true;
-
       try {
-        const res = await fetch(targetUrl, {
-          headers: { Accept: 'application/json' },
-        });
-
-        if (!res.ok) {
-          throw new Error(`HTTP-Fehler ${res.status}: ${res.statusText}`);
+        let jsonData;
+        try {
+          const res = await fetch(targetUrl, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error(`HTTP-Fehler ${res.status}${res.statusText ? ': ' + res.statusText : ''}`);
+          jsonData = await res.json();
+        } catch (err) {
+          console.error('Fetch error:', err);
+          importError.value = `Fehler beim Abrufen der URL: ${err.message || err}. (Prüfen Sie ggf. die Internetverbindung oder nutzen Sie den Datei-Upload).`;
+          return;
         }
-
-        const jsonData = await res.json();
         await processImportedJson(jsonData, 'url', presetName || targetUrl);
       } catch (err) {
-        console.error('Fetch error:', err);
-        importError.value = `Fehler beim Abrufen der URL: ${err.message || err}. (Prüfen Sie ggf. die Internetverbindung oder nutzen Sie den Datei-Upload).`;
+        console.error('Import error:', err);
+        importError.value = `Der Katalog konnte nicht gespeichert werden: ${err.message || err}`;
       } finally {
         importLoading.value = false;
       }
     }
 
-    function readFile(file) {
+    async function readFile(file) {
       importError.value = '';
       loadNotice.value = '';
-      importSuccess.value = '';
       importLoading.value = true;
-
-      const reader = new FileReader();
-      reader.onload = async (evt) => {
+      try {
+        let jsonData;
         try {
-          const text = evt.target.result;
-          const jsonData = JSON.parse(text);
-          await processImportedJson(jsonData, 'upload', file.name);
+          jsonData = JSON.parse(await file.text());
         } catch (err) {
-          console.error('JSON parse error:', err);
-          importError.value = `Die Datei konnte nicht als JSON geparst werden: ${err.message}`;
-          importLoading.value = false;
+          importError.value = `Die Datei ist keine gültige JSON-Datei: ${err.message}`;
+          return;
         }
-      };
-      reader.onerror = () => {
-        importError.value = 'Fehler beim Lesen der Datei.';
+        await processImportedJson(jsonData, 'upload', file.name);
+      } catch (err) {
+        console.error('Import error:', err);
+        importError.value = `Der Katalog konnte nicht gespeichert werden: ${err.message || err}`;
+      } finally {
         importLoading.value = false;
-      };
-      reader.readAsText(file);
+      }
     }
 
     // SHA-256 über den Katalog-Inhalt; unabhängig von Formatierung und Quelle der Datei
@@ -1515,21 +1625,20 @@ const app = createApp({
       return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
     }
 
+    // Prüft, speichert und zeigt einen geladenen Katalog. Gespeichert wird nur, was sich auch öffnen lässt.
     async function processImportedJson(jsonData, sourceType, sourceName) {
-      const isCatalog = Boolean(
-        jsonData?.catalog ||
-        (jsonData?.groups && jsonData?.controls) ||
-        jsonData?.metadata?.title
-      );
-
-      if (!isCatalog) {
-        importError.value =
-          'Die Datei enthält keinen gültigen OSCAL-Katalog ("catalog"). Keine BSI-kompatible Struktur gefunden.';
-        importLoading.value = false;
+      let parsed;
+      try {
+        parsed = parseOscalCatalog(jsonData);
+      } catch (err) {
+        importError.value = `Die Datei enthält keinen lesbaren OSCAL-Katalog: ${err.message}`;
+        return;
+      }
+      if (parsed.allControls.length === 0) {
+        importError.value = 'Die Datei enthält keinen OSCAL-Katalog mit Anforderungen.';
         return;
       }
 
-      // Catalog
       const catObj = jsonData.catalog || jsonData;
       const catTitle = catObj.metadata?.title || sourceName;
       const catVersion = catObj.metadata?.version || catObj.metadata?.['last-modified'] || '';
@@ -1548,7 +1657,6 @@ const app = createApp({
       // Aus dem Dialog "Katalog laden": Hinweis dort anzeigen, nichts laden
       if (duplicate && isLoadModalOpen.value) {
         loadNotice.value = `Dieser Katalog ist bereits geladen: „${duplicate.title}“, importiert ${formatDate(duplicate.importedAt)}.`;
-        importLoading.value = false;
         return;
       }
 
@@ -1570,14 +1678,10 @@ const app = createApp({
         await refreshStoredCatalogs();
       }
 
-      // Der neue Katalog wird Basis; ein laufender Vergleich endet (Vergleiche über die Versionsliste)
-      if (detailActiveTab.value === 'diff') detailActiveTab.value = 'overview';
-      comparisonRecordId.value = '';
-      comparisonCatalog.value = null;
-      diffSummary.value = null;
-      await loadCatalogById(newId);
+      // Neue Daten: der Katalog wird ohne Vergleich angezeigt (den Vergleich wählt man im Dialog "Kataloge")
+      await showCatalogs(newId, '', { resetView: true });
+      startupError.value = '';
 
-      importLoading.value = false;
       const fromLoadDialog = isLoadModalOpen.value;
       isLoadModalOpen.value = false;
       isCatalogModalOpen.value = fromLoadDialog && loadReturnToList;
@@ -2037,15 +2141,22 @@ const app = createApp({
       for (const incoming of imported) {
         const takenNames = nextLists.map((l) => l.name);
         const existing = nextLists.find((l) => l.name.toLocaleLowerCase('de') === incoming.name.toLocaleLowerCase('de'));
-        const merge =
-          existing &&
-          (await askConfirm({
-            title: 'Liste bereits vorhanden',
-            message: `Die Liste „${existing.name}“ gibt es bereits. Sollen die Einträge zusammengeführt werden?`,
-            hint: 'Unterschiedliche Notizen bleiben dabei beide erhalten.',
-            confirmLabel: 'Zusammenführen',
-            cancelLabel: `Als „${uniqueListName(incoming.name, takenNames)}“ anlegen`,
-          }));
+        // Zusammenführen, als Kopie anlegen oder den ganzen Import abbrechen (auch mit Esc)
+        const choice = existing
+          ? await askConfirm({
+              title: 'Liste bereits vorhanden',
+              message: `Die Liste „${existing.name}“ gibt es bereits. Sollen die Einträge zusammengeführt werden?`,
+              hint: 'Unterschiedliche Notizen bleiben dabei beide erhalten.',
+              confirmLabel: 'Zusammenführen',
+              altLabel: `Als „${uniqueListName(incoming.name, takenNames)}“ anlegen`,
+              cancelLabel: 'Import abbrechen',
+            })
+          : 'alt';
+        if (!choice) {
+          showListNotice('Import abgebrochen, es wurde nichts geändert.');
+          return;
+        }
+        const merge = choice === true;
         let target;
         if (merge) {
           target = { ...existing, updatedAt: now };
@@ -2303,45 +2414,44 @@ const app = createApp({
       return out;
     }
 
-    // Comparison actions in Versions Modal
-    async function selectComparison(id) {
-      const record = await getCatalogRecord(id);
-      if (!record || !activeCatalog.value) return;
-
-      comparisonRecordId.value = id;
-      const parsedComp = parseOscalCatalog(record.catalogData);
-      comparisonCatalog.value = parsedComp;
-
-      diffSummary.value = compareCatalogs(parsedComp, activeCatalog.value);
-    }
-
-    function clearComparison() {
-      if (detailActiveTab.value === 'diff') detailActiveTab.value = 'overview';
-      comparisonRecordId.value = '';
-      comparisonCatalog.value = null;
-      diffSummary.value = null;
-
-      if (activeRecordId.value) {
-        // gleicher Katalog, nur der Vergleich endet: Aufklapp-Zustand beibehalten
-        loadCatalogById(activeRecordId.value, false);
+    // Katalog löschen; war er angezeigt, rückt ein anderer nach (bevorzugt nicht der Vergleichsstand)
+    async function deleteCatalog(cat) {
+      const role =
+        cat.id === activeRecordId.value
+          ? ' Er wird gerade angezeigt.'
+          : cat.id === comparisonRecordId.value
+            ? ' Er ist gerade der Vergleichsstand.'
+            : '';
+      const confirmed = await askConfirm({
+        title: 'Katalog löschen?',
+        message: `„${cat.title}“${cat.version ? ` (${formatVersion(cat.version)})` : ''} wird aus Ihrem Browser gelöscht.${role}`,
+        hint: 'Den offiziellen Katalog können Sie jederzeit neu laden.',
+        confirmLabel: 'Katalog löschen',
+        danger: true,
+      });
+      if (!confirmed) return;
+      catalogError.value = '';
+      try {
+        await deleteCatalogRecord(cat.id);
+        await refreshStoredCatalogs();
+      } catch (err) {
+        catalogError.value = `Der Katalog konnte nicht gelöscht werden: ${err.message || err}`;
+        return;
       }
-    }
 
-    async function deleteCatalog(id) {
-      await deleteCatalogRecord(id);
-      await refreshStoredCatalogs();
-
-      if (activeRecordId.value === id) {
-        activeCatalog.value = null;
-        activeRecordId.value = '';
-        selectedControlId.value = '';
-        if (storedCatalogs.value.length > 0) {
-          await loadCatalogById(storedCatalogs.value[0].id);
-        }
+      const activeId = activeRecordId.value === cat.id ? '' : activeRecordId.value;
+      const comparisonId = comparisonRecordId.value === cat.id ? '' : comparisonRecordId.value;
+      if (activeId) {
+        // Der angezeigte Katalog bleibt; ggf. endet nur der Vergleich
+        if (comparisonId !== comparisonRecordId.value) await runCatalogChange(activeId, comparisonId);
+        return;
       }
-      if (comparisonRecordId.value === id) {
-        clearComparison();
-      }
+      // Ein anderer rückt nach: zuerst die übrigen Stände mit dem bisherigen Vergleich, zuletzt der Vergleichsstand selbst
+      const others = storedCatalogs.value.filter((c) => c.id !== comparisonId).map((c) => [c.id, comparisonId]);
+      const attempts = comparisonId ? [...others, [comparisonId, '']] : others;
+      const err = await showFirstOpenable(attempts);
+      startupError.value = '';
+      if (err) catalogError.value = `Die übrigen Kataloge lassen sich nicht öffnen: ${err.message || err}`;
     }
 
     async function clearAll() {
@@ -2368,6 +2478,7 @@ const app = createApp({
         comparisonRecordId.value = '';
         diffSummary.value = null;
         selectedControlId.value = '';
+        startupError.value = '';
         expandedKeys.value = new Set();
         resetFilters();
         await refreshStoredCatalogs();
@@ -2448,6 +2559,22 @@ const app = createApp({
       if (status === 'modified') return 'Geändert';
       if (status === 'deleted') return 'Gelöscht';
       return '';
+    }
+
+    // Wert einer Änderung (Reiter "Änderungen") so, wie ihn die Detailansicht zeigt
+    function formatChangeValue(field, value) {
+      if (value === '' || value === undefined || value === null) return '–';
+      if (field === 'secLevel') return secLevelDisplayLabel(value);
+      if (field === 'effortLevel') return `Stufe ${value}`;
+      if (SECURITY_TARGETS.some((st) => st.key === field)) return `${value} (${securityTargetLevelLabel(value)})`;
+      return value;
+    }
+
+    // Kurzbezeichnung eines gespeicherten Katalogs (Hinweisbalken im Vergleich): der Stand, sonst der Titel
+    function catalogLabel(id) {
+      const rec = storedCatalogs.value.find((c) => c.id === id);
+      if (!rec) return '';
+      return rec.version ? formatVersion(rec.version) : rec.title;
     }
 
     // Versionskennungen, die ein ISO-Zeitstempel sind, als Datum darstellen
@@ -2571,7 +2698,6 @@ const app = createApp({
       importUrlInput,
       importLoading,
       importError,
-      importSuccess,
       loadNotice,
       PRESET_CATALOG_URL,
 
@@ -2637,7 +2763,12 @@ const app = createApp({
       FONT_SCALES,
       fontScale,
       setFontScale,
-      loadCatalogById,
+      chooseActiveCatalog,
+      catalogLabel,
+      formatChangeValue,
+      chooseComparisonCatalog,
+      startupError,
+      catalogError,
       fetchFromUrl,
       selectControl,
       selectControlById,
@@ -2674,8 +2805,6 @@ const app = createApp({
       countMatchingControlsInSubgroup,
       isControlVisible,
       visibleControlRows,
-      selectComparison,
-      clearComparison,
       deleteCatalog,
       clearAll,
       startResize,

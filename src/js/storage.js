@@ -48,20 +48,32 @@ function openDatabase() {
       dbPromise = null;
       reject(event.target.error);
     };
+
+    // Ein anderer Tab hält noch eine ältere Version der Datenbank offen: nicht endlos warten
+    request.onblocked = () => {
+      dbPromise = null;
+      reject(new Error('Die Daten sind in einem anderen Tab mit einer älteren Version geöffnet. Bitte schließen Sie diesen Tab.'));
+    };
   });
 
   return dbPromise;
 }
 
-export async function saveCatalogRecord(record) {
+// Schreibvorgang in einer Transaktion; erfolgreich erst, wenn die Transaktion abgeschlossen ist
+// (ein Quota-Fehler zeigt sich oft erst beim Abschluss)
+async function write(storeNames, fn) {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction('catalogs', 'readwrite');
-    const store = tx.objectStore('catalogs');
-    const req = store.put(record);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
+    const tx = db.transaction(storeNames, 'readwrite');
+    fn(tx);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Speichern abgebrochen'));
   });
+}
+
+export function saveCatalogRecord(record) {
+  return write('catalogs', (tx) => tx.objectStore('catalogs').put(record));
 }
 
 export async function getCatalogRecord(id) {
@@ -90,26 +102,12 @@ export async function getAllCatalogRecords() {
   });
 }
 
-export async function deleteCatalogRecord(id) {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('catalogs', 'readwrite');
-    const store = tx.objectStore('catalogs');
-    const req = store.delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+export function deleteCatalogRecord(id) {
+  return write('catalogs', (tx) => tx.objectStore('catalogs').delete(id));
 }
 
-export async function saveSetting(key, value) {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('settings', 'readwrite');
-    const store = tx.objectStore('settings');
-    const req = store.put({ key, value });
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+export function saveSetting(key, value) {
+  return write('settings', (tx) => tx.objectStore('settings').put({ key, value }));
 }
 
 export async function getSetting(key, defaultValue = undefined) {
@@ -125,14 +123,10 @@ export async function getSetting(key, defaultValue = undefined) {
   });
 }
 
-export async function clearAllData() {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const stores = ['catalogs', 'settings', 'lists', 'listEntries'];
-    const tx = db.transaction(stores, 'readwrite');
+export function clearAllData() {
+  const stores = ['catalogs', 'settings', 'lists', 'listEntries'];
+  return write(stores, (tx) => {
     for (const name of stores) tx.objectStore(name).clear();
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
   });
 }
 
@@ -158,32 +152,20 @@ export function getAllListEntries() {
 }
 
 // Schreibt Listen und Einträge in einer Transaktion (Anlegen, Umbenennen, Import)
-export async function saveListData(lists = [], entries = []) {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['lists', 'listEntries'], 'readwrite');
+export function saveListData(lists = [], entries = []) {
+  return write(['lists', 'listEntries'], (tx) => {
     for (const list of lists) tx.objectStore('lists').put(list);
     for (const entry of entries) tx.objectStore('listEntries').put(entry);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
   });
 }
 
-export async function deleteListEntry(key) {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('listEntries', 'readwrite');
-    tx.objectStore('listEntries').delete(key);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+export function deleteListEntry(key) {
+  return write('listEntries', (tx) => tx.objectStore('listEntries').delete(key));
 }
 
 // Löscht eine Liste samt aller Einträge
-export async function deleteList(listId) {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['lists', 'listEntries'], 'readwrite');
+export function deleteList(listId) {
+  return write(['lists', 'listEntries'], (tx) => {
     tx.objectStore('lists').delete(listId);
     const cursorReq = tx.objectStore('listEntries').index('listId').openKeyCursor(IDBKeyRange.only(listId));
     cursorReq.onsuccess = () => {
@@ -192,7 +174,5 @@ export async function deleteList(listId) {
       tx.objectStore('listEntries').delete(cursor.primaryKey);
       cursor.continue();
     };
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
   });
 }

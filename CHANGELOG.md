@@ -23,6 +23,19 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 - Neue `security.txt` unter `/.well-known/`.
 - Die Registerkarte **OSCAL** in der Detailansicht entfällt. Ihre Rohdaten zeigt die Übersicht bereits lesbar, Parameter sind in den Anforderungstext eingesetzt; die UUID steht jetzt klein am Ende der Übersicht.
 - Handbuch: Abbildungen sind nummeriert und beschriftet; Abstände und Beschriftungen folgen dem Default-Theme von markpublish 2.2.0.
+- Dialog **Kataloge**: Je Katalog ein Auswahlknopf **Anzeigen** und **Vergleich**. Ein erneuter Klick auf den Vergleichsstand beendet den Vergleich; wird der Vergleichsstand zum Anzeigen gewählt, tauschen beide die Rollen. „Als Basis“, „Vergleichen“ und „Vergleich lösen“ entfallen. Der Vergleich bleibt beim nächsten Aufruf erhalten.
+- Der Hinweisbalken im Vergleich nennt die beiden Stände und erscheint auch, wenn es keine Unterschiede gibt.
+- Der Vergleich prüft alle Angaben einer Anforderung, auch Handlungswort, Dokumentation, gefordertes Ergebnis, Spezifikation, Schutzziele, Tags und die Einordnung. Der Reiter **Änderungen** verwendet die Bezeichnungen der Detailansicht und zeigt Texte nur einmal, als Wortvergleich.
+- Katalog löschen fragt vorher nach.
+- Die Suche reagiert deutlich schneller.
+
+### Behoben
+
+- Beim Wechsel des Vergleichsstands ohne vorheriges Lösen erschienen gelöschte Anforderungen des vorigen Vergleichs als „Neu“.
+- Gelöschte Unteranforderungen stehen wieder unter ihrer Anforderung und nicht mehr doppelt im Baum.
+- Ein Katalog, der sich nicht öffnen lässt, wird nicht mehr gespeichert; eine Datei ohne Anforderungen wird abgelehnt. Lässt sich ein gespeicherter Katalog nicht öffnen, startet der Explorer mit einem anderen oder zeigt einen Hinweis, statt im Ladebildschirm hängen zu bleiben.
+- Die gewählte Anforderung verschwand beim Blättern mit ↑ unter der Überschrift der Praktik.
+- Beim Import einer gleichnamigen Liste ließ sich der Import nicht abbrechen; Esc legte eine Kopie an.
 
 ## [1.0.2] – 2026-09-24
 
