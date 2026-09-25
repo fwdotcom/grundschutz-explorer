@@ -1,2 +1,2 @@
 # Werkzeug zum Bauen des Handbuchs (scripts/build_manual.py)
-markpublish>=2.1.10,<3
+markpublish>=2.2.0,<3

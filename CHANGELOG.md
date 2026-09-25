@@ -18,6 +18,8 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 - Die Fußzeile blendet App-Name und Version aus, wenn sie sonst umbrechen würde.
 - „Alle lokal gespeicherten Daten löschen“ löscht auch die Listen und weist vorher darauf hin.
 - Neue `security.txt` unter `/.well-known/`.
+- Die Registerkarte **OSCAL** in der Detailansicht entfällt. Ihre Rohdaten zeigt die Übersicht bereits lesbar, Parameter sind in den Anforderungstext eingesetzt; die UUID steht jetzt klein am Ende der Übersicht.
+- Handbuch: Abbildungen sind nummeriert und beschriftet; Abstände und Beschriftungen folgen dem Default-Theme von markpublish 2.2.0.
 
 ## [1.0.2] – 2026-09-24
 

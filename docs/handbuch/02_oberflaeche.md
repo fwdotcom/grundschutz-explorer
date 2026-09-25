@@ -4,9 +4,19 @@ Der Bildschirm ist in vier Bereiche gegliedert: die **Kopfzeile** oben, die **Fi
 
 ![Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht](bilder/oberflaeche.png)
 
+/// figure-caption
+    attrs: {id: fig-oberflaeche}
+Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht
+///
+
 ## Kopfzeile
 
 ![Kopfzeile](bilder/kopfzeile.png)
+
+/// figure-caption
+    attrs: {id: fig-kopfzeile}
+Kopfzeile
+///
 
 Von links nach rechts finden Sie:
 

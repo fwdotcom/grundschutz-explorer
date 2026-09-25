@@ -4,6 +4,11 @@ Suche und Filter lassen sich frei kombinieren. Eine Anforderung erscheint nur, w
 
 ![Aktive Filter und flache Trefferliste](bilder/filter.png)
 
+/// figure-caption
+    attrs: {id: fig-filter}
+Aktive Filter und flache Trefferliste
+///
+
 ## Volltextsuche
 
 Das Suchfeld in der Kopfzeile durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, die Bezeichnungen der Gefährdungen und die Tags. Die Treffer erscheinen sofort während der Eingabe.

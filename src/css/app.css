@@ -45,6 +45,7 @@
   --text: #101828;
   --text-2: #475467;
   --text-3: #667085; /* mind. 4,5:1 gegen alle hellen Hintergründe (WCAG AA) */
+  --text-faint: #b3bac5; /* bewusst kontrastarm, nur für Nebensächliches wie die UUID */
   --icon-subtle: #6187e1; /* dezentes Blau für Info-Symbole: mind. 3:1 gegen alle hellen Hintergründe (WCAG 1.4.11) */
 
   --accent: #2459d6;
@@ -102,6 +103,7 @@
   --text: #e8ebf1;
   --text-2: #a5adbb;
   --text-3: #8990a0; /* mind. 4,5:1 gegen alle dunklen Hintergründe (WCAG AA) */
+  --text-faint: #4b5263; /* bewusst kontrastarm, nur für Nebensächliches wie die UUID */
   --icon-subtle: #476cb4; /* mind. 3:1 gegen alle dunklen Hintergründe */
 
   --accent: #5b8def;
@@ -1052,14 +1054,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tok-add { background: var(--added-soft); color: var(--added); border-radius: 3px; padding: 0 2px; }
 .tok-del { background: var(--muss-soft); color: var(--muss); text-decoration: line-through; border-radius: 3px; padding: 0 2px; }
 
-.props-table { width: 100%; border-collapse: collapse; font-size: calc(12.5px * var(--font-scale)); }
-.props-table th { text-align: left; font-weight: 600; font-size: calc(11px * var(--font-scale)); color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 20px; border-bottom: 1px solid var(--border); }
-.props-table td { padding: 9px 20px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.props-table tr:last-child td { border-bottom: 0; }
-.props-table td:first-child { font-family: var(--mono); font-weight: 500; color: var(--text-2); white-space: nowrap; }
-.props-table td.ns { font-family: var(--mono); font-size: calc(11px * var(--font-scale)); color: var(--text-3); word-break: break-all; }
-.param { padding: 10px 20px; font-family: var(--mono); font-size: calc(12.5px * var(--font-scale)); border-top: 1px solid var(--border); }
-.param b { color: var(--accent-text); font-weight: 600; }
+/* UUID am Ende der Übersicht: 8px darüber (statt 20px Abstand der .stack), darunter derselbe Innenabstand wie oben (24px statt 48px) */
+.detail-uuid { margin: -12px 0 0; line-height: 1.2; text-align: right; font-size: calc(10.5px * var(--font-scale)); color: var(--text-faint); word-break: break-all; }
+.detail-body:has(.detail-uuid) { padding-bottom: 24px; }
 
 /* ---------- Full-screen states ---------- */
 .center-state { flex: 1; display: grid; place-items: center; padding: 24px; }

@@ -22,6 +22,11 @@ https://www.grundschutz-explorer.de
 
 ![Startseite](bilder/startseite.png)
 
+/// figure-caption
+    attrs: {id: fig-startseite}
+Startseite beim ersten Aufruf
+///
+
 Beim ersten Aufruf erscheint eine Startseite. Dort öffnen Sie mit **Katalog laden** den gleichnamigen Dialog und laden den aktuellen Grundschutz++-Katalog des BSI oder einen eigenen OSCAL-Katalog als Datei oder über eine URL. Darunter fasst die Startseite kurz zusammen, woher die Daten kommen und wie der Explorer mit Ihren Daten umgeht. Ein geladener Katalog bleibt in Ihrem Browser gespeichert und steht beim nächsten Aufruf sofort zur Verfügung. Die Startseite erscheint erst wieder, wenn Sie alle gespeicherten Kataloge gelöscht haben.
 
 > [!NOTE]

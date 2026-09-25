@@ -1368,7 +1368,6 @@
                     <span v-if="selectedNoteState" class="note-dot" :class="'note-dot-' + selectedNoteState" aria-hidden="true"></span>
                   </button>
                   <button v-if="diffSummary?.hasDiff" class="tab" role="tab" id="tab-diff" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'diff'" :tabindex="detailActiveTab === 'diff' ? 0 : -1" :class="{ on: detailActiveTab === 'diff' }" @click="detailActiveTab = 'diff'">Änderungen</button>
-                  <button class="tab" role="tab" id="tab-props" aria-controls="detail-tabpanel" :aria-selected="detailActiveTab === 'props'" :tabindex="detailActiveTab === 'props' ? 0 : -1" :class="{ on: detailActiveTab === 'props' }" @click="detailActiveTab = 'props'">OSCAL</button>
                 </div>
               </div>
 
@@ -1594,6 +1593,8 @@
                       </li>
                     </ul>
                   </div>
+
+                  <p v-if="selectedControl.altIdentifier" class="detail-uuid">UUID <span class="mono">{{ selectedControl.altIdentifier }}</span></p>
                 </div>
 
                 <!-- Hilfestellung -->
@@ -1662,31 +1663,6 @@
                   <div v-if="guidanceDiffTokens.length">
                     <div class="section-label">Hilfestellung</div>
                     <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
-                  </div>
-                </div>
-
-                <!-- OSCAL -->
-                <div v-else-if="detailActiveTab === 'props'" class="stack">
-                  <div class="card" style="overflow:hidden">
-                    <table class="props-table">
-                      <thead><tr><th>Name</th><th>Wert</th><th>Namespace</th></tr></thead>
-                      <tbody>
-                        <tr v-for="prop in selectedControl.allProps" :key="prop.name + prop.value">
-                          <td>{{ prop.name }}</td>
-                          <td>{{ prop.value }}</td>
-                          <td class="ns">{{ prop.ns || '–' }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div v-if="selectedControl.params?.length" class="card">
-                    <div class="card-head"><h4>Parameter</h4></div>
-                    <div v-for="p in selectedControl.params" :key="p.id" class="param">
-                      <b>{{ p.id }}</b>&nbsp; {{ p.values?.join(', ') || p.label }}
-                    </div>
-                  </div>
-                  <div v-if="selectedControl.altIdentifier" class="card">
-                    <dl style="margin:0"><div class="kv"><dt>Alternative Kennung (UUID)</dt><dd class="mono" style="font-size:calc(12.5px * var(--font-scale))">{{ selectedControl.altIdentifier }}</dd></div></dl>
                   </div>
                 </div>
               </div>

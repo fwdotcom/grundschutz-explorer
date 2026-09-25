@@ -6,6 +6,11 @@ Der Explorer kann mehrere Stände des Grundschutz++-Katalogs speichern und jewei
 
 ![Dialog „Katalog laden“](bilder/kataloge-laden.png)
 
+/// figure-caption
+    attrs: {id: fig-kataloge-laden}
+Dialog „Katalog laden“
+///
+
 Über **Kataloge → Katalog laden** in der Kopfzeile öffnen Sie den Dialog zum Laden eines Katalogs. Auf der Startseite erreichen Sie ihn über **Katalog laden**. Es gibt drei Wege:
 
 | Weg | Verwendung |
@@ -25,6 +30,11 @@ Ist ein Katalog mit identischem Inhalt bereits geladen, legt der Explorer ihn ni
 
 ![Dialog „Kataloge“ im Vergleichsmodus](bilder/kataloge-versionen.png)
 
+/// figure-caption
+    attrs: {id: fig-kataloge-versionen}
+Dialog „Kataloge“ im Vergleichsmodus
+///
+
 Jeder geladene Katalog wird als Version in Ihrem Browser gespeichert. Der Dialog **Kataloge** in der Kopfzeile listet sie mit Titel, Stand und Importdatum; solange keiner gespeichert ist, steht dort „Keine Kataloge gespeichert.“ Pro Version stehen zur Wahl:
 
 - **Als Basis:** Diese Version wird zum aktuell angezeigten Katalog.
@@ -39,6 +49,11 @@ Alle Versionen und Einstellungen zusammen entfernen Sie in der **Datenschutzerkl
 Laden Sie zunächst beide Stände, zum Beispiel den offiziellen Katalog und eine ältere Version als Datei. Wählen Sie dann unter **Kataloge** den neueren Stand mit **Als Basis** und beim älteren Stand **Vergleichen**.
 
 ![Vergleichsmodus mit Hinweisbalken, markierten Anforderungen und der Registerkarte „Änderungen“](bilder/vergleich.png)
+
+/// figure-caption
+    attrs: {id: fig-vergleich}
+Vergleichsmodus mit Hinweisbalken, markierten Anforderungen und der Registerkarte „Änderungen“
+///
 
 Im Vergleichsmodus erscheint unter der Kopfzeile ein Hinweisbalken mit der Zahl der neuen, geänderten und gelöschten Anforderungen. Zusätzlich:
 

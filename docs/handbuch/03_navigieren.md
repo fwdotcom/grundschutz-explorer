@@ -15,11 +15,21 @@ Nach dem Laden eines Katalogs sind alle Praktiken eingeklappt.
 
 ![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png)
 
+/// figure-caption
+    attrs: {id: fig-unteranforderungen}
+Mehrstufige Unteranforderungen in der Baumansicht
+///
+
 Wählen Sie eine Anforderung auf anderem Weg aus, etwa über die Suche, den Breadcrumb oder die Liste der Unteranforderungen in der Detailansicht, klappt der Explorer die Baumansicht bis zu dieser Anforderung auf.
 
 ## Übersicht einer Praktik oder eines Teilbereichs
 
 ![Übersicht einer Praktik](bilder/praktik-uebersicht.png)
+
+/// figure-caption
+    attrs: {id: fig-praktik-uebersicht}
+Übersicht einer Praktik
+///
 
 Die Übersicht zeigt:
 

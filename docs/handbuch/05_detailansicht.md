@@ -4,6 +4,11 @@ Die Detailansicht zeigt alle Angaben, die das BSI zu einer Anforderung veröffen
 
 ![Detailansicht einer Anforderung](bilder/detailansicht.png)
 
+/// figure-caption
+    attrs: {id: fig-detailansicht}
+Detailansicht einer Anforderung
+///
+
 ## Kopf der Detailansicht
 
 Unter dem Breadcrumb stehen Kennung und Titel der Anforderung. Die Kennzeichnungen darunter zeigen:
@@ -33,6 +38,8 @@ Fahren Sie mit der Maus über das Modalverb oder den Schutzbedarf, um die Defini
 
 **Unteranforderungen.** Bei Anforderungen mit Unteranforderungen deren Liste. Ein Klick öffnet die Unteranforderung.
 
+**UUID.** Ganz unten steht klein die eindeutige Kennung der Anforderung im Katalog, etwa für den Abgleich mit anderen Werkzeugen.
+
 ### Definitionen nachschlagen
 
 Neben Handlung, Dokumentation, Aufwand, Schutzzielen und Tags steht ein kleiner Info-Button **i**. Ein Klick darauf klappt die Definition des BSI auf, bei Handlungswörtern mit Synonymen, bei Dokumentationsvorgaben mit Kategorie und Zielgruppe. Ein weiterer Klick klappt sie wieder zu.
@@ -48,7 +55,3 @@ Die Erläuterungen des BSI zur Umsetzung der Anforderung. Nicht jede Anforderung
 ## Registerkarte „Änderungen“
 
 Erscheint nur im Vergleichsmodus. Sie zeigt, was sich an der Anforderung gegenüber der Vergleichsversion geändert hat. Bei Texten sind entfernte Wörter durchgestrichen und neue Wörter hervorgehoben.
-
-## Registerkarte „OSCAL“
-
-Die technischen Rohdaten der Anforderung, wie sie im OSCAL-Katalog stehen: alle Eigenschaften mit ihren Namensräumen sowie die eindeutige Kennung (UUID). Diese Ansicht ist vor allem für die Weiterverarbeitung in anderen Werkzeugen gedacht.
