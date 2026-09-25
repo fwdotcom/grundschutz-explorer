@@ -91,6 +91,8 @@ const app = createApp({
     const splitEl = ref(null);
     const listScroll = ref(null);
     const detailBody = ref(null);
+    const footerLinks = ref(null);
+    let footerObserver = null;
 
     // Detail Tab State
     const detailActiveTab = ref('overview');
@@ -1023,6 +1025,14 @@ const app = createApp({
       fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
       applyFontScale(fontScale.value);
 
+      if (footerLinks.value && window.ResizeObserver) {
+        footerObserver = new ResizeObserver(updateFooterCompact);
+        footerObserver.observe(footerLinks.value.closest('.app-footer'));
+      }
+      updateFooterCompact();
+      // Nach dem Laden der Webschrift ändern sich die Textbreiten
+      document.fonts?.ready.then(updateFooterCompact);
+
       // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
       await loadNamespaces();
       namespacesVersion.value++;
@@ -1057,7 +1067,20 @@ const app = createApp({
 
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', handleGlobalKeydown);
+      footerObserver?.disconnect();
     });
+
+    // Fußzeile: App-Name und Version ausblenden, sobald die Links sonst umbrechen würden.
+    // Gemessen wird immer mit allen Einträgen, damit der Zustand nicht hin- und herspringt.
+    function updateFooterCompact() {
+      const el = footerLinks.value;
+      if (!el) return;
+      el.classList.remove('is-compact');
+      const items = el.children;
+      const first = items[0].getBoundingClientRect();
+      const last = items[items.length - 1].getBoundingClientRect();
+      el.classList.toggle('is-compact', last.top > first.top + first.height / 2);
+    }
 
     function handleGlobalKeydown(e) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -1133,6 +1156,7 @@ const app = createApp({
       fontScale.value = value;
       applyFontScale(value);
       saveSetting('font_scale', value);
+      nextTick(updateFooterCompact);
     }
 
     function applyHighContrast(val) {
@@ -1905,6 +1929,7 @@ const app = createApp({
     }
 
     return {
+      footerLinks,
       activeCatalog,
       activeRecordId,
       comparisonCatalog,

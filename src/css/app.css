@@ -1117,6 +1117,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .app-footer .footer-version { color: var(--text-2); font-variant-numeric: tabular-nums; }
 .app-footer .footer-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Würde die Fußzeile umbrechen, entfallen App-Name und Version (siehe updateFooterCompact) */
+.app-footer .footer-links.is-compact .footer-meta { display: none; }
 .app-footer .footer-brand {
   font-weight: 600;
   color: var(--text-2);
