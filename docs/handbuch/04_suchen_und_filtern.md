@@ -1,6 +1,6 @@
 # Suchen und filtern
 
-Suche und Filter lassen sich frei kombinieren. Eine Anforderung erscheint nur, wenn sie **alle** gesetzten Bedingungen erfüllt.
+Suche und Filter lassen sich frei kombinieren. Eine Anforderung erscheint nur, wenn sie die Bedingungen **aller** Filterbereiche erfüllt.
 
 ![Aktive Filter und flache Trefferliste](bilder/filter.png)
 
@@ -25,7 +25,7 @@ Jeder Wert in der Filterleiste hat rechts zwei Schaltflächen:
 Ein Klick auf den Namen eines Werts wirkt wie **✓**, ein weiterer Klick hebt den Filter wieder auf. Die Zahl neben einem Wert gibt an, wie viele Anforderungen es mit den übrigen gesetzten Filtern zusammen ergibt. Werte ohne Treffer sind blass dargestellt.
 
 > [!NOTE]
-> Innerhalb eines Abschnitts kann jeweils nur ein Wert mit **✓** gewählt sein, weil eine Anforderung zum Beispiel nicht gleichzeitig MUSS und SOLLTE sein kann. Mit **✕** können Sie dagegen mehrere Werte ausschließen.
+> Bei **Gefährdungen**, **Tags** und **Listen** können Sie mehrere Werte mit **✓** wählen. Es genügt, wenn einer davon passt: Zwei Tags zeigen alle Anforderungen mit dem einen *oder* dem anderen Tag. In den übrigen Abschnitten ist jeweils nur ein Wert mit **✓** möglich, weil eine Anforderung zum Beispiel nicht gleichzeitig MUSS und SOLLTE sein kann. Mit **✕** können Sie überall mehrere Werte ausschließen.
 
 ## Die Filterbereiche
 

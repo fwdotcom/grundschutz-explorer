@@ -16,7 +16,21 @@ import {
   saveSetting,
   getSetting,
   clearAllData,
+  getAllLists,
+  getAllListEntries,
+  saveListData,
+  deleteListEntry,
+  deleteList,
 } from './storage.js';
+import {
+  entryKey,
+  createListId,
+  buildListExport,
+  parseListImport,
+  mergeNotes,
+  uniqueListName,
+  listExportFileName,
+} from './lists.js';
 
 // Schutzziele: Feld der Anforderung, Anzeige und Begriff im Namespace security_targets.csv
 const SECURITY_TARGETS = [
@@ -50,6 +64,9 @@ const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
 const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
 
 const APP_VERSION = '1.0.2';
+
+// Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
+const DEFAULT_LIST_NAME = 'Merkliste';
 
 // Stufen der Schriftgröße (Faktor auf alle Schriftgrößen, CSS-Variable --font-scale)
 const FONT_SCALES = [
@@ -144,12 +161,47 @@ const app = createApp({
       documentation: true,
       securityTargets: false,
       tags: true,
+      lists: false,
     });
 
     const tagRailSearch = ref('');
 
     // Suchfelder der langen Werte-Facetten
     const facetSearch = ref({ actionWord: '', documentation: '' });
+
+    // Eigene Listen: Anforderungen mit Notizen, z. B. für eine Besprechung
+    const lists = ref([]); // [{ id, name, createdAt, updatedAt }]
+    const listEntries = ref({}); // entryKey → { key, listId, controlId, note, createdAt, updatedAt }
+    // Nur eine Liste ist aktiv: in sie schreiben Stern und Notizfeld
+    const activeListId = ref('');
+    // Im Reiter "Notizen" angezeigte Liste (aktive Liste oder eine andere, nur lesbar)
+    const notesViewListId = ref('');
+    // Inline-Eingabe in der Filterleiste: { id: '' (neue Liste) | Listen-ID (umbenennen), name }
+    const listEdit = ref(null);
+    const listImportInput = ref(null);
+    // Geöffnetes ⋯-Menü einer Liste bzw. '__all' für das Menü der Gruppe
+    const listMenuId = ref('');
+    const listNotice = ref('');
+
+    const sortedLists = computed(() =>
+      [...lists.value].sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }))
+    );
+    const activeList = computed(() => lists.value.find((l) => l.id === activeListId.value) || null);
+    const defaultList = computed(
+      () => lists.value.find((l) => l.name.toLocaleLowerCase('de') === DEFAULT_LIST_NAME.toLocaleLowerCase('de')) || null
+    );
+    // Ziel von Stern und Notizfeld: aktive Liste, sonst die Merkliste (id '' = wird beim ersten Schreiben angelegt)
+    const writeList = computed(() => activeList.value || defaultList.value || { id: '', name: DEFAULT_LIST_NAME });
+
+    // Anforderung → Einträge (in welchen Listen sie steht)
+    const entriesByControl = computed(() => {
+      const map = new Map();
+      for (const e of Object.values(listEntries.value)) {
+        if (!map.has(e.controlId)) map.set(e.controlId, []);
+        map.get(e.controlId).push(e);
+      }
+      return map;
+    });
 
     // Computed: Practice options
     const practiceOptions = computed(() => {
@@ -256,8 +308,8 @@ const app = createApp({
     // Computed: Active filter specification grouped by category and mode
     const activeFilterSpec = computed(() => {
       const spec = {
-        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set() },
-        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set() },
+        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set() },
+        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set() },
       };
       for (const category of Object.keys(VALUE_FACETS)) {
         spec.inc[category] = new Set();
@@ -339,12 +391,9 @@ const app = createApp({
         if (spec.exc.threat.size > 0 && ctrl.elementareGefaehrdungen.some((t) => spec.exc.threat.has(splitThreat(t).code))) {
           return false;
         }
-        if (spec.inc.threat.size > 0) {
-          for (const reqT of spec.inc.threat) {
-            if (!ctrl.elementareGefaehrdungen.some((t) => splitThreat(t).code === reqT)) {
-              return false;
-            }
-          }
+        // Mehrere ✓ innerhalb der Kategorie: mindestens eine muss passen (oder)
+        if (spec.inc.threat.size > 0 && !ctrl.elementareGefaehrdungen.some((t) => spec.inc.threat.has(splitThreat(t).code))) {
+          return false;
         }
       }
 
@@ -368,13 +417,18 @@ const app = createApp({
         if (spec.exc.tags?.size > 0 && (ctrl.tags || []).some((tag) => spec.exc.tags.has(tag))) {
           return false;
         }
-        if (spec.inc.tags?.size > 0) {
-          for (const reqTag of spec.inc.tags) {
-            if (!(ctrl.tags || []).includes(reqTag)) {
-              return false;
-            }
-          }
+        if (spec.inc.tags?.size > 0 && !(ctrl.tags || []).some((tag) => spec.inc.tags.has(tag))) {
+          return false;
         }
+      }
+
+      // Eigene Listen: ✓ = steht in der Liste, ✕ = steht nicht darin
+      if (ignoreCategory !== 'list' && (spec.inc.list.size > 0 || spec.exc.list.size > 0)) {
+        const inLists = new Set((entriesByControl.value.get(ctrl.id) || []).map((e) => e.listId));
+        for (const id of spec.exc.list) {
+          if (inLists.has(id)) return false;
+        }
+        if (spec.inc.list.size > 0 && ![...spec.inc.list].some((id) => inLists.has(id))) return false;
       }
 
       return true;
@@ -667,6 +721,91 @@ const app = createApp({
 
     const hasActiveFilters = computed(() => allActiveChips.value.length > 0);
 
+    // Einträge je Liste, die zu den übrigen Filtern passen
+    const listCounts = computed(() => {
+      const counts = {};
+      const map = activeCatalog.value?.controlMap;
+      if (!map) return counts;
+      for (const e of Object.values(listEntries.value)) {
+        const ctrl = map.get(e.controlId);
+        if (!ctrl || !matchesFilterCategory(ctrl, 'list')) continue;
+        counts[e.listId] = (counts[e.listId] || 0) + 1;
+      }
+      return counts;
+    });
+
+    // Einträge je Liste insgesamt (für Rückfragen und den leeren Zustand)
+    function listEntryCount(listId) {
+      return Object.values(listEntries.value).filter((e) => e.listId === listId).length;
+    }
+
+    // Stern der gewählten Anforderung: 'none' | 'other' (in einer anderen Liste) | 'here' (in der Zielliste)
+    const selectedStarState = computed(() => {
+      const entries = selectedControl.value ? entriesByControl.value.get(selectedControl.value.id) || [] : [];
+      if (writeList.value.id && entries.some((e) => e.listId === writeList.value.id)) return 'here';
+      return entries.length ? 'other' : 'none';
+    });
+
+    const selectedStarTitle = computed(() => {
+      const names = (entriesByControl.value.get(selectedControl.value?.id) || [])
+        .map((e) => lists.value.find((l) => l.id === e.listId)?.name)
+        .filter(Boolean);
+      const where = names.length ? `In ${names.length === 1 ? 'Liste' : 'Listen'}: ${names.join(', ')}` : 'In keiner Liste';
+      return selectedStarState.value === 'here'
+        ? `${where}\n\nKlicken: aus „${writeList.value.name}“ entfernen`
+        : `${where}\n\nKlicken: in „${writeList.value.name}“ aufnehmen`;
+    });
+
+    // Listen, deren Notiz im Reiter "Notizen" wählbar ist: die Zielliste und alle nicht ausgeschlossenen mit Notiz
+    const notesViewOptions = computed(() => {
+      const ctrl = selectedControl.value;
+      if (!ctrl) return [];
+      const excluded = activeFilterSpec.value.exc.list;
+      const options = [writeList.value];
+      for (const list of sortedLists.value) {
+        if (list.id === writeList.value.id || excluded.has(list.id)) continue;
+        if (listEntries.value[entryKey(list.id, ctrl.id)]?.note?.trim()) options.push(list);
+      }
+      return options;
+    });
+
+    const notesViewList = computed(
+      () => notesViewOptions.value.find((l) => l.id === notesViewListId.value) || notesViewOptions.value[0] || null
+    );
+
+    const notesViewEntry = computed(() =>
+      notesViewList.value?.id && selectedControl.value
+        ? listEntries.value[entryKey(notesViewList.value.id, selectedControl.value.id)] || null
+        : null
+    );
+
+    // Markierungen in der Explorerliste je Anforderung: { star, note } mit 'here' (Zielliste) bzw. 'other' (andere Liste)
+    const listMarks = computed(() => {
+      const marks = new Map();
+      const target = writeList.value.id;
+      const excluded = activeFilterSpec.value.exc.list;
+      for (const [controlId, entries] of entriesByControl.value) {
+        const star = entries.some((e) => e.listId === target) ? 'here' : 'other';
+        const hasNote = (e) => Boolean(e.note?.trim());
+        const note = entries.some((e) => e.listId === target && hasNote(e))
+          ? 'here'
+          : entries.some((e) => e.listId !== target && !excluded.has(e.listId) && hasNote(e))
+            ? 'other'
+            : '';
+        marks.set(controlId, { star, note });
+      }
+      return marks;
+    });
+
+    // Punkt am Reiter "Notizen": 'here' = Notiz in der Zielliste, 'other' = nur in anderen Listen
+    const selectedNoteState = computed(() => {
+      const ctrl = selectedControl.value;
+      if (!ctrl) return '';
+      const target = writeList.value.id;
+      if (target && listEntries.value[entryKey(target, ctrl.id)]?.note?.trim()) return 'here';
+      return notesViewOptions.value.some((l) => l.id !== target) ? 'other' : '';
+    });
+
     // Selected Control
     const selectedControl = computed(() => {
       if (!activeCatalog.value || !selectedControlId.value) return null;
@@ -913,6 +1052,7 @@ const app = createApp({
         railCollapsed.value.actionWords,
         railCollapsed.value.documentation,
         railCollapsed.value.securityTargets,
+        railCollapsed.value.lists,
         selectedControlId.value,
         listViewMode.value,
       ],
@@ -947,6 +1087,23 @@ const app = createApp({
         }
       }
     );
+
+    // Aktive Liste merken; wird sie ausgeschlossen, ist sie nicht mehr aktiv
+    watch(activeListId, (id) => {
+      saveSetting('active_list_id', id).catch(() => {});
+    });
+    watch(
+      () => activeTags.value,
+      () => {
+        if (activeListId.value && getTagMode('list', activeListId.value) === 'exclude') activeListId.value = '';
+      },
+      { deep: true }
+    );
+    // Beim Wechsel der Anforderung ausstehende Notizen sofort speichern und wieder die aktive Liste zeigen
+    watch(selectedControlId, () => {
+      flushNoteSaves();
+      notesViewListId.value = '';
+    });
 
     async function restorePersistedState() {
       try {
@@ -1033,6 +1190,12 @@ const app = createApp({
       // Nach dem Laden der Webschrift ändern sich die Textbreiten
       document.fonts?.ready.then(updateFooterCompact);
 
+      window.addEventListener('click', closeListMenuOnOutsideClick);
+      window.addEventListener('pagehide', flushNoteSaves);
+      document.addEventListener('visibilitychange', flushNoteSaves);
+
+      await loadLists();
+
       // BSI-Namespaces vor dem Katalog laden (Gefährdungsbezeichnungen werden beim Parsen benötigt)
       await loadNamespaces();
       namespacesVersion.value++;
@@ -1040,6 +1203,7 @@ const app = createApp({
       await refreshStoredCatalogs();
 
       const restored = await restorePersistedState();
+      dropUnknownListTags();
       const hasSavedCollapse = Boolean(restored?.savedCollapseState && Array.isArray(restored.savedCollapseState.expandedKeys));
 
       const lastActiveId = await getSetting('last_active_catalog_id');
@@ -1067,6 +1231,10 @@ const app = createApp({
 
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', handleGlobalKeydown);
+      window.removeEventListener('click', closeListMenuOnOutsideClick);
+      window.removeEventListener('pagehide', flushNoteSaves);
+      document.removeEventListener('visibilitychange', flushNoteSaves);
+      flushNoteSaves();
       footerObserver?.disconnect();
     });
 
@@ -1090,7 +1258,8 @@ const app = createApp({
         return;
       }
       if (e.key === 'Escape') {
-        if (isLoadModalOpen.value) closeLoadDialog();
+        if (listMenuId.value) listMenuId.value = '';
+        else if (isLoadModalOpen.value) closeLoadDialog();
         else if (isCatalogModalOpen.value) isCatalogModalOpen.value = false;
         else if (isImpressumModalOpen.value) isImpressumModalOpen.value = false;
         else if (isDatenschutzModalOpen.value) isDatenschutzModalOpen.value = false;
@@ -1583,6 +1752,350 @@ const app = createApp({
       scheduleSaveFilters();
     }
 
+    // ---------- Eigene Listen ----------
+
+    async function loadLists() {
+      try {
+        const [storedLists, storedEntries] = await Promise.all([getAllLists(), getAllListEntries()]);
+        lists.value = storedLists;
+        listEntries.value = Object.fromEntries(storedEntries.map((e) => [e.key, e]));
+        const savedActive = await getSetting('active_list_id', '');
+        activeListId.value = storedLists.some((l) => l.id === savedActive) ? savedActive : '';
+        if (!activeListId.value && storedLists.length === 1) activeListId.value = storedLists[0].id;
+      } catch (err) {
+        console.warn('Fehler beim Laden der Listen:', err);
+      }
+    }
+
+    // Filter auf Listen, die es nicht mehr gibt, verwerfen
+    function dropUnknownListTags() {
+      const ids = new Set(lists.value.map((l) => l.id));
+      if (activeTags.value.some((t) => t.category === 'list' && !ids.has(t.value))) {
+        activeTags.value = activeTags.value.filter((t) => t.category !== 'list' || ids.has(t.value));
+      }
+    }
+
+    let listNoticeTimer = null;
+    function showListNotice(text) {
+      listNotice.value = text;
+      clearTimeout(listNoticeTimer);
+      listNoticeTimer = setTimeout(() => {
+        listNotice.value = '';
+      }, 6000);
+    }
+
+    // Browser bitten, die Daten nicht bei Platzmangel zu räumen
+    function requestPersistentStorage() {
+      navigator.storage?.persist?.().catch(() => {});
+    }
+
+    function setActiveList(id) {
+      if (activeListId.value === id) {
+        activeListId.value = '';
+        return;
+      }
+      // Eine ausgeschlossene Liste kann nicht zugleich aktiv sein
+      if (getTagMode('list', id) === 'exclude') removeTag('list', id);
+      activeListId.value = id;
+    }
+
+    function startNewList() {
+      listMenuId.value = '';
+      railCollapsed.value.lists = false;
+      listEdit.value = { id: '', name: '' };
+      nextTick(() => document.querySelector('.list-edit input')?.focus());
+    }
+
+    function startRenameList(list) {
+      listMenuId.value = '';
+      listEdit.value = { id: list.id, name: list.name };
+      nextTick(() => document.querySelector('.list-edit input')?.select());
+    }
+
+    function cancelListEdit() {
+      listEdit.value = null;
+    }
+
+    async function commitListEdit() {
+      const edit = listEdit.value;
+      if (!edit) return;
+      listEdit.value = null;
+      const name = edit.name.trim();
+      if (!name) return;
+      const now = new Date().toISOString();
+      const otherNames = lists.value.filter((l) => l.id !== edit.id).map((l) => l.name);
+      try {
+        if (!edit.id) {
+          const list = { id: createListId(), name: uniqueListName(name, otherNames), createdAt: now, updatedAt: now };
+          await saveListData([list]);
+          lists.value = [...lists.value, list];
+          activeListId.value = list.id;
+          requestPersistentStorage();
+        } else {
+          const list = lists.value.find((l) => l.id === edit.id);
+          if (!list || list.name === name) return;
+          const renamed = { ...list, name: uniqueListName(name, otherNames), updatedAt: now };
+          await saveListData([renamed]);
+          lists.value = lists.value.map((l) => (l.id === renamed.id ? renamed : l));
+          const tag = activeTags.value.find((t) => t.category === 'list' && t.value === renamed.id);
+          if (tag) tag.label = renamed.name;
+        }
+      } catch (err) {
+        showListNotice('Die Liste konnte nicht gespeichert werden.');
+        console.warn('Fehler beim Speichern der Liste:', err);
+      }
+    }
+
+    async function removeList(list) {
+      listMenuId.value = '';
+      const entries = Object.values(listEntries.value).filter((e) => e.listId === list.id);
+      const withNote = entries.filter((e) => e.note?.trim()).length;
+      if (entries.length > 0) {
+        const detail =
+          `${entries.length} ${entries.length === 1 ? 'Eintrag' : 'Einträgen'}` +
+          (withNote ? `, davon ${withNote} mit Notiz,` : '');
+        const text =
+          `Liste „${list.name}“ mit ${detail} löschen?\n\n` +
+          'Tipp: Über „Exportieren“ im Listenmenü sichern Sie die Liste vorher als Datei.';
+        if (!confirm(text)) return;
+      }
+      for (const e of entries) {
+        clearTimeout(pendingNoteSaves.get(e.key));
+        pendingNoteSaves.delete(e.key);
+      }
+      try {
+        await deleteList(list.id);
+      } catch (err) {
+        showListNotice('Die Liste konnte nicht gelöscht werden.');
+        console.warn('Fehler beim Löschen der Liste:', err);
+        return;
+      }
+      lists.value = lists.value.filter((l) => l.id !== list.id);
+      listEntries.value = Object.fromEntries(Object.entries(listEntries.value).filter(([, e]) => e.listId !== list.id));
+      removeTag('list', list.id);
+      if (activeListId.value === list.id) activeListId.value = '';
+      if (!activeListId.value && lists.value.length === 1) activeListId.value = lists.value[0].id;
+    }
+
+    // Filter auf eine Liste (✓ / ✕), wie bei den übrigen Facetten
+    function toggleListFilter(list, mode) {
+      toggleTag('list', list.id, mode, list.name, 'Liste');
+    }
+
+    // Notizen werden kurz nach dem Tippen gespeichert, je Eintrag entprellt
+    const pendingNoteSaves = new Map();
+
+    function persistEntry(key) {
+      pendingNoteSaves.delete(key);
+      const entry = listEntries.value[key];
+      if (!entry) return;
+      saveListData([], [{ ...entry }]).catch((err) => {
+        showListNotice('Die Notiz konnte nicht gespeichert werden.');
+        console.warn('Fehler beim Speichern der Notiz:', err);
+      });
+    }
+
+    function flushNoteSaves() {
+      for (const [key, timer] of pendingNoteSaves) {
+        clearTimeout(timer);
+        persistEntry(key);
+      }
+    }
+
+    async function addEntry(listId, controlId, note = '') {
+      const now = new Date().toISOString();
+      const entry = { key: entryKey(listId, controlId), listId, controlId, note, createdAt: now, updatedAt: now };
+      listEntries.value = { ...listEntries.value, [entry.key]: entry };
+      try {
+        await saveListData([], [{ ...entry }]);
+      } catch (err) {
+        showListNotice('Der Eintrag konnte nicht gespeichert werden.');
+        console.warn('Fehler beim Speichern des Eintrags:', err);
+      }
+    }
+
+    // Liefert die ID der Zielliste; ohne aktive Liste wird die Merkliste aktiviert bzw. angelegt
+    function ensureWriteList() {
+      if (activeListId.value) return activeListId.value;
+      if (defaultList.value) {
+        activeListId.value = defaultList.value.id;
+        return activeListId.value;
+      }
+      const now = new Date().toISOString();
+      const list = { id: createListId(), name: DEFAULT_LIST_NAME, createdAt: now, updatedAt: now };
+      lists.value = [...lists.value, list];
+      activeListId.value = list.id;
+      railCollapsed.value.lists = false;
+      requestPersistentStorage();
+      saveListData([list]).catch((err) => {
+        showListNotice('Die Merkliste konnte nicht gespeichert werden.');
+        console.warn('Fehler beim Anlegen der Merkliste:', err);
+      });
+      return list.id;
+    }
+
+    // Stern: gewählte Anforderung in die Zielliste aufnehmen bzw. daraus entfernen
+    async function toggleStar() {
+      const ctrl = selectedControl.value;
+      if (!ctrl) return;
+      const listId = ensureWriteList();
+      const key = entryKey(listId, ctrl.id);
+      const existing = listEntries.value[key];
+      if (!existing) {
+        await addEntry(listId, ctrl.id);
+        return;
+      }
+      if (
+        existing.note?.trim() &&
+        !confirm(`„${ctrl.id}“ aus der Liste „${activeList.value.name}“ entfernen? Die Notiz wird dabei gelöscht.`)
+      ) {
+        return;
+      }
+      clearTimeout(pendingNoteSaves.get(key));
+      pendingNoteSaves.delete(key);
+      const next = { ...listEntries.value };
+      delete next[key];
+      listEntries.value = next;
+      try {
+        await deleteListEntry(key);
+      } catch (err) {
+        console.warn('Fehler beim Entfernen aus der Liste:', err);
+      }
+    }
+
+    function updateNote(text) {
+      const ctrl = selectedControl.value;
+      if (!ctrl) return;
+      const listId = ensureWriteList();
+      const key = entryKey(listId, ctrl.id);
+      const entry = listEntries.value[key];
+      if (!entry) {
+        // Erste Eingabe nimmt die Anforderung in die Zielliste auf
+        addEntry(listId, ctrl.id, text);
+        return;
+      }
+      entry.note = text;
+      entry.updatedAt = new Date().toISOString();
+      clearTimeout(pendingNoteSaves.get(key));
+      pendingNoteSaves.set(key, setTimeout(() => persistEntry(key), 400));
+    }
+
+    function downloadJson(data, fileName) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportList(list) {
+      listMenuId.value = '';
+      flushNoteSaves();
+      downloadJson(buildListExport([list], Object.values(listEntries.value), APP_VERSION), listExportFileName(list.name));
+    }
+
+    function exportAllLists() {
+      listMenuId.value = '';
+      flushNoteSaves();
+      downloadJson(buildListExport(sortedLists.value, Object.values(listEntries.value), APP_VERSION), listExportFileName());
+    }
+
+    function startListImport() {
+      listMenuId.value = '';
+      listImportInput.value?.click();
+    }
+
+    async function onListImportFile(e) {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      let imported;
+      try {
+        imported = parseListImport(JSON.parse(await file.text()));
+      } catch (err) {
+        showListNotice(err instanceof SyntaxError ? 'Die Datei ist keine gültige JSON-Datei.' : err.message);
+        return;
+      }
+      if (imported.length === 0) {
+        showListNotice('Die Datei enthält keine Listen.');
+        return;
+      }
+
+      flushNoteSaves();
+      const now = new Date().toISOString();
+      const nextLists = [...lists.value];
+      const nextEntries = { ...listEntries.value };
+      const changedLists = [];
+      const changedEntries = [];
+      let entryCount = 0;
+
+      for (const incoming of imported) {
+        const takenNames = nextLists.map((l) => l.name);
+        const existing = nextLists.find((l) => l.name.toLocaleLowerCase('de') === incoming.name.toLocaleLowerCase('de'));
+        const merge =
+          existing &&
+          confirm(
+            `Die Liste „${existing.name}“ gibt es bereits.\n\n` +
+              'OK: Einträge zusammenführen (unterschiedliche Notizen bleiben beide erhalten)\n' +
+              `Abbrechen: als neue Liste „${uniqueListName(incoming.name, takenNames)}“ anlegen`
+          );
+        let target;
+        if (merge) {
+          target = { ...existing, updatedAt: now };
+          nextLists[nextLists.indexOf(existing)] = target;
+        } else {
+          target = {
+            id: createListId(),
+            name: uniqueListName(incoming.name, takenNames),
+            createdAt: incoming.createdAt,
+            updatedAt: now,
+          };
+          nextLists.push(target);
+        }
+        changedLists.push(target);
+
+        for (const e of incoming.entries) {
+          const key = entryKey(target.id, e.controlId);
+          const prev = nextEntries[key];
+          const entry = prev
+            ? { ...prev, note: mergeNotes(prev.note, e.note), updatedAt: now }
+            : { key, listId: target.id, controlId: e.controlId, note: e.note, createdAt: e.createdAt, updatedAt: e.updatedAt };
+          nextEntries[key] = entry;
+          changedEntries.push({ ...entry });
+          entryCount++;
+        }
+      }
+
+      try {
+        await saveListData(changedLists, changedEntries);
+      } catch (err) {
+        showListNotice('Der Import konnte nicht gespeichert werden.');
+        console.warn('Fehler beim Import der Listen:', err);
+        return;
+      }
+      lists.value = nextLists;
+      listEntries.value = nextEntries;
+      if (!activeListId.value && nextLists.length === 1) activeListId.value = nextLists[0].id;
+      railCollapsed.value.lists = false;
+      requestPersistentStorage();
+      showListNotice(
+        `${imported.length} ${imported.length === 1 ? 'Liste' : 'Listen'} mit ${entryCount} ` +
+          `${entryCount === 1 ? 'Eintrag' : 'Einträgen'} importiert.`
+      );
+    }
+
+    function toggleListMenu(id) {
+      listMenuId.value = listMenuId.value === id ? '' : id;
+    }
+
+    function closeListMenuOnOutsideClick(e) {
+      if (listMenuId.value && !e.target.closest?.('.list-menu, .list-menu-btn')) listMenuId.value = '';
+    }
+
     function secLevelDisplayLabel(lvl) {
       return definition('securityLevels', lvl) || (lvl === 'normal-SdT' ? 'Standard-Sicherheitsstufe' : (lvl === 'erhöht' ? 'Erhöhte Sicherheitsstufe' : (lvl || '')));
     }
@@ -1829,8 +2342,16 @@ const app = createApp({
     }
 
     async function clearAll() {
-      if (confirm('Möchten Sie wirklich alle lokal gespeicherten Kataloge löschen?')) {
+      const listText = lists.value.length
+        ? `\n\nDabei werden auch ${lists.value.length === 1 ? 'Ihre Liste' : `Ihre ${lists.value.length} Listen`} mit allen Notizen gelöscht.`
+        : '';
+      if (confirm(`Möchten Sie wirklich alle lokal gespeicherten Kataloge und Einstellungen löschen?${listText}`)) {
+        pendingNoteSaves.forEach((timer) => clearTimeout(timer));
+        pendingNoteSaves.clear();
         await clearAllData();
+        lists.value = [];
+        listEntries.value = {};
+        activeListId.value = '';
         activeCatalog.value = null;
         activeRecordId.value = '';
         comparisonCatalog.value = null;
@@ -1930,6 +2451,39 @@ const app = createApp({
 
     return {
       footerLinks,
+      lists,
+      sortedLists,
+      activeListId,
+      activeList,
+      writeList,
+      listMarks,
+      notesViewListId,
+      notesViewOptions,
+      notesViewList,
+      notesViewEntry,
+      listEdit,
+      listImportInput,
+      listMenuId,
+      listNotice,
+      listCounts,
+      listEntryCount,
+      selectedStarState,
+      selectedStarTitle,
+      selectedNoteState,
+      setActiveList,
+      startNewList,
+      startRenameList,
+      cancelListEdit,
+      commitListEdit,
+      removeList,
+      toggleListFilter,
+      toggleStar,
+      updateNote,
+      exportList,
+      exportAllLists,
+      startListImport,
+      onListImportFile,
+      toggleListMenu,
       activeCatalog,
       activeRecordId,
       comparisonCatalog,

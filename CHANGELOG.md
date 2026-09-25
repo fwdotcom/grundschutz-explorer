@@ -2,6 +2,23 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Neu
+
+- **Listen mit Notizen**, etwa für Besprechungen: Listen legen Sie in der Filterleiste unter **Listen** an. Eine Liste ist aktiv (grüner Punkt, Klick auf den Punkt oder den Namen); der Stern am Titel nimmt die Anforderung in die aktive Liste auf. Ist keine Liste aktiv, landen Stern und Notizen in der **Merkliste**, die dabei bei Bedarf angelegt wird. Leer = in keiner Liste, grau = in einer anderen Liste, gelb = in der aktiven Liste.
+- Reiter **Notizen** in der Detailansicht: Notizen schreiben Sie nur in die aktive Liste; Notizen anderer Listen sind über die Auswahl nur lesbar. Der Punkt am Reiter zeigt, ob es eine Notiz gibt (grün: aktive Liste, grau: andere Liste).
+- Listen filtern wie Tags mit ✓ und ✕, auch mehrere zugleich. Eine ausgeschlossene Liste ist nicht mehr aktiv.
+- Listen exportieren und importieren (JSON), einzeln oder alle auf einmal; beim Import lassen sich gleichnamige Listen zusammenführen, ohne dass Notizen verloren gehen.
+
+### Geändert
+
+- Mehrere ✓ innerhalb von **Gefährdungen**, **Tags** und **Listen** verknüpfen jetzt mit „oder“: Es genügt, wenn einer der Werte passt. Bisher mussten alle zutreffen.
+- Buttons heben sich im hellen und dunklen Design mit einem dezenten Verlauf vom Hintergrund ab.
+- Die Fußzeile blendet App-Name und Version aus, wenn sie sonst umbrechen würde.
+- „Alle lokal gespeicherten Daten löschen“ löscht auch die Listen und weist vorher darauf hin.
+- Neue `security.txt` unter `/.well-known/`.
+
 ## [1.0.2] – 2026-09-24
 
 ### Geändert

@@ -76,6 +76,9 @@
   /* Sekundäre Buttons: dezenter Verlauf, damit sie sich von weißen Flächen abheben */
   --btn-bg: linear-gradient(180deg, #ffffff 0%, #f1f3f6 100%);
   --btn-bg-hover: linear-gradient(180deg, #f8f9fb 0%, #e8ebf0 100%);
+  /* Stern (Listen): Füllung und Kontur, Kontur mindestens 3:1 gegen den Hintergrund */
+  --star: #fbbf24;
+  --star-stroke: #a16207;
 
   --radius-sm: 6px;
   --radius: 8px;
@@ -127,6 +130,8 @@
   --overlay: rgba(0, 0, 0, 0.6);
   --btn-bg: linear-gradient(180deg, #1d212a 0%, #161a21 100%);
   --btn-bg-hover: linear-gradient(180deg, #252a35 0%, #1d212a 100%);
+  --star: #fbbf24;
+  --star-stroke: #fbbf24;
 
   color-scheme: dark;
 }
@@ -593,6 +598,80 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .rail-divider { height: 1px; background: var(--border); margin: 6px 4px; }
 
+/* ---------- Eigene Listen (Filterleiste) ---------- */
+.list-rows { display: flex; flex-direction: column; gap: 2px; }
+.list-row { position: relative; padding-left: 2px; }
+.list-radio {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%;
+}
+.list-radio-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong); background: var(--surface);
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+.list-radio:hover .list-radio-dot { border-color: var(--added); }
+.list-radio[aria-checked="true"] .list-radio-dot {
+  border-color: var(--added); background: var(--added);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+.list-radio:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.list-row.is-active-list .rail-row-label { font-weight: 600; color: var(--text); }
+.list-row.is-included.is-active-list .rail-row-label { color: inherit; }
+.rail-row-actions > .list-menu-btn { margin-left: 4px; border-radius: 4px; }
+.list-edit { padding: 2px 4px; }
+.list-tools { gap: 6px; padding: 4px 4px 2px; }
+.list-tools .spacer { flex: 1; }
+.list-menu-anchor { position: relative; }
+.list-menu {
+  position: absolute; right: 4px; top: calc(100% - 2px); z-index: 20;
+  min-width: 170px; padding: 4px; display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+.list-menu-anchor .list-menu { right: 0; top: calc(100% + 4px); }
+.list-menu button {
+  text-align: left; padding: 6px 10px; border-radius: var(--radius-sm);
+  font-size: calc(12.5px * var(--font-scale)); color: var(--text-2);
+}
+.list-menu button:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.list-menu button.is-danger { color: var(--muss); }
+.list-notice { color: var(--text-2); }
+
+/* Stern am Titel: leer = in keiner Liste, grau = in anderer Liste, gelb = in der aktiven Liste */
+.detail-title-row { display: flex; align-items: flex-start; gap: 12px; }
+.detail-title-row .detail-title { flex: 1; min-width: 0; }
+.star-btn {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  /* mittig zur ersten Zeile der Überschrift (20px, Zeilenhöhe 1,3, 2px Abstand oben) */
+  width: 36px; height: 36px; margin: calc(2px + (26px * var(--font-scale) - 36px) / 2) -6px 0 0; border-radius: var(--radius);
+  transition: background 0.12s, transform 0.08s;
+}
+.star-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--text-3); transition: fill 0.12s, stroke 0.12s; }
+.star-btn.star-other svg { fill: var(--text-3); }
+.star-btn.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
+.star-btn:not([aria-disabled="true"]):hover { background: var(--surface-hover); }
+.star-btn:not([aria-disabled="true"]):active { transform: scale(0.92); }
+.star-btn[aria-disabled="true"] { cursor: default; opacity: 0.8; }
+.star-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Reiter "Notizen": Punkt grau = Notiz in anderer Liste, grün (wie der Punkt der aktiven Liste) = Notiz in der aktiven Liste */
+.note-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.note-dot-here { background: var(--added); }
+.note-dot-other { background: var(--text-3); }
+
+.notes-panel { display: grid; gap: 10px; }
+.notes-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.notes-select { width: auto; max-width: 100%; height: 32px; padding: 0 8px; }
+.notes-list-name { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--text); }
+.notes-meta { margin-left: auto; font-size: calc(12px * var(--font-scale)); color: var(--text-3); }
+.notes-text {
+  height: auto; min-height: 240px; padding: 10px 12px; resize: vertical; font-family: inherit;
+  font-size: calc(13.5px * var(--font-scale)); line-height: 1.55;
+}
+.notes-text[readonly] { background: var(--surface-2); color: var(--text-2); }
+.notes-readonly { margin: 0; font-size: calc(12.5px * var(--font-scale)); color: var(--text-3); }
+
 /* Main split */
 .split { flex: 1; display: flex; min-width: 0; min-height: 0; }
 
@@ -730,6 +809,13 @@ ul { margin: 0; padding: 0; list-style: none; }
 .ctrl-row.selected .ctrl-id { color: var(--accent-text); font-weight: 600; }
 .ctrl-title { flex: 1; min-width: 0; font-size: calc(13px * var(--font-scale)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
 .ctrl-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* Listen-Markierungen in der Explorerliste: gleiche Farben wie Stern und Notizen-Punkt in der Detailansicht */
+.list-mark { display: inline-flex; flex-shrink: 0; }
+.list-mark svg { width: calc(14px * var(--font-scale)); height: calc(14px * var(--font-scale)); }
+.star-mark svg { fill: var(--text-3); stroke: var(--text-3); }
+.star-mark.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
+.note-mark { color: var(--text-3); }
+.note-mark.note-here { color: var(--added); }
 
 /* Aufwand als horizontaler, segmentierter Balken (Farbe per Inline-Style: grün = 0 … rot = Maximum) */
 .effort-row { display: inline-flex; align-items: center; gap: 12px; padding: 0; font: inherit; color: inherit; cursor: pointer; }
@@ -1226,6 +1312,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hc {
   --btn-bg: var(--surface);
   --btn-bg-hover: var(--surface-hover);
+  --star: #f5b301;
+  --star-stroke: #7a4304;
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #ffffff;
@@ -1254,6 +1342,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   --threat: #8a3505;
 }
 .dark.hc {
+  --star: #ffd27a;
+  --star-stroke: #ffd27a;
   --bg: #000000;
   --surface: #000000;
   --surface-2: #0a0c10;

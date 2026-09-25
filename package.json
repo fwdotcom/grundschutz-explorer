@@ -9,6 +9,6 @@
   },
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
-    "check": "node --check src/js/app.js && node --check src/js/oscalParser.js && node --check src/js/namespaces.js && node --check src/js/diffEngine.js && node --check src/js/storage.js"
+    "check": "node --check src/js/app.js && node --check src/js/oscalParser.js && node --check src/js/namespaces.js && node --check src/js/diffEngine.js && node --check src/js/storage.js && node --check src/js/lists.js"
   }
 }

@@ -196,6 +196,112 @@
           </div>
           <div class="rail-scroll">
 
+            <!-- 0. Eigene Listen (Anforderungen mit Notizen) -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.lists = !railCollapsed.lists" title="Listen ein-/ausklappen">
+                <span class="rail-heading-title">Listen</span>
+                <span v-if="activeTagCountFor('list')" class="rail-active-badge">{{ activeTagCountFor('list') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.lists }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.lists" class="rail-section-body">
+
+                <div role="radiogroup" aria-label="Aktive Liste" class="list-rows">
+                  <template v-for="list in sortedLists" :key="list.id">
+                    <form v-if="listEdit && listEdit.id === list.id" class="list-edit" @submit.prevent="commitListEdit">
+                      <input v-model="listEdit.name" class="rail-search-input" maxlength="80" aria-label="Name der Liste" @keydown.esc.stop="cancelListEdit" @blur="commitListEdit" />
+                    </form>
+                    <div
+                      v-else
+                      class="rail-row list-row"
+                      :class="{
+                        'is-included': getTagMode('list', list.id) === 'include',
+                        'is-excluded': getTagMode('list', list.id) === 'exclude',
+                        'is-active-list': activeListId === list.id,
+                        'is-empty': !listCounts[list.id]
+                      }"
+                    >
+                      <button
+                        class="list-radio"
+                        role="radio"
+                        :aria-checked="activeListId === list.id"
+                        :aria-label="'Aktive Liste: ' + list.name"
+                        :title="activeListId === list.id ? 'Aktive Liste – Klicken zum Deaktivieren' : 'Als aktive Liste wählen (Stern und Notizen schreiben hierhin)'"
+                        @click.stop="setActiveList(list.id)"
+                      ><span class="list-radio-dot"></span></button>
+                      <div
+                        class="rail-row-main"
+                        @click="setActiveList(list.id)"
+                        :title="activeListId === list.id ? 'Aktive Liste – Klicken zum Deaktivieren' : 'Als aktive Liste wählen (Stern und Notizen schreiben hierhin)'"
+                      >
+                        <span class="rail-row-label">{{ list.name }}</span>
+                        <span class="rail-row-count">{{ listCounts[list.id] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode('list', list.id)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode('list', list.id) === 'exclude' }"
+                          @click.stop="removeTag('list', list.id)"
+                          :title="getTagMode('list', list.id) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                        </button>
+                        <template v-else>
+                          <button class="rail-btn btn-check" @click.stop="toggleListFilter(list, 'include')" title="Nur Anforderungen dieser Liste (✓)">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </button>
+                          <button class="rail-btn btn-cross" @click.stop="toggleListFilter(list, 'exclude')" title="Anforderungen dieser Liste ausschließen (✕)">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          </button>
+                        </template>
+                        <button
+                          class="rail-btn list-menu-btn"
+                          :aria-expanded="listMenuId === list.id"
+                          aria-haspopup="menu"
+                          :title="'Liste „' + list.name + '“: umbenennen, exportieren, löschen'"
+                          @click.stop="toggleListMenu(list.id)"
+                        >
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                        </button>
+                      </div>
+                      <div v-if="listMenuId === list.id" class="list-menu" role="menu">
+                        <button role="menuitem" @click="startRenameList(list)">Umbenennen</button>
+                        <button role="menuitem" @click="exportList(list)">Exportieren</button>
+                        <button role="menuitem" class="is-danger" @click="removeList(list)">Löschen</button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <form v-if="listEdit && !listEdit.id" class="list-edit" @submit.prevent="commitListEdit">
+                  <input v-model="listEdit.name" class="rail-search-input" maxlength="80" placeholder="Name der neuen Liste" aria-label="Name der neuen Liste" @keydown.esc.stop="cancelListEdit" @blur="commitListEdit" />
+                </form>
+
+                <div class="rail-subfilter-row list-tools">
+                  <button class="link-btn xs" @click="startNewList">&plus; Neue Liste</button>
+                  <span class="spacer"></span>
+                  <div class="list-menu-anchor">
+                    <button
+                      class="rail-btn list-menu-btn"
+                      :aria-expanded="listMenuId === '__all'"
+                      aria-haspopup="menu"
+                      title="Listen importieren oder sichern" aria-label="Listen importieren oder sichern"
+                      @click.stop="toggleListMenu('__all')"
+                    >
+                      <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    </button>
+                    <div v-if="listMenuId === '__all'" class="list-menu" role="menu">
+                      <button role="menuitem" @click="startListImport">Listen importieren …</button>
+                      <button role="menuitem" :disabled="lists.length === 0" @click="exportAllLists">Alle Listen sichern</button>
+                    </div>
+                  </div>
+                  <input ref="listImportInput" type="file" accept=".json,application/json" hidden @change="onListImportFile" />
+                </div>
+                <p v-if="listNotice" class="rail-empty-note list-notice" role="status">{{ listNotice }}</p>
+              </div>
+            </div>
+
             <!-- 1. Modalverben -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.modalVerbs = !railCollapsed.modalVerbs" title="Modalverben ein-/ausklappen">
@@ -948,7 +1054,9 @@
                 >
                   <span class="ctrl-id">{{ ctrl.id }}</span>
                   <span class="ctrl-title" :title="ctrl.title">{{ ctrl.title }}</span>
-                  <span class="ctrl-meta">
+<span class="ctrl-meta">
+                    <span v-if="listMarks.get(ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(ctrl.id).star" role="img" :aria-label="listMarks.get(ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'" :title="listMarks.get(ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></span>
+                    <span v-if="listMarks.get(ctrl.id)?.note" class="list-mark note-mark" :class="'note-' + listMarks.get(ctrl.id).note" role="img" :aria-label="listMarks.get(ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'" :title="listMarks.get(ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
                     <span v-if="ctrl.diff && ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + ctrl.diff.status">{{ diffLabel(ctrl.diff.status) }}</span>
                     <span v-if="ctrl.subcontrols?.length" class="meta-num" :title="ctrl.subcontrols.length + ' Unteranforderungen'">
                       <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ ctrl.subcontrols.length }}
@@ -1002,6 +1110,8 @@
                             <span class="ctrl-id">{{ row.ctrl.id }}</span>
                             <span class="ctrl-title" :title="row.ctrl.title">{{ row.ctrl.title }}</span>
                             <span class="ctrl-meta">
+                              <span v-if="listMarks.get(row.ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(row.ctrl.id).star" role="img" :aria-label="listMarks.get(row.ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'" :title="listMarks.get(row.ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></span>
+                              <span v-if="listMarks.get(row.ctrl.id)?.note" class="list-mark note-mark" :class="'note-' + listMarks.get(row.ctrl.id).note" role="img" :aria-label="listMarks.get(row.ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'" :title="listMarks.get(row.ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
                               <span v-if="row.ctrl.diff && row.ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + row.ctrl.diff.status">{{ diffLabel(row.ctrl.diff.status) }}</span>
                               <span v-if="row.ctrl.subcontrols?.length" class="meta-num" :title="row.ctrl.subcontrols.length + ' Unteranforderungen'">
                                 <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ row.ctrl.subcontrols.length }}
@@ -1177,7 +1287,19 @@
                 <div class="detail-titlebar">
                   <div class="titles">
                     <div class="detail-id">{{ selectedControl.id }}</div>
-                    <h2 class="detail-title">{{ selectedControl.title }}</h2>
+                    <div class="detail-title-row">
+                      <h2 class="detail-title">{{ selectedControl.title }}</h2>
+                      <button
+                        class="star-btn"
+                        :class="'star-' + selectedStarState"
+                        :aria-pressed="selectedStarState === 'here'"
+                        :aria-label="'In Liste „' + writeList.name + '“ merken'"
+                        :title="selectedStarTitle"
+                        @click="toggleStar"
+                      >
+                        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1200,6 +1322,15 @@
                     Übersicht
                   </button>
                   <button class="tab" :class="{ on: detailActiveTab === 'guidance' }" @click="detailActiveTab = 'guidance'">Hilfestellung</button>
+                  <button
+                    class="tab"
+                    :class="{ on: detailActiveTab === 'notes' }"
+                    @click="detailActiveTab = 'notes'"
+                    :aria-label="'Notizen' + (selectedNoteState === 'here' ? ' (Notiz in aktiver Liste)' : selectedNoteState === 'other' ? ' (Notiz in anderer Liste)' : '')"
+                  >
+                    Notizen
+                    <span v-if="selectedNoteState" class="note-dot" :class="'note-dot-' + selectedNoteState" aria-hidden="true"></span>
+                  </button>
                   <button v-if="diffSummary?.hasDiff" class="tab" :class="{ on: detailActiveTab === 'diff' }" @click="detailActiveTab = 'diff'">Änderungen</button>
                   <button class="tab" :class="{ on: detailActiveTab === 'props' }" @click="detailActiveTab = 'props'">OSCAL</button>
                 </div>
@@ -1430,6 +1561,40 @@
                 </div>
 
                 <!-- Hilfestellung -->
+                <!-- Notizen: nur die aktive Liste ist beschreibbar, andere Listen nur lesbar -->
+                <div v-else-if="detailActiveTab === 'notes'" class="stack">
+                  <div v-if="notesViewList" class="notes-panel">
+                    <div class="notes-head">
+                      <label v-if="notesViewOptions.length > 1" class="notes-select-label">
+                        <span class="sr-only">Liste</span>
+                        <select class="input notes-select" :value="notesViewList.id" @change="notesViewListId = $event.target.value">
+                          <option v-for="l in notesViewOptions" :key="l.id" :value="l.id">
+                            {{ l.name }}{{ l.id === writeList.id ? ' (aktiv)' : ' (nur lesen)' }}
+                          </option>
+                        </select>
+                      </label>
+                      <span v-else class="notes-list-name">{{ notesViewList.name }}</span>
+                      <span v-if="!activeList && notesViewList.id === writeList.id" class="notes-meta">Keine Liste aktiv – Einträge landen in der Merkliste</span>
+                      <span v-else-if="notesViewEntry?.updatedAt && notesViewEntry.note" class="notes-meta">zuletzt geändert {{ formatDate(notesViewEntry.updatedAt) }}</span>
+                    </div>
+                    <textarea
+                      v-if="notesViewList.id === writeList.id"
+                      class="input notes-text"
+                      :value="notesViewEntry?.note || ''"
+                      @input="updateNote($event.target.value)"
+                      :placeholder="'Notiz zu ' + selectedControl.id + ' in „' + notesViewList.name + '“ …'"
+                      :aria-label="'Notiz in Liste ' + notesViewList.name"
+                    ></textarea>
+                    <template v-else>
+                      <textarea class="input notes-text" :value="notesViewEntry?.note || ''" readonly :aria-label="'Notiz in Liste ' + notesViewList.name + ' (nur lesen)'"></textarea>
+                      <p class="notes-readonly">
+                        Nur lesbar.
+                        <button class="link-btn" @click="setActiveList(notesViewList.id)">„{{ notesViewList.name }}“ aktivieren</button>, um die Notiz zu bearbeiten.
+                      </p>
+                    </template>
+                  </div>
+                </div>
+
                 <div v-else-if="detailActiveTab === 'guidance'" class="card card-pad">
                   <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
                   <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
@@ -1854,7 +2019,7 @@ SOFTWARE.</pre>
           <div>
             <h3>5. Lokale Speicherung in Ihrem Browser</h3>
             <p>
-              Geladene Kataloge sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
+              Geladene Kataloge, Ihre Listen mit Notizen sowie Einstellungen wie Filter, Schriftgröße, Hell-/Dunkelmodus und Kontrast werden ausschließlich in der Datenbank
               Ihres Browsers (IndexedDB) gespeichert. Diese Daten verlassen Ihr Gerät nicht. Einzelne Kataloge löschen Sie unter <strong>Kataloge</strong> über den Papierkorb.
               Alle Daten löschen Sie mit der folgenden Schaltfläche oder über die Einstellungen Ihres Browsers.
             </p>
