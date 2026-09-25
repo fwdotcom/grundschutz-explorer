@@ -63,6 +63,7 @@
   --kann-soft: #ebfbfd;
   --kann-border: #a6e6ef;
   --added: #067647;
+  --list-other: #c0c6d1; /* Stern und Notizen-Punkt "andere Liste": bewusst hell, damit sie sich klar von der aktiven Liste abheben */
   --added-soft: #ecfdf3;
   --added-border: #abefc6;
   --threat: #b54708;
@@ -91,6 +92,7 @@
 }
 
 .dark {
+  --list-other: var(--text-3);
   --bg: #0c0e13;
   --surface: #13161d;
   --surface-2: #181c24;
@@ -183,6 +185,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .btn-ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
 .btn-danger { color: var(--muss); }
 .btn-danger:hover { border-color: var(--muss-border); background: var(--muss-soft); }
+.btn-danger-solid { background: var(--muss); color: #fff; }
+.btn-danger-solid:hover:not(:disabled) { filter: brightness(0.92); }
+.dark .btn-danger-solid { color: #0c0e13; }
 .btn-lg { height: 42px; padding: 0 18px; font-size: calc(14px * var(--font-scale)); font-weight: 600; }
 .btn-block { width: 100%; }
 .icon-btn {
@@ -648,7 +653,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   transition: background 0.12s, transform 0.08s;
 }
 .star-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--text-3); transition: fill 0.12s, stroke 0.12s; }
-.star-btn.star-other svg { fill: var(--text-3); }
+.star-btn.star-other svg { fill: var(--list-other); stroke: var(--list-other); }
 .star-btn.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
 .star-btn:not([aria-disabled="true"]):hover { background: var(--surface-hover); }
 .star-btn:not([aria-disabled="true"]):active { transform: scale(0.92); }
@@ -658,7 +663,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* Reiter "Notizen": Punkt grau = Notiz in anderer Liste, grün (wie der Punkt der aktiven Liste) = Notiz in der aktiven Liste */
 .note-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .note-dot-here { background: var(--added); }
-.note-dot-other { background: var(--text-3); }
+.note-dot-other { background: var(--list-other); }
 
 .notes-panel { display: grid; gap: 10px; }
 .notes-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -666,11 +671,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .notes-list-name { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--text); }
 .notes-meta { margin-left: auto; font-size: calc(12px * var(--font-scale)); color: var(--text-3); }
 .notes-text {
-  height: auto; min-height: 240px; padding: 10px 12px; resize: vertical; font-family: inherit;
+  height: auto; min-height: 240px; padding: 10px 12px; resize: vertical; overflow: auto;
+  white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
   font-size: calc(13.5px * var(--font-scale)); line-height: 1.55;
 }
-.notes-text[readonly] { background: var(--surface-2); color: var(--text-2); }
+.notes-text[contenteditable="false"] { cursor: default; background: var(--surface-2); color: var(--text-2); }
+.notes-text:empty::before { content: attr(data-placeholder); color: var(--text-3); pointer-events: none; }
 .notes-readonly { margin: 0; font-size: calc(12.5px * var(--font-scale)); color: var(--text-3); }
+.notes-readonly .link-btn { font-size: inherit; }
 
 /* Main split */
 .split { flex: 1; display: flex; min-width: 0; min-height: 0; }
@@ -681,10 +689,6 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* Tag-basierte Filterleiste */
 .active-tags-bar { display: flex; flex-direction: column; gap: 6px; }
-.no-tags-hint {
-  display: flex; align-items: center; gap: 6px; font-size: calc(12px * var(--font-scale)); color: var(--text-3);
-  padding: 3px 0;
-}
 .tags-container {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
 }
@@ -812,9 +816,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* Listen-Markierungen in der Explorerliste: gleiche Farben wie Stern und Notizen-Punkt in der Detailansicht */
 .list-mark { display: inline-flex; flex-shrink: 0; }
 .list-mark svg { width: calc(14px * var(--font-scale)); height: calc(14px * var(--font-scale)); }
-.star-mark svg { fill: var(--text-3); stroke: var(--text-3); }
+.star-mark svg { fill: var(--list-other); stroke: var(--list-other); }
 .star-mark.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
-.note-mark { color: var(--text-3); }
+.note-mark { color: var(--list-other); }
 .note-mark.note-here { color: var(--added); }
 
 /* Aufwand als horizontaler, segmentierter Balken (Farbe per Inline-Style: grün = 0 … rot = Maximum) */
@@ -1134,6 +1138,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .modal-body { padding: 20px; overflow-y: auto; display: grid; gap: 14px; }
 .modal-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 .modal-foot .spacer { flex: 1; }
+/* Bestätigungsdialog auf Basis von <dialog> */
+.confirm-dialog { max-width: 440px; width: calc(100% - 32px); margin: auto; padding: 0; color: var(--text); }
+.confirm-dialog:not([open]) { display: none; }
+.confirm-dialog::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--overlay); backdrop-filter: blur(3px); animation: fade 0.12s ease-out; }
+.confirm-dialog form { display: flex; flex-direction: column; min-height: 0; }
+.confirm-dialog .modal-body { gap: 8px; }
+.confirm-message { margin: 0; font-size: calc(13.5px * var(--font-scale)); line-height: 1.5; color: var(--text-2); }
+.confirm-hint { margin: 0; font-size: calc(12.5px * var(--font-scale)); line-height: 1.5; color: var(--text-3); }
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.985); } }
 
@@ -1310,6 +1322,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* ============ Hoher Kontrast ============
    Alle Textfarben mindestens 7:1 (WCAG AAA), Rahmen mindestens 3:1 gegen den Hintergrund */
 .hc {
+  --list-other: var(--text-3);
   --btn-bg: var(--surface);
   --btn-bg-hover: var(--surface-hover);
   --star: #f5b301;

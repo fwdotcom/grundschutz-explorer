@@ -943,12 +943,8 @@
           <section class="list-pane">
             <div class="filterbar">
               <!-- Aktive Filter-Tags Visualisierung -->
-              <div class="active-tags-bar" :class="{ 'has-tags': allActiveChips.length > 0 }">
-                <div v-if="allActiveChips.length === 0" class="no-tags-hint">
-                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                  <span>Keine Filter aktiv &ndash; Links mit &bdquo;&check;&ldquo; (Nur) oder &bdquo;&cross;&ldquo; (Nicht) w&auml;hlen oder Volltextsuche nutzen</span>
-                </div>
-                <div v-else class="tags-container">
+              <div v-if="allActiveChips.length > 0" class="active-tags-bar has-tags">
+                <div class="tags-container">
                   <span class="tags-lead-label">Aktive Filter:</span>
                   <div class="tag-chips-wrap">
                     <div
@@ -1574,24 +1570,22 @@
                         </select>
                       </label>
                       <span v-else class="notes-list-name">{{ notesViewList.name }}</span>
-                      <span v-if="!activeList && notesViewList.id === writeList.id" class="notes-meta">Keine Liste aktiv – Einträge landen in der Merkliste</span>
-                      <span v-else-if="notesViewEntry?.updatedAt && notesViewEntry.note" class="notes-meta">zuletzt geändert {{ formatDate(notesViewEntry.updatedAt) }}</span>
+                      <span v-if="notesViewEntry?.updatedAt && notesViewEntry.note" class="notes-meta">zuletzt geändert {{ formatDate(notesViewEntry.updatedAt) }}</span>
                     </div>
-                    <textarea
-                      v-if="notesViewList.id === writeList.id"
+                    <!-- Ein Element für beide Fälle: in der aktiven Liste beschreibbar, sonst reiner (nicht fokussierbarer) Text -->
+                    <div
                       class="input notes-text"
-                      :value="notesViewEntry?.note || ''"
-                      @input="updateNote($event.target.value)"
-                      :placeholder="'Notiz zu ' + selectedControl.id + ' in „' + notesViewList.name + '“ …'"
+                      v-plain-text="notesViewEntry?.note || ''"
+                      :contenteditable="notesViewList.id === writeList.id ? 'plaintext-only' : 'false'"
+                      :role="notesViewList.id === writeList.id ? 'textbox' : null"
+                      :aria-multiline="notesViewList.id === writeList.id ? 'true' : null"
                       :aria-label="'Notiz in Liste ' + notesViewList.name"
-                    ></textarea>
-                    <template v-else>
-                      <textarea class="input notes-text" :value="notesViewEntry?.note || ''" readonly :aria-label="'Notiz in Liste ' + notesViewList.name + ' (nur lesen)'"></textarea>
-                      <p class="notes-readonly">
-                        Nur lesbar.
-                        <button class="link-btn" @click="setActiveList(notesViewList.id)">„{{ notesViewList.name }}“ aktivieren</button>, um die Notiz zu bearbeiten.
-                      </p>
-                    </template>
+                      :data-placeholder="notesViewList.id === writeList.id ? 'Notiz zu ' + selectedControl.id + ' in „' + notesViewList.name + '“ …' : 'Keine Notiz in dieser Liste.'"
+                      @input="updateNote($event.target.innerText)"
+                    ></div>
+                    <p v-if="notesViewList.id !== writeList.id" class="notes-readonly">
+                      <button class="link-btn" @click="setActiveList(notesViewList.id)">„{{ notesViewList.name }}“ aktivieren</button>, um die Notiz zu bearbeiten.
+                    </p>
                   </div>
                 </div>
 
@@ -1683,6 +1677,31 @@
         <button class="footer-link" @click="isDatenschutzModalOpen = true">Datenschutz</button>
       </div>
     </footer>
+
+    <!-- ============ Bestätigungsdialog (natives <dialog>: Fokusfalle, Escape und Hintergrundsperre vom Browser) ============ -->
+    <dialog
+      ref="confirmDialogEl"
+      class="modal confirm-dialog"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-message"
+      @close="onConfirmDialogClose"
+      @click.self="$event.target.close('cancel')"
+    >
+      <form v-if="confirmState" method="dialog">
+        <div class="modal-head">
+          <h2 id="confirm-title">{{ confirmState.title }}</h2>
+        </div>
+        <div class="modal-body">
+          <p id="confirm-message" class="confirm-message">{{ confirmState.message }}</p>
+          <p v-if="confirmState.hint" class="confirm-hint">{{ confirmState.hint }}</p>
+        </div>
+        <div class="modal-foot">
+          <span class="spacer"></span>
+          <button class="btn btn-secondary" value="cancel" :data-autofocus="confirmState.danger ? '' : null">{{ confirmState.cancelLabel }}</button>
+          <button class="btn" :class="confirmState.danger ? 'btn-danger-solid' : 'btn-primary'" value="confirm" :data-autofocus="confirmState.danger ? null : ''">{{ confirmState.confirmLabel }}</button>
+        </div>
+      </form>
+    </dialog>
 
     <!-- ============ Kataloge: gespeicherte Versionen ============ -->
     <div v-if="isCatalogModalOpen" class="modal-backdrop" @mousedown.self="isCatalogModalOpen = false">

@@ -95,6 +95,10 @@ const app = createApp({
     const isImpressumModalOpen = ref(false);
     const isDatenschutzModalOpen = ref(false);
     const isLicenseModalOpen = ref(false);
+    // Bestätigungsdialog (ersetzt window.confirm): Inhalt, Element und Rückgabe des offenen Promise
+    const confirmState = ref(null);
+    const confirmDialogEl = ref(null);
+    let confirmResolve = null;
     const isDarkMode = ref(false);
     const isHighContrast = ref(false);
     const fontScale = ref(1);
@@ -1250,7 +1254,34 @@ const app = createApp({
       el.classList.toggle('is-compact', last.top > first.top + first.height / 2);
     }
 
+    // Zeigt einen modalen Bestätigungsdialog und liefert true (bestätigt) oder false (abgebrochen, Escape, Klick daneben)
+    function askConfirm({ title, message, hint = '', confirmLabel = 'OK', cancelLabel = 'Abbrechen', danger = false }) {
+      confirmResolve?.(false);
+      confirmState.value = { title, message, hint, confirmLabel, cancelLabel, danger };
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        nextTick(() => {
+          const dialog = confirmDialogEl.value;
+          if (!dialog.open) dialog.showModal();
+          // Bei destruktiven Aktionen liegt der Fokus auf "Abbrechen"
+          dialog.querySelector('[data-autofocus]')?.focus();
+        });
+      });
+    }
+
+    function onConfirmDialogClose() {
+      const dialog = confirmDialogEl.value;
+      const confirmed = dialog.returnValue === 'confirm';
+      dialog.returnValue = '';
+      confirmState.value = null;
+      const resolve = confirmResolve;
+      confirmResolve = null;
+      resolve?.(confirmed);
+    }
+
     function handleGlobalKeydown(e) {
+      // Offener Bestätigungsdialog behandelt Tasten selbst (Escape schließt nur ihn)
+      if (confirmState.value) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         searchInput.value?.focus();
@@ -1854,10 +1885,14 @@ const app = createApp({
         const detail =
           `${entries.length} ${entries.length === 1 ? 'Eintrag' : 'Einträgen'}` +
           (withNote ? `, davon ${withNote} mit Notiz,` : '');
-        const text =
-          `Liste „${list.name}“ mit ${detail} löschen?\n\n` +
-          'Tipp: Über „Exportieren“ im Listenmenü sichern Sie die Liste vorher als Datei.';
-        if (!confirm(text)) return;
+        const confirmed = await askConfirm({
+          title: 'Liste löschen?',
+          message: `Die Liste „${list.name}“ mit ${detail} wird gelöscht.`,
+          hint: 'Tipp: Über „Exportieren“ im Listenmenü sichern Sie die Liste vorher als Datei.',
+          confirmLabel: 'Liste löschen',
+          danger: true,
+        });
+        if (!confirmed) return;
       }
       for (const e of entries) {
         clearTimeout(pendingNoteSaves.get(e.key));
@@ -1947,7 +1982,12 @@ const app = createApp({
       }
       if (
         existing.note?.trim() &&
-        !confirm(`„${ctrl.id}“ aus der Liste „${activeList.value.name}“ entfernen? Die Notiz wird dabei gelöscht.`)
+        !(await askConfirm({
+          title: 'Aus Liste entfernen?',
+          message: `„${ctrl.id}“ wird aus der Liste „${activeList.value.name}“ entfernt. Die Notiz wird dabei gelöscht.`,
+          confirmLabel: 'Entfernen',
+          danger: true,
+        }))
       ) {
         return;
       }
@@ -2038,11 +2078,13 @@ const app = createApp({
         const existing = nextLists.find((l) => l.name.toLocaleLowerCase('de') === incoming.name.toLocaleLowerCase('de'));
         const merge =
           existing &&
-          confirm(
-            `Die Liste „${existing.name}“ gibt es bereits.\n\n` +
-              'OK: Einträge zusammenführen (unterschiedliche Notizen bleiben beide erhalten)\n' +
-              `Abbrechen: als neue Liste „${uniqueListName(incoming.name, takenNames)}“ anlegen`
-          );
+          (await askConfirm({
+            title: 'Liste bereits vorhanden',
+            message: `Die Liste „${existing.name}“ gibt es bereits. Sollen die Einträge zusammengeführt werden?`,
+            hint: 'Unterschiedliche Notizen bleiben dabei beide erhalten.',
+            confirmLabel: 'Zusammenführen',
+            cancelLabel: `Als „${uniqueListName(incoming.name, takenNames)}“ anlegen`,
+          }));
         let target;
         if (merge) {
           target = { ...existing, updatedAt: now };
@@ -2343,9 +2385,16 @@ const app = createApp({
 
     async function clearAll() {
       const listText = lists.value.length
-        ? `\n\nDabei werden auch ${lists.value.length === 1 ? 'Ihre Liste' : `Ihre ${lists.value.length} Listen`} mit allen Notizen gelöscht.`
+        ? ` Dabei werden auch ${lists.value.length === 1 ? 'Ihre Liste' : `Ihre ${lists.value.length} Listen`} mit allen Notizen gelöscht.`
         : '';
-      if (confirm(`Möchten Sie wirklich alle lokal gespeicherten Kataloge und Einstellungen löschen?${listText}`)) {
+      const confirmed = await askConfirm({
+        title: 'Alle Daten löschen?',
+        message: `Alle lokal gespeicherten Kataloge und Einstellungen werden gelöscht.${listText}`,
+        hint: 'Dieser Schritt lässt sich nicht rückgängig machen.',
+        confirmLabel: 'Alles löschen',
+        danger: true,
+      });
+      if (confirmed) {
         pendingNoteSaves.forEach((timer) => clearTimeout(timer));
         pendingNoteSaves.clear();
         await clearAllData();
@@ -2513,6 +2562,9 @@ const app = createApp({
       isImpressumModalOpen,
       isDatenschutzModalOpen,
       isLicenseModalOpen,
+      confirmState,
+      confirmDialogEl,
+      onConfirmDialogClose,
       isDarkMode,
       isLoadingInitial,
       detailPaneWidth,
@@ -2655,6 +2707,20 @@ const app = createApp({
       diffLabel,
     };
   },
+});
+
+// Text eines contenteditable-Elements setzen, ohne die Cursorposition beim Tippen zu verlieren
+function setPlainText(el, value) {
+  if (document.activeElement === el) return;
+  if (el.innerText !== value) el.textContent = value;
+}
+app.directive('plain-text', {
+  mounted(el, { value }) {
+    // Nach dem Löschen bleibt teils ein einzelnes <br> stehen; leeren, damit der Platzhalter (:empty) wieder greift
+    el.addEventListener('input', () => { if (!el.textContent && el.firstChild) el.textContent = ''; }, true);
+    setPlainText(el, value);
+  },
+  updated: (el, { value }) => setPlainText(el, value),
 });
 
 app.mount('#app');
