@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ */
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeWordDiff, compareCatalogs } from '../src/js/diffEngine.js';

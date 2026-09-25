@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Gemeinsame Hilfen für die Tests (Node-Test-Runner, ohne Abhängigkeiten).
  */
 import { readFile } from 'node:fs/promises';

@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ */
+
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseOscalCatalog, formatBsiThreat, resolveParamsInProse } from '../src/js/oscalParser.js';

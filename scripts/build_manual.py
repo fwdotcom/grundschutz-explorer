@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Frank Winter
+# SPDX-License-Identifier: MIT
 """
 Baut das Benutzerhandbuch (docs/handbuch) mit markpublish als PDF.
 

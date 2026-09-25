@@ -1,4 +1,7 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Frank Winter
+ * SPDX-License-Identifier: MIT
+ *
  * Prüft die ausgelieferte statische Seite: verlinkte Dateien vorhanden, Module importierbar, Metadaten gesetzt.
  */
 import { test } from 'node:test';
