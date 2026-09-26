@@ -7,8 +7,8 @@ Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdef
 Praktik
 : Oberste Gliederungsebene, etwa „DEV Entwicklung“, „GC Governance und Compliance“ oder „ARCH Architektur“. Jede Praktik besitzt eine offizielle Zweckbestimmung des BSI.
 
-Teilbereich
-: Fachliche Untergliederung innerhalb einer Praktik, etwa „DEV.4 Softwareentwicklung - Code“.
+Thema
+: Fachliche Untergliederung innerhalb einer Praktik, etwa „DEV.4 Softwareentwicklung - Code“. Die Beschreibung eines Themas stammt aus den Begriffsdefinitionen des BSI.
 
 Anforderung
 : Ein verbindlich zu erreichender Zielzustand, etwa „DEV.4.3“. Eine Anforderung kann ihrerseits konkretere Unteranforderungen enthalten.

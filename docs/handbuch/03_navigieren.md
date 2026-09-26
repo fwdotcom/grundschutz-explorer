@@ -3,7 +3,7 @@
 Der Grundschutz++-Katalog besitzt eine durchgängige, vierstufige Hierarchie:
 
 1. **Praktiken** (z. B. `DEV Entwicklung` oder `GC Governance und Compliance`)
-2. **Teilbereiche** (z. B. `DEV.4 Softwareentwicklung - Code`)
+2. **Themen** (z. B. `DEV.4 Softwareentwicklung - Code`)
 3. **Anforderungen** (z. B. `DEV.4.3 Softwarebestandteile (SBOM)`)
 4. **Unteranforderungen** (z. B. `DEV.1.1.1 Dokumentation`, bis hin zu tieferen Verästelungen wie `GC.9.1.1.1.1`)
 
@@ -11,7 +11,7 @@ Der Grundschutz++-Katalog besitzt eine durchgängige, vierstufige Hierarchie:
 
 In der Baumansicht navigieren Sie intuitiv durch die hierarchische Struktur:
 
-- **Praktik oder Teilbereich aufklappen:** Ein Klick auf den kleinen Pfeil am Zeilenanfang klappt die Unterelemente auf oder zu, ohne die Detailansicht zu verändern. Ein Klick auf den Text zeigt rechts zusätzlich eine zusammenfassende Übersicht.
+- **Praktik oder Thema aufklappen:** Ein Klick auf den kleinen Pfeil am Zeilenanfang klappt die Unterelemente auf oder zu, ohne die Detailansicht zu verändern. Ein Klick auf den Text zeigt rechts zusätzlich eine zusammenfassende Übersicht.
 - **Anforderung auswählen:** Ein Klick auf die Anforderungszeile öffnet ihre Detailansicht. Besitzt die Anforderung eigene Unteranforderungen, werden diese automatisch im Baum aufgefaltet.
 - **Tiefere Ebenen:** Eingerückte Zeilen und vertikale Hilfslinien visualisieren die Überordnungen. Die Zahl am Pfeil rechts außen nennt die Anzahl der direkten Unteranforderungen.
 - **Alle auf- oder zuklappen:** Über die Schaltflächen oberhalb der Liste falten Sie alle Ebenen mit einem Klick auf oder zu.
@@ -23,16 +23,17 @@ In der Baumansicht navigieren Sie intuitiv durch die hierarchische Struktur:
 Mehrstufige Unteranforderungen am Beispiel von GC.9.1 Festlegung einer Sicherheitsorganisation (Ebenen 1 bis 3)
 ///
 
-## Übersicht einer Praktik oder eines Teilbereichs
+## Übersicht von Katalog, Praktik und Thema
 
-Wählen Sie eine Praktik oder einen Teilbereich aus, blendet die rechte Seite eine übersichtliche Zusammenfassung ein:
+Wählen Sie eine Praktik oder ein Thema aus, blendet die rechte Seite eine übersichtliche Zusammenfassung ein. Ist nichts ausgewählt, erscheint dieselbe Übersicht für den ganzen Katalog.
 
 Die Übersicht liefert auf einen Blick:
-- Die offizielle Zweckbestimmung und Beschreibung des BSI.
-- Statistische Kennzahlen: Gesamtzahl der Anforderungen, gegliedert nach Basis- und Unteranforderungen.
+- Unter dem Titel den Umfang als Tags: die Anzahl der Praktiken, Themen, Anforderungen und Unteranforderungen darunter.
+- Die offizielle Beschreibung des BSI.
+- Beim Katalog seine Angaben, etwa Version, letzte Änderung, umgesetzte Norm und Verantwortliche.
 - Verteilung der Modalverben auf MUSS, SOLLTE und KANN.
-- Die Liste der untergeordneten Teilbereiche oder Anforderungen.
 - Im Vergleichsmodus: Die Anzahl neu hinzugekommener, geänderter oder entfallener Anforderungen.
+- Die Liste der Ebene darunter: Praktiken, Themen oder Anforderungen.
 
 ## Pfadleiste (Breadcrumb)
 
@@ -43,7 +44,7 @@ Die Übersicht liefert auf einen Blick:
 ```
 
 - **Buch-Symbol am Anfang:** Führt mit einem Klick zur **Katalogübersicht** mit allgemeinen Metadaten, Normverweisen und Versionsständen zurück (zugeklapptes Buch = Katalogübersicht aktiv, aufgeschlagenes Buch = Anforderung aktiv).
-- **Hierarchische Knoten:** Zeigt den exakten Pfad von der Praktik über den Teilbereich bis zu eventuellen Elternanforderungen. Jeder Knoten lässt sich anklicken, um direkt zur entsprechenden Ebene zu springen.
+- **Hierarchische Knoten:** Zeigt den exakten Pfad von der Praktik über das Thema bis zu eventuellen Elternanforderungen. Jeder Knoten lässt sich anklicken, um direkt zur entsprechenden Ebene zu springen.
 - **Fokus auf das Wesentliche:** Die Pfadleiste endet übersichtlich bei der übergeordneten Gruppe, da Kennung und Titel der aktuellen Anforderung bereits prominent als Hauptüberschrift darunter stehen.
 
 ## Flache Trefferliste

@@ -642,6 +642,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
   /* mittig zur ersten Zeile der Überschrift (20px, Zeilenhöhe 1,3, 2px Abstand oben) */
   width: 36px; height: 36px; margin: calc(2px + (26px * var(--font-scale) - 36px) / 2) -6px 0 0; border-radius: var(--radius);
+  /* was über die erste Zeile hinausragt, vergrößert nicht den Abstand zu den Tags */
+  margin-bottom: min(0px, calc(13px * var(--font-scale) - 18px));
   transition: background 0.12s, transform 0.08s;
 }
 .star-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--text-3); transition: fill 0.12s, stroke 0.12s; }

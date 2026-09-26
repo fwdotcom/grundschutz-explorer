@@ -67,7 +67,7 @@ Die mittlere Spalte präsentiert die Anforderungen wahlweise als strukturierte *
 
 Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten Anforderung:
 
-- **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Teilbereich und gegebenenfalls übergeordneten Anforderungen.
+- **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Thema und gegebenenfalls übergeordneten Anforderungen.
 - **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Modalverb, Schutzbedarf und Änderungsstatus.
 - **Reiter (Tabs):**
   - **Übersicht:** Vollständiger Anforderungstext, Schutzziele, Handlungswort, Dokumentationsvorgabe, Ergebnis, Aufwand, Tags, Gefährdungen und Unteranforderungen.

@@ -679,7 +679,7 @@ const app = createApp({
         chips.push({ ...chip, values: labels, label: labels.join(chip.mode === 'include' ? ' oder ' : ', ') });
       }
 
-      // 3. Teilbereich-Drilldown
+      // 3. Themen-Drilldown
       if (filters.value.subgroupFilter) {
         let subTitle = filters.value.subgroupFilter;
         if (activeCatalog.value) {
@@ -695,7 +695,7 @@ const app = createApp({
           key: 'subgroupFilter',
           type: 'subgroup',
           category: 'subgroup',
-          categoryLabel: 'Teilbereich',
+          categoryLabel: 'Thema',
           label: subTitle,
           mode: 'include',
         });
@@ -821,7 +821,7 @@ const app = createApp({
 
     const ancestorControls = computed(() => controlAncestors(selectedControl.value));
 
-    // Praktik bzw. Teilbereich der aktiven Detail-Ebene
+    // Praktik bzw. Thema der aktiven Detail-Ebene
     const scopePractice = computed(() => {
       const scope = detailScope.value;
       if (!scope || !activeCatalog.value) return null;
@@ -932,13 +932,28 @@ const app = createApp({
       return selectedControl.value ? `${selectedControl.value.id} ${selectedControl.value.title}` : '';
     });
 
-    const scopeStats = computed(() => {
+    // Kennzahlen der Übersicht (Katalog, Praktik oder Thema) über alle Ebenen darunter
+    const overviewStats = computed(() => {
       if (scopeSubgroup.value) return summarizeControls(flattenControls(scopeSubgroup.value.controls));
-      if (scopePractice.value) return summarizeControls(scopePractice.value.controls);
-      return null;
+      if (scopePractice.value) {
+        return { ...summarizeControls(scopePractice.value.controls), subgroups: scopePractice.value.subgroups.length };
+      }
+      const cat = activeCatalog.value;
+      if (!cat) return null;
+      return {
+        ...summarizeControls(cat.allControls),
+        practices: cat.practices.length,
+        subgroups: cat.practices.reduce((n, p) => n + p.subgroups.length, 0),
+      };
     });
 
-    // Anforderungen, die direkt an der Praktik hängen (ohne Teilbereich)
+    // Beschreibung der Übersicht: Thema, Praktik oder Katalog
+    const overviewDescription = computed(() => {
+      if (scopePractice.value) return (scopeSubgroup.value || scopePractice.value).remarks || '';
+      return catalogMeta.value?.remarks || '';
+    });
+
+    // Anforderungen, die direkt an der Praktik hängen (ohne Thema)
     const scopeDirectControls = computed(() => {
       if (!scopePractice.value || scopeSubgroup.value) return [];
       return scopePractice.value.controls.filter((c) => !c.subgroupId && !c.parentControlId);
@@ -1802,7 +1817,7 @@ const app = createApp({
       scrollSelectedIntoView();
     }
 
-    // Klappt den Weg zu einer Anforderung auf (Praktik, Teilbereich, übergeordnete Anforderungen) und ihre Unteranforderungen
+    // Klappt den Weg zu einer Anforderung auf (Praktik, Thema, übergeordnete Anforderungen) und ihre Unteranforderungen
     function expandPathTo(ctrl) {
       let changedKeys = false;
       // Auto-expand control if it has subcontrols so they are immediately visible
@@ -2343,7 +2358,7 @@ const app = createApp({
       resetDetailScroll();
     }
 
-    // Klick auf Praktik/Teilbereich im Explorer: Übersicht öffnen; ist sie bereits offen, auf-/zuklappen
+    // Klick auf Praktik/Thema im Explorer: Übersicht öffnen; ist sie bereits offen, auf-/zuklappen
     function onPracticeHeadClick(groupId) {
       if (detailScope.value?.level === 'practice' && detailScope.value.id === groupId) toggleGroup('p_' + groupId);
       else navigateToPractice(groupId);
@@ -2487,7 +2502,7 @@ const app = createApp({
       return Boolean(ctrl.subcontrols?.some((sc) => isControlVisible(sc)));
     }
 
-    // Zeilen der Baumansicht unterhalb eines Teilbereichs: sichtbare Anforderungen mit Tiefe, nur aufgeklappte Zweige
+    // Zeilen der Baumansicht unterhalb eines Themas: sichtbare Anforderungen mit Tiefe, nur aufgeklappte Zweige
     function visibleControlRows(controls, depth = 0, out = []) {
       for (const ctrl of controls) {
         if (!isControlVisible(ctrl)) continue;
@@ -2861,7 +2876,8 @@ const app = createApp({
       detailScope,
       scopePractice,
       scopeSubgroup,
-      scopeStats,
+      overviewStats,
+      overviewDescription,
       scopeDirectControls,
       summarizeControls,
       flattenControls,

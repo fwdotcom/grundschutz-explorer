@@ -1206,37 +1206,48 @@
               </div>
             </div>
 
-            <!-- Nichts gewählt: Übersicht über den Katalog -->
-            <template v-else-if="!selectedControl && !scopePractice">
+            <!-- Übersicht einer Strukturebene: Katalog (nichts gewählt), Praktik oder Thema (über Explorer bzw. Breadcrumb angesteuert) -->
+            <template v-else-if="!selectedControl || scopePractice">
               <div class="detail-head scope-head">
                 <nav class="crumbs" aria-label="Hierarchie">
-                  <span class="crumb-current" aria-current="page" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M10 2v8l3-3 3 3V2"/></svg><span class="sr-only">Katalog</span></span>
+                  <span v-if="!scopePractice" class="crumb-current" aria-current="page" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M10 2v8l3-3 3 3V2"/></svg><span class="sr-only">Katalog</span></span>
+                  <button v-else @click="showCatalogOverview" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="sr-only">Katalog</span></button>
+                  <template v-if="scopeSubgroup">
+                  <span class="sep">&raquo;</span>
+                  <button @click="onBreadcrumbClick('practice', scopePractice.id)" :title="'Praktik ' + scopePractice.id + ' in der Baumansicht anzeigen'">
+                    {{ scopePractice.id }} {{ scopePractice.title }}
+                  </button>
+                  </template>
                 </nav>
+
                 <div class="detail-titlebar">
                   <div class="titles">
-                    <div class="detail-id">Katalog</div>
-                    <h2 class="detail-title">{{ activeCatalog.title }}</h2>
+                    <div class="detail-id">{{ scopePractice ? (scopeSubgroup || scopePractice).id : 'Katalog' }}</div>
+                    <h2 class="detail-title">{{ scopePractice ? (scopeSubgroup || scopePractice).title : activeCatalog.title }}</h2>
                   </div>
+                </div>
+
+                <!-- Umfang über alle Ebenen darunter; die Zahlen stehen nur hier -->
+                <div class="detail-tags">
+                  <span class="tag tag-lg tag-accent">{{ scopeSubgroup ? 'Thema' : scopePractice ? 'Praktik' : 'Katalog' }}</span>
+                  <span v-if="!scopePractice" class="tag tag-lg tag-outline">{{ overviewStats.practices }} {{ overviewStats.practices === 1 ? 'Praktik' : 'Praktiken' }}</span>
+                  <span v-if="!scopeSubgroup && overviewStats.subgroups" class="tag tag-lg tag-outline">{{ overviewStats.subgroups }} {{ overviewStats.subgroups === 1 ? 'Thema' : 'Themen' }}</span>
+                  <span class="tag tag-lg tag-outline">{{ overviewStats.main }} {{ overviewStats.main === 1 ? 'Anforderung' : 'Anforderungen' }}</span>
+                  <span v-if="overviewStats.sub" class="tag tag-lg tag-outline">{{ overviewStats.sub }} {{ overviewStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
                 </div>
               </div>
 
               <div class="detail-body" ref="detailBody">
                 <div class="stack">
+                  <div v-if="overviewDescription" class="card card-pad prose">{{ overviewDescription }}</div>
 
-                  <!-- Metadaten nach dem OSCAL-Metadatenmodell -->
-                  <div v-if="catalogMeta.dates.length" class="card">
+                  <!-- Katalog: Metadaten nach dem OSCAL-Metadatenmodell -->
+                  <div v-if="!scopePractice && (catalogMeta.dates.length || catalogMeta.norms.length || catalogMeta.responsible.length || catalogMeta.otherParties.length || catalogMeta.links.length || catalogMeta.keywords.length || catalogMeta.otherProps.length)" class="card">
                     <dl class="kv-grid" style="margin:0">
                       <div v-for="([label, value], i) in catalogMeta.dates" :key="i" class="kv">
                         <dt>{{ label }}</dt>
                         <dd>{{ value }}</dd>
                       </div>
-                    </dl>
-                  </div>
-
-                  <div v-if="catalogMeta.remarks" class="card card-pad prose">{{ catalogMeta.remarks }}</div>
-
-                  <div v-if="catalogMeta.norms.length || catalogMeta.responsible.length || catalogMeta.otherParties.length || catalogMeta.links.length || catalogMeta.keywords.length || catalogMeta.otherProps.length" class="card">
-                    <dl class="kv-grid" style="margin:0">
                       <div v-if="catalogMeta.norms.length" class="kv full">
                         <dt>Umgesetzte Norm</dt>
                         <dd v-for="(n, i) in catalogMeta.norms" :key="i">{{ n }}</dd>
@@ -1275,88 +1286,48 @@
                     </dl>
                   </div>
 
-                  <div v-if="catalogMeta.revisions.length" class="card">
-                    <div class="card-head"><h4>Frühere Fassungen</h4></div>
-                    <ul class="meta-links">
-                      <li v-for="(r, i) in catalogMeta.revisions" :key="i">
-                        <span>{{ r.title || r.version }}</span>
-                        <span v-if="r.date" class="meta-rel">{{ r.date }}</span>
-                        <p v-if="r.remarks" class="meta-remarks">{{ r.remarks }}</p>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Übersicht einer Praktik bzw. eines Teilbereichs (über Breadcrumb angesteuert) -->
-            <template v-else-if="scopePractice">
-              <div class="detail-head scope-head">
-                <nav class="crumbs" aria-label="Hierarchie">
-                  <button @click="showCatalogOverview" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="sr-only">Katalog</span></button>
-                  <template v-if="scopeSubgroup">
-                  <span class="sep">&raquo;</span>
-                  <button @click="onBreadcrumbClick('practice', scopePractice.id)" :title="'Praktik ' + scopePractice.id + ' in der Baumansicht anzeigen'">
-                    {{ scopePractice.id }} {{ scopePractice.title }}
-                  </button>
-                  </template>
-                </nav>
-
-                <div class="detail-titlebar">
-                  <div class="titles">
-                    <div class="detail-id">{{ scopeSubgroup ? scopeSubgroup.id : scopePractice.id }}</div>
-                    <h2 class="detail-title">{{ scopeSubgroup ? scopeSubgroup.title : scopePractice.title }}</h2>
-                  </div>
-                </div>
-
-                <div class="detail-tags">
-                  <span class="tag tag-lg tag-accent">{{ scopeSubgroup ? 'Teilbereich' : 'Praktik' }}</span>
-                  <span v-if="!scopeSubgroup" class="tag tag-lg tag-outline">{{ scopePractice.subgroups.length }} {{ scopePractice.subgroups.length === 1 ? 'Teilbereich' : 'Teilbereiche' }}</span>
-                  <span class="tag tag-lg tag-outline">{{ scopeStats.main }} {{ scopeStats.main === 1 ? 'Anforderung' : 'Anforderungen' }}</span>
-                  <span v-if="scopeStats.sub" class="tag tag-lg tag-outline">{{ scopeStats.sub }} {{ scopeStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
-                </div>
-              </div>
-
-              <div class="detail-body" ref="detailBody">
-                <div class="stack">
-                  <div v-if="!scopeSubgroup && scopePractice.remarks">
-                    <div class="section-label">Beschreibung</div>
-                    <div class="card card-pad prose">{{ scopePractice.remarks }}</div>
-                  </div>
-
                   <div class="card">
                     <dl class="kv-grid" style="margin:0">
-                      <div class="kv">
-                        <dt>Anforderungen</dt>
-                        <dd>{{ scopeStats.main }}</dd>
-                      </div>
-                      <div class="kv">
-                        <dt>Unteranforderungen</dt>
-                        <dd :class="{ muted: !scopeStats.sub }">{{ scopeStats.sub || '–' }}</dd>
-                      </div>
                       <div class="kv full">
                         <dt>Modalverben (inkl. Unteranforderungen)</dt>
                         <dd class="scope-counts">
-                          <span><span class="dot dot-muss"></span>MUSS {{ scopeStats.muss }}</span>
-                          <span><span class="dot dot-sollte"></span>SOLLTE {{ scopeStats.sollte }}</span>
-                          <span><span class="dot dot-kann"></span>KANN {{ scopeStats.kann }}</span>
+                          <span><span class="dot dot-muss"></span>MUSS {{ overviewStats.muss }}</span>
+                          <span><span class="dot dot-sollte"></span>SOLLTE {{ overviewStats.sollte }}</span>
+                          <span><span class="dot dot-kann"></span>KANN {{ overviewStats.kann }}</span>
                         </dd>
                       </div>
                       <div v-if="diffSummary?.hasDiff" class="kv full">
                         <dt>Änderungen gegenüber dem Vergleichsstand</dt>
                         <dd class="scope-counts">
-                          <span class="tag diff-added">Neu {{ scopeStats.added }}</span>
-                          <span class="tag diff-modified">Geändert {{ scopeStats.modified }}</span>
-                          <span class="tag diff-deleted">Gelöscht {{ scopeStats.deleted }}</span>
+                          <span class="tag diff-added">Neu {{ overviewStats.added }}</span>
+                          <span class="tag diff-modified">Geändert {{ overviewStats.modified }}</span>
+                          <span class="tag diff-deleted">Gelöscht {{ overviewStats.deleted }}</span>
                         </dd>
                       </div>
                     </dl>
                   </div>
 
-                  <!-- Praktik: Teilbereiche -->
-                  <div v-if="!scopeSubgroup && scopePractice.subgroups.length" class="card">
+                  <!-- Katalog: Praktiken -->
+                  <div v-if="!scopePractice && activeCatalog.practices.length" class="card">
                     <div class="card-head">
-                      <h4>Teilbereiche</h4>
+                      <h4>Praktiken</h4>
+                      <span class="hint">{{ activeCatalog.practices.length }}</span>
+                    </div>
+                    <ul class="sub-list">
+                      <li v-for="p in activeCatalog.practices" :key="p.id">
+                        <button class="sub-item" @click="onBreadcrumbClick('practice', p.id)">
+                          <span class="mono">{{ p.id }}</span>
+                          <span class="grow">{{ p.title }}</span>
+                          <span class="meta-num" :title="p.subgroups.length + ' Themen'">{{ p.subgroups.length }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Praktik: Themen -->
+                  <div v-if="scopePractice && !scopeSubgroup && scopePractice.subgroups.length" class="card">
+                    <div class="card-head">
+                      <h4>Themen</h4>
                       <span class="hint">{{ scopePractice.subgroups.length }}</span>
                     </div>
                     <ul class="sub-list">
@@ -1370,8 +1341,8 @@
                     </ul>
                   </div>
 
-                  <!-- Anforderungen des Teilbereichs bzw. direkt an der Praktik -->
-                  <div v-if="scopeSubgroup ? scopeSubgroup.controls.length : scopeDirectControls.length" class="card">
+                  <!-- Anforderungen des Themas bzw. direkt an der Praktik -->
+                  <div v-if="scopePractice && (scopeSubgroup ? scopeSubgroup.controls.length : scopeDirectControls.length)" class="card">
                     <div class="card-head">
                       <h4>Anforderungen</h4>
                       <span class="hint">{{ (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls).length }}</span>
@@ -1385,6 +1356,18 @@
                           <span v-if="c.subcontrols?.length" class="meta-num" :title="c.subcontrols.length + ' Unteranforderungen'">+{{ c.subcontrols.length }}</span>
                           <span class="verb-label" :class="verbKey(c.modalVerb)">{{ verbKey(c.modalVerb) ? c.modalVerb : '' }}</span>
                         </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Katalog: frühere Fassungen -->
+                  <div v-if="!scopePractice && catalogMeta.revisions.length" class="card">
+                    <div class="card-head"><h4>Frühere Fassungen</h4></div>
+                    <ul class="meta-links">
+                      <li v-for="(r, i) in catalogMeta.revisions" :key="i">
+                        <span>{{ r.title || r.version }}</span>
+                        <span v-if="r.date" class="meta-rel">{{ r.date }}</span>
+                        <p v-if="r.remarks" class="meta-remarks">{{ r.remarks }}</p>
                       </li>
                     </ul>
                   </div>
@@ -1405,12 +1388,12 @@
                     {{ practiceBreadcrumbLabel(selectedControl) }}
                   </button>
 
-                  <!-- Ebene 2: Teilbereich -->
+                  <!-- Ebene 2: Thema -->
                   <template v-if="selectedControl.subgroupTitle">
                     <span class="sep">&raquo;</span>
                     <button
                       @click="onBreadcrumbClick('subgroup', selectedControl.subgroupId, selectedControl.groupId)"
-                      :title="'Teilbereich ' + subgroupBreadcrumbLabel(selectedControl) + ' in der Baumansicht anzeigen'"
+                      :title="'Thema ' + subgroupBreadcrumbLabel(selectedControl) + ' in der Baumansicht anzeigen'"
                     >
                       {{ subgroupBreadcrumbLabel(selectedControl) }}
                     </button>

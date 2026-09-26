@@ -18,7 +18,7 @@ Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne 
 
 ## Funktionen
 
-- **Navigieren** in Praktiken, Teilbereichen, Anforderungen und Unteranforderungen, als Baumansicht oder flache Trefferliste, mit Übersichten je Praktik und Teilbereich.
+- **Navigieren** in Praktiken, Themen, Anforderungen und Unteranforderungen, als Baumansicht oder flache Trefferliste, mit Übersichten je Praktik und Thema.
 - **Volltextsuche** über Kennungen, Titel, Anforderungstexte, Hilfestellungen und Gefährdungen.
 - **Filter** nach Modalverb, Schutzbedarf, Aufwand, Handlungswort, Dokumentationsvorgabe, Schutzzielen, Praktiken, elementaren Gefährdungen und Tags – jeweils einschließend oder ausschließend.
 - **Listen mit Notizen**, etwa für Audits oder Besprechungen: Anforderungen per Stern sammeln, Notizen je Liste erfassen, nach Listen filtern, Listen als JSON exportieren und importieren.

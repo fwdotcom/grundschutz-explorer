@@ -170,11 +170,33 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
   };
 }
 
+// Beschreibung einer Gruppe (Praktik, Thema): Anmerkung am label-Prop (GS++),
+// sonst die Prosa ihrer parts nach OSCAL-Konvention (z. B. "overview")
+function groupDescription(group) {
+  const labelRemarks = group.props?.find((p) => p.name === 'label')?.remarks;
+  if (labelRemarks) return labelRemarks;
+  const texts = [];
+  const walk = (parts) => {
+    for (const part of parts || []) {
+      if (part.prose) texts.push(resolveParamsInProse(part.prose, group.params));
+      walk(part.parts);
+    }
+  };
+  walk(group.parts);
+  return texts.join('\n\n');
+}
+
+// Definition eines Themas (2. Ebene) aus dem Namespace topics.csv, zugeordnet über den alt-identifier (UUID)
+function topicDefinition(group) {
+  const uuid = group.props?.find((p) => p.name === 'alt-identifier')?.value;
+  return lookupNamespace('topics', uuid)?.Definition || '';
+}
+
 function parsePractice(group) {
   const practiceId = group.id;
   const practiceTitle = group.title;
   const labelProp = group.props?.find((p) => p.name === 'label');
-  const remarks = labelProp?.remarks;
+  const remarks = groupDescription(group);
 
   const subgroups = [];
   const directControls = [];
@@ -204,6 +226,7 @@ function parsePractice(group) {
         id: sub.id,
         title: sub.title,
         label: subLabel,
+        remarks: groupDescription(sub) || topicDefinition(sub),
         controls: subControls,
       });
     }

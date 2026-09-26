@@ -155,13 +155,13 @@ test('aktueller BSI-Katalog: Unteranforderungen in beliebiger Tiefe', async (t) 
   walkGroups(raw.catalog.groups);
   assert.equal(cat.allControls.length, rawCount);
 
-  // Jede Unteranforderung hängt an einer vorhandenen Anforderung desselben Teilbereichs
+  // Jede Unteranforderung hängt an einer vorhandenen Anforderung desselben Themas
   for (const c of cat.allControls) {
     if (!c.parentControlId) continue;
     const parent = cat.controlMap.get(c.parentControlId);
     assert.ok(parent, `${c.id}: übergeordnete Anforderung ${c.parentControlId} fehlt`);
     assert.ok(parent.subcontrols.includes(c), `${c.id}: fehlt in subcontrols von ${parent.id}`);
-    assert.equal(c.subgroupId, parent.subgroupId, `${c.id}: anderer Teilbereich als ${parent.id}`);
+    assert.equal(c.subgroupId, parent.subgroupId, `${c.id}: anderes Thema als ${parent.id}`);
   }
 });
 
@@ -181,7 +181,7 @@ test('Unteranforderungen über mehrere Ebenen', () => {
         {
           id: 'P',
           title: 'Praktik',
-          groups: [{ id: 'P.1', title: 'Teilbereich', controls: [ctrl('P.1.1', [ctrl('P.1.1.1', [ctrl('P.1.1.1.1', [ctrl('P.1.1.1.1.1')])])])] }],
+          groups: [{ id: 'P.1', title: 'Thema', controls: [ctrl('P.1.1', [ctrl('P.1.1.1', [ctrl('P.1.1.1.1', [ctrl('P.1.1.1.1.1')])])])] }],
         },
       ],
     },

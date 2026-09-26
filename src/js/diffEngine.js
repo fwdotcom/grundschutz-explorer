@@ -97,7 +97,7 @@ export const COMPARED_FIELDS = [
   { field: 'altIdentifier', label: 'UUID', kind: 'value' },
 ];
 
-// Wert eines Feldes; „Einordnung“ ist die übergeordnete Anforderung, sonst der Teilbereich bzw. die Praktik
+// Wert eines Feldes; „Einordnung“ ist die übergeordnete Anforderung, sonst das Thema bzw. die Praktik
 function fieldValue(ctrl, field) {
   if (field === 'placement') return ctrl.parentControlId || ctrl.subgroupId || ctrl.groupId || '';
   const v = ctrl[field];
@@ -169,7 +169,7 @@ export function compareCatalogs(baseCatalog, newCatalog) {
 
 /**
  * Überträgt einen Vergleich auf den angezeigten Katalog: setzt ctrl.diff und fügt die gelöschten Anforderungen
- * an ihrer früheren Stelle ein – Unteranforderungen unter ihrer übergeordneten Anforderung, sonst im Teilbereich.
+ * an ihrer früheren Stelle ein – Unteranforderungen unter ihrer übergeordneten Anforderung, sonst im Thema.
  * Verändert den Katalog; gedacht für einen frisch geparsten Katalog, der nur der Anzeige dient.
  */
 export function applyDiff(catalog, diff) {

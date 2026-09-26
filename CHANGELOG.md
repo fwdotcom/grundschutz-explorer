@@ -2,6 +2,18 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- Vereinheitlichung der Anzeige der Detailbereiche
+- Ebenenbezeichnung gemäß BSI-Namespaces verbessert
+
+### Behoben
+
+- Beim Tippen im Notizfeld verschoben die Pfeiltasten sowie `j` und `k` die Auswahl im Explorer.
+- Bei Anforderungen war der Abstand zwischen Titel und Tags durch den Merk-Stern größer als bei den anderen Ebenen.
+
 ## [1.1.2] – 2026-09-26
 
 ### Neu

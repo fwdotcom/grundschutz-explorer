@@ -22,6 +22,7 @@ const NAMESPACE_FILES = {
   securityTargets: { file: 'security_targets.csv', key: 'Begriff' },
   securityTargetLevels: { file: 'security_targets_levels.csv', key: 'Wert' },
   tags: { file: 'tags.csv', key: 'Tag' },
+  topics: { file: 'topics.csv', key: 'UUID' },
 };
 
 /**
