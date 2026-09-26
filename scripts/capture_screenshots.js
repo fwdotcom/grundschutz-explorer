@@ -569,10 +569,14 @@ async function main() {
     ws.close();
   } catch (err) {
     console.error('Fehler bei Screenshot-Erstellung:', err);
+    process.exitCode = 1;
   } finally {
     chrome.kill();
     server.close();
   }
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});

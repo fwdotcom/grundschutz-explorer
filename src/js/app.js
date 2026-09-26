@@ -64,7 +64,7 @@ const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
 // Handbuch, von scripts/build_manual.py je Version erzeugt
 const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
