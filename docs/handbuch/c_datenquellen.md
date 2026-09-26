@@ -52,3 +52,4 @@ Der Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt ohne Verbin
 | **Autor & Copyright** | © 2026 Frank Winter |
 | **Technik** | Läuft vollständig im Browser, Daten werden nur lokal gespeichert (IndexedDB) |
 | **Standards** | NIST OSCAL 1.1.3; orientiert sich an WCAG 2.1 AA, im hohen Kontrastmodus an AAA-Kontrast |
+| **Handbuch** | Erstellt mit markpublish, `https://www.markpublish.com` |
