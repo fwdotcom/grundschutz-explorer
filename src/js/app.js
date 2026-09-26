@@ -1377,7 +1377,7 @@ const app = createApp({
       }
       if (isCatalogModalOpen.value || isLoadModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
       const tag = e.target?.tagName;
-      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
       // Pfeiltasten, die ein Element schon selbst verarbeitet hat (Reiter, Trenner), nicht noch einmal auswerten
       if (e.defaultPrevented) return;
       if (e.key === '/') {
