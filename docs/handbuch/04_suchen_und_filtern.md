@@ -1,109 +1,95 @@
 # Suchen und filtern
 
-Suche und Filter lassen sich frei kombinieren. Wie mehrere Filter zusammenwirken, beschreibt der Abschnitt **So wirken Filter zusammen**.
+Suche und Filter lassen sich beliebig miteinander kombinieren. Sie arbeiten nach einer einheitlichen, logischen Regel und ermöglichen sowohl grobe thematische Eingrenzungen als auch hochspezifische Detailabfragen.
 
-![Aktive Filter und flache Trefferliste](bilder/filter.png)
+![Kombinierte Filter-Chips und flache Trefferliste](bilder/filter.png){width=70%}
 
 /// figure-caption
     attrs: {id: fig-filter}
-Aktive Filter und flache Trefferliste
+Kombinierte Filter: Einschluss (NUR MUSS) und Ausschluss (NICHT Aufwand Stufe 5) mit flacher Trefferliste
 ///
 
 ## Volltextsuche
 
-Das Suchfeld in der Kopfzeile durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, die Bezeichnungen der Gefährdungen und die Tags. Die Treffer erscheinen sofort während der Eingabe.
+Das Suchfeld in der Kopfzeile durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, Gefährdungsbezeichnungen und Tags in Echtzeit:
 
-- **Strg + K** oder **/** setzt den Cursor ins Suchfeld.
-- **Esc** leert das Suchfeld.
-- Das Kreuz rechts im Suchfeld leert es ebenfalls.
+- **Eingabe:** Die Trefferliste aktualisiert sich sofort während des Tippens.
+- **Mehrere Suchwörter:** Werden mit Leerzeichen getrennt eingegeben und automatisch mit **UND** verknüpft (alle Wörter müssen vorkommen, die Reihenfolge ist beliebig).
+- **Exakte Wortfolgen:** Setzen Sie einen Suchausdruck in doppelte Anführungszeichen (z. B. `"Security by Design"`), um gezielt nach dieser zusammenhängenden Phrase zu suchen.
+- **Tastatur:** Mit `Strg + K` (oder `/`) springen Sie direkt ins Suchfeld; `Esc` leert das Suchfeld und setzt den Fokus zurück.
 
-## Einen Filter setzen
+## Filter setzen
 
-Jeder Wert in der Filterleiste hat rechts zwei Schaltflächen:
+Jeder Wert in der Filterleiste besitzt funktionale Steuerelemente:
 
-| Schaltfläche | Wirkung |
+| Aktion | Wirkung |
 | :--- | :--- |
-| **✓** (Nur) | Zeigt nur Anforderungen mit diesem Wert – bei mehreren ✓ im selben Bereich mit einem davon. |
-| **✕** (Nicht) | Blendet Anforderungen mit diesem Wert aus. |
-| Papierkorb | Erscheint bei aktiven Werten und hebt den Filter wieder auf. |
+| **Klick auf Wert** oder **✓** | **Einschließen (NUR):** Zeigt Anforderungen, die diese Eigenschaft besitzen. |
+| **✕** | **Ausschließen (NICHT):** Blendet Anforderungen mit dieser Eigenschaft zuverlässig aus. |
+| **Papierkorb** | Hebt den gesetzten Filter für diesen Wert wieder auf. |
 
-Ein Klick auf den Namen eines Werts wirkt wie **✓**, ein weiterer Klick hebt den Filter wieder auf.
+Die Zahl neben jedem Wert gibt an, wie viele Anforderungen im Katalog diesen Wert aufweisen – unter Berücksichtigung aller in **anderen** Abschnitten gesetzten Filter.
 
-Die Zahl neben einem Wert gibt an, wie viele Anforderungen mit diesem Wert zu den Filtern der **übrigen** Bereiche passen. Werte ohne Treffer sind blass dargestellt.
+> [!TIP]
+> Das **Trichter-Symbol** oben rechts in der Filterleiste blendet alle Zeilen ohne Treffer aus. Dadurch wird die Filterleiste auf die tatsächlich verfügbaren Optionen komprimiert.
 
-Der Trichter oben in der Filterleiste blendet Werte ohne Treffer ganz aus, in allen Bereichen außer den **Schutzzielen** und den **Listen**. Das kürzt die Filterleiste, an der Liste der Anforderungen ändert sich nichts. Gesetzte Werte bleiben sichtbar, auch wenn sie keine Treffer haben. Ein weiterer Klick zeigt wieder alle Werte.
+## Die Filterlogik
 
-## So wirken Filter zusammen
+Für alle Filterbereiche gilt ein einheitliches, intuitives Prinzip:
 
-Für alle Bereiche gilt dieselbe Regel:
+- **Innerhalb eines Bereichs: ODER.** Mehrere mit **✓** aktivierte Werte im selben Bereich erweitern die Trefferliste. Es genügt, wenn einer der gewählten Werte auf eine Anforderung zutrifft (z. B. `MUSS` oder `SOLLTE`).
+- **Zwischen den Bereichen: UND.** Werden Werte in unterschiedlichen Bereichen ausgewählt, müssen alle Bedingungen erfüllt sein (z. B. `MUSS` und `Aufwand Stufe 2` und Praktik `DEV`).
+- **✕ schließt immer aus:** Ein Ausschlussfilter sticht jeden Einschlussfilter. Eine Anforderung mit einem ausgeschlossenen Merkmal wird nicht angezeigt, selbst wenn andere Merkmale übereinstimmen.
 
-- **Innerhalb eines Bereichs: oder.** Mehrere Werte mit **✓** im selben Bereich erweitern die Auswahl. Es genügt, wenn einer davon passt.
-- **Zwischen den Bereichen: und.** Eine Anforderung erscheint nur, wenn sie in jedem Bereich mit gesetztem Filter passt. Das gilt auch für die Volltextsuche.
-- **✕ schließt immer aus.** Eine Anforderung mit einem ausgeschlossenen Wert fällt heraus, auch wenn ein anderer ihrer Werte mit **✓** gewählt ist.
-
-| Filter | Angezeigt werden Anforderungen mit … |
+| Gesetzte Filter | Angezeigte Anforderungen |
 | :--- | :--- |
-| ✓ MUSS, ✓ SOLLTE | MUSS oder SOLLTE |
-| ✓ MUSS, ✓ Aufwand Stufe 1 | MUSS und Aufwandsstufe 1 |
-| ✓ Stufe 1, ✓ Stufe 2, ✓ Praktik GC | Aufwandsstufe 1 oder 2 in der Praktik GC |
-| ✓ Zero Trust, ✕ VPN (Tags) | Tag „Zero Trust“, aber ohne Tag „VPN“ |
+| ✓ MUSS, ✓ SOLLTE | Alle Anforderungen mit Verbindlichkeit MUSS oder SOLLTE. |
+| ✓ MUSS, ✓ Aufwandsstufe 1 | Verbindliche Anforderungen (MUSS), die zugleich Stufe 1 erfordern. |
+| ✓ Praktik DEV, ✕ Tag: VPN | Alle Entwicklungs-Anforderungen, die nicht das Schlagwort „VPN“ tragen. |
+| ✓ Liste: Audit 2026 | Nur Anforderungen, die in der eigenen Liste „Audit 2026“ stehen. |
 
 /// table-caption
     attrs: {id: tbl-filter-beispiele}
-Beispiele für kombinierte Filter
+Beispiele für kombinierte Filterbedingungen
 ///
 
 ## Die Filterbereiche
 
-| Bereich | Filtert nach |
+| Bereich | Bedeutung und Filterkriterien |
 | :--- | :--- |
-| Modalverben | Verbindlichkeit: MUSS, SOLLTE, KANN |
-| Schutzbedarf | Sicherheitsstufe: Standard-Sicherheitsstufe oder erhöhte Sicherheitsstufe |
-| Aufwand | Aufwandsstufe 0 bis 5, jeweils mit farbigem Balken |
-| Handlungswort | Das Verb, das die geforderte Handlung beschreibt, etwa „dokumentieren“ oder „verankern“ |
-| Dokumentation | Die Dokumentationsvorgabe, etwa „IT-Betriebskonzept“ |
-| Schutzziele | Wirkung auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität |
-| Praktiken | Die Praktiken des Katalogs, etwa GC, ARCH oder OPS |
-| Gefährdungen | Die elementaren Gefährdungen G 0.1 bis G 0.47 |
-| Tags | Schlagwörter des BSI, etwa „Zero Trust“ |
-| Änderungen | Nur im Vergleichsmodus: neu, geändert, gelöscht |
+| **Listen** | Eigene Sammlungen: Zeigt oder schließt Anforderungen aus bestimmten Listen aus. |
+| **Modalverben** | Verbindlichkeitsgrad: MUSS, SOLLTE oder KANN. |
+| **Schutzbedarf** | Sicherheitsniveaus: Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe. |
+| **Aufwand** | Aufwandsstufen 0 bis 5 (von geringem bis zu sehr hohem Realisierungsaufwand). |
+| **Handlungswort** | Das primäre Verbum der Forderung (z. B. *dokumentieren*, *verankern*, *prüfen*). |
+| **Dokumentation** | Geforderte Dokumentenart (z. B. *Sicherheitskonzept*, *Freigabeplan*). |
+| **Schutzziele** | Wirkungsgrad auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität. |
+| **Praktiken** | Die 20 Fachpraktiken des BSI-Grundschutzes (z. B. *DEV*, *ARCH*, *BES*, *GC*). |
+| **Gefährdungen** | Zuordnung zu den elementaren Gefährdungen G 0.1 bis G 0.47. |
+| **Tags** | Fachliche Schlagwörter aus dem kontrollierten Vokabular des BSI. |
+| **Änderungen** | Im Vergleichsmodus: gezieltes Filtern nach neuen, geänderten oder entfallenen Anforderungen. |
 
-In den langen Listen **Handlungswort**, **Dokumentation**, **Gefährdungen** und **Tags** hilft ein Suchfeld oberhalb der Werte, gesetzte Werte stehen dort oben.
+## Schutzziele gezielt filtern
 
-> [!TIP]
-> Fahren Sie mit der Maus über einen Wert, um die Definition des BSI zu sehen, etwa was ein Handlungswort genau verlangt oder wie eine Aufwandsstufe definiert ist.
-
-## Schutzziele filtern
-
-Bei den Schutzzielen hat jede Zeile drei Schaltflächen für die Wirkungsstufen:
+Die Schutzziele Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au) verfügen über eine dreistufige Skala:
 
 | Symbol | Stufe | Bedeutung |
-| :--- | :--- | :--- |
-| ○○ | 0 | Die Anforderung wirkt nicht oder kaum auf dieses Schutzziel. |
-| ●○ | 1 | Die Anforderung wirkt auf dieses Schutzziel hin. |
+| :---: | :---: | :--- |
+| ○○ | 0 | Die Anforderung entfaltet keine wesentliche Schutzwirkung auf dieses Ziel. |
+| ●○ | 1 | Die Anforderung wirkt auf das Schutzziel hin. |
 | ●● | 2 | Das Schutzziel steht im Zentrum der Anforderung. |
 
-Ein **Klick** zeigt nur Anforderungen mit dieser Stufe, ein **Rechtsklick** schließt die Stufe aus. Jedes Schutzziel ist ein eigener Bereich: Mehrere Stufen desselben Schutzziels verknüpfen mit „oder“, verschiedene Schutzziele mit „und“.
+Ein Linksklick filtert nach der entsprechenden Stufe, ein Rechtsklick schließt diese Stufe aus. Wählen Sie z. B. bei der Vertraulichkeit sowohl `●○` als auch `●●`, erfasst der Filter alle Anforderungen mit relevanter Schutzwirkung auf die Vertraulichkeit.
 
-Ein Beispiel: „Authentizität ●○“ und „Authentizität ●●“ zusammen finden alle Anforderungen, die überhaupt auf die Authentizität wirken. Denselben Effekt hat ein Rechtsklick auf „Authentizität ○○“.
+## Aktive Filter-Chips
 
-> [!TIP]
-> Wenn Sie für ein Zielobjekt einen hohen Schutzbedarf an Vertraulichkeit festgestellt haben, finden Sie mit „Vertraulichkeit ●●“ die Anforderungen, die dafür besonders wichtig sind.
+Oberhalb der Anforderungsliste erscheinen alle aktiven Filter als übersichtliche Chips:
 
-## Aktive Filter
+- **NUR [Kategorie: Werte]:** Zeigt eingeschlossene Kriterien; mehrere Werte innerhalb des Chips sind mit „oder“ verknüpft.
+- **NICHT [Kategorie: Werte]:** Zeigt ausgeschlossene Kriterien.
+- **Papierkorb am Chip:** Entfernt alle Kriterien dieser Kategorie mit einem Klick.
+- **Alle zurücksetzen:** Hebt sämtliche gesetzten Filter und Suchbegriffe sofort auf.
 
-Alle aktiven Filter stehen als Chips über der Liste, ein Chip je Bereich. **NUR** kennzeichnet die mit **✓** gewählten Werte, **NICHT** die mit **✕** ausgeschlossenen; sind in einem Bereich beide gesetzt, hat er zwei Chips. So lässt sich die Regel direkt ablesen: Innerhalb eines Chips gilt „oder“, zwischen den Chips „und“.
+## Klickfilter aus der Detailansicht
 
-Ein Beispiel: **NUR** Handlung: aktivieren oder analysieren · **NUR** Modalverb: MUSS · **NICHT** Tag: VPN
-
-- Der Papierkorb am Chip hebt alle Filter dieses Chips auf.
-- Einzelne Werte entfernen Sie in der Filterleiste mit einem Klick auf den Wert.
-- **Alle zurücksetzen** hebt alle Filter und die Suche auf.
-
-## Filter direkt aus der Detailansicht
-
-Viele Angaben in der Detailansicht sind gestrichelt unterstrichen. Ein Klick darauf setzt den passenden Filter zusätzlich zu den bereits gesetzten, zum Beispiel auf das Handlungswort, die Dokumentationsvorgabe, eine Gefährdung, ein Schutzziel, einen Tag oder die Aufwandsstufe. So finden Sie mit einem Klick alle Anforderungen, die dieselbe Eigenschaft haben.
-
-## Gespeicherter Zustand
-
-Der Explorer merkt sich Filter, Suche und die aufgeklappten Bereiche in Ihrem Browser. Beim nächsten Aufruf finden Sie alles so vor, wie Sie es verlassen haben. Wenn Sie einen neuen Katalog laden, setzt der Explorer die Filter zurück und klappt alle Bereiche zu.
+Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Handlungswort, eine Dokumentationsart, einen Tag oder eine elementare Gefährdung).

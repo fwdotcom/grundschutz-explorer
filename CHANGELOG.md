@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unveröffentlicht]
+## [1.1.0] – 2026-09-26
 
 ### Neu
 
@@ -22,12 +22,21 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 - Datenschutzerklärung und Startseite nennen Listen und Notizen; die Datenschutzerklärung beschreibt zusätzlich Export und Import von Listen.
 - Neue `security.txt` unter `/.well-known/`.
 - Die Registerkarte **OSCAL** in der Detailansicht entfällt. Ihre Rohdaten zeigt die Übersicht bereits lesbar, Parameter sind in den Anforderungstext eingesetzt; die UUID steht jetzt klein am Ende der Übersicht.
-- Handbuch: Abbildungen sind nummeriert und beschriftet; Abstände und Beschriftungen folgen dem Default-Theme von markpublish 2.2.0.
+- Handbuch grundlegend überarbeitet für Version 1.1.0: Neues Kapitel 6 zu Listen und Notizen, vollständige Überarbeitung aller Kapitel und Anhänge an die neuen Oberflächen- und Filterfunktionen sowie 15 neue, hochauflösende Screenshots für alle wesentlichen Detailsichten (Katalogübersicht, Detailansicht-Übersicht mit Notiz-Stern, Hilfestellung, Notizen, Wortvergleich/Änderungen) und Funktionsdialoge. Abbildungen sind nummeriert und beschriftet nach dem Default-Theme von markpublish 2.2.0.
 - Dialog **Kataloge**: Je Katalog ein Auswahlknopf **Anzeigen** und **Vergleich**. Ein erneuter Klick auf den Vergleichsstand beendet den Vergleich; wird der Vergleichsstand zum Anzeigen gewählt, tauschen beide die Rollen. „Als Basis“, „Vergleichen“ und „Vergleich lösen“ entfallen. Der Vergleich bleibt beim nächsten Aufruf erhalten.
 - Der Hinweisbalken im Vergleich nennt die beiden Stände und erscheint auch, wenn es keine Unterschiede gibt.
 - Der Vergleich prüft alle Angaben einer Anforderung, auch Handlungswort, Dokumentation, gefordertes Ergebnis, Spezifikation, Schutzziele, Tags und die Einordnung. Der Reiter **Änderungen** verwendet die Bezeichnungen der Detailansicht und zeigt Texte nur einmal, als Wortvergleich.
 - Katalog löschen fragt vorher nach.
-- Die Suche reagiert deutlich schneller.
+- Die Suche reagiert deutlich schneller. Mehrere Wörter müssen alle vorkommen, in beliebiger Reihenfolge; in Anführungszeichen gesetzt wird die Wortfolge gesucht.
+- Ist nichts gewählt, zeigt die Detailansicht eine Übersicht über den Katalog mit den Angaben aus seinen OSCAL-Metadaten: Version, letzte Änderung, Beschreibung, umgesetzte Norm, Verantwortliche, Verweise, Schlagwörter, weitere Eigenschaften und frühere Fassungen. Die Pfadleiste beginnt mit einem Buch-Symbol (zugeklappt in der Übersicht, aufgeschlagen darunter), das zur Übersicht zurückführt.
+- Ist die Auswahl durch Filter ausgeblendet, sagt die Detailansicht das jetzt ausdrücklich.
+- Nach dem Aufheben aller Filter hat der Baum wieder den Aufklapp-Zustand von vorher, statt aufgeklappt zu bleiben.
+- Nach dem Laden eines Katalogs sind Listen, Modalverben, Schutzbedarf und Aufwand aufgeklappt, die langen Filterlisten zu.
+- Eine gewählte Praktik oder ein Teilbereich rückt in der Liste nach oben statt an den unteren Rand.
+- Der Link „Filter zurücksetzen“ neben der Trefferzahl entfällt (doppelt zu „Alle zurücksetzen“); das Suchfeld erscheint erst mit geladenem Katalog. Die Suchfelder der Filterleiste werden nicht mehr über Sitzungen hinweg gemerkt.
+
+- Barrierefreiheit: Die Anforderungsliste ist für Screenreader eine Auswahlliste (Listbox) mit Praktiken und Teilbereichen als Gruppen und lässt sich mit Tab ansteuern; die gewählte Anforderung wird angesagt. Mit → und ← klappen Sie die Unteranforderungen der gewählten Anforderung auf und zu, ← springt von einer Unteranforderung zur übergeordneten Anforderung. Die Überschriften der Startseite sind richtig gegliedert.
+- Strengere Content-Security-Policy: Skripte, Stile, Schriften und Bilder nur von der eigenen Adresse, Kataloge über eine URL nur per https.
 
 ### Behoben
 

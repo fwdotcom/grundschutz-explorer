@@ -1,61 +1,62 @@
 # Im Katalog navigieren
 
-Der Grundschutz++-Katalog ist hierarchisch aufgebaut. **Praktiken** wie „GC Governance und Compliance“ gliedern sich in **Teilbereiche** wie „GC.1 Grundlagen“. Diese enthalten die **Anforderungen**, etwa „GC.1.1“, und manche Anforderungen haben **Unteranforderungen**, etwa „GC.1.1.1“. Unteranforderungen können ihrerseits weitere Unteranforderungen haben. Im aktuellen Katalog reicht die Verschachtelung bis zu vier Ebenen tief, etwa bis „GC.9.1.1.1.1“.
+Der Grundschutz++-Katalog besitzt eine durchgängige, vierstufige Hierarchie:
 
-## Baumansicht
+1. **Praktiken** (z. B. `DEV Entwicklung` oder `GC Governance und Compliance`)
+2. **Teilbereiche** (z. B. `DEV.4 Softwareentwicklung - Code`)
+3. **Anforderungen** (z. B. `DEV.4.3 Softwarebestandteile (SBOM)`)
+4. **Unteranforderungen** (z. B. `DEV.1.1.1 Dokumentation`, bis hin zu tieferen Verästelungen wie `GC.9.1.1.1.1`)
 
-Nach dem Laden eines Katalogs sind alle Praktiken eingeklappt.
+## Die Baumansicht
 
-- Ein Klick auf eine **Praktik** oder einen **Teilbereich** klappt die Ebene auf und zeigt rechts eine Übersicht. Ein weiterer Klick auf dieselbe Zeile klappt sie wieder zu.
-- Der **Pfeil** am Zeilenanfang klappt nur auf oder zu, ohne die Detailansicht zu wechseln.
-- Ein Klick auf eine **Anforderung** zeigt sie rechts in der Detailansicht. Hat sie Unteranforderungen, klappen diese automatisch auf.
-- Anforderungen mit Unteranforderungen haben am Zeilenanfang einen eigenen **Pfeil**; der Pfeil mit Zahl rechts in der Zeile nennt die Anzahl der direkten Unteranforderungen.
-- Jede tiefere Ebene ist weiter eingerückt und durch eine senkrechte Linie mit ihrer übergeordneten Anforderung verbunden.
-- Die Schaltflächen über der Liste klappen alle Ebenen auf oder zu.
+In der Baumansicht navigieren Sie intuitiv durch die hierarchische Struktur:
 
-![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png)
+- **Praktik oder Teilbereich aufklappen:** Ein Klick auf den kleinen Pfeil am Zeilenanfang klappt die Unterelemente auf oder zu, ohne die Detailansicht zu verändern. Ein Klick auf den Text zeigt rechts zusätzlich eine zusammenfassende Übersicht.
+- **Anforderung auswählen:** Ein Klick auf die Anforderungszeile öffnet ihre Detailansicht. Besitzt die Anforderung eigene Unteranforderungen, werden diese automatisch im Baum aufgefaltet.
+- **Tiefere Ebenen:** Eingerückte Zeilen und vertikale Hilfslinien visualisieren die Überordnungen. Die Zahl am Pfeil rechts außen nennt die Anzahl der direkten Unteranforderungen.
+- **Alle auf- oder zuklappen:** Über die Schaltflächen oberhalb der Liste falten Sie alle Ebenen mit einem Klick auf oder zu.
+
+![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png){width=65%}
 
 /// figure-caption
     attrs: {id: fig-unteranforderungen}
-Mehrstufige Unteranforderungen in der Baumansicht
+Mehrstufige Unteranforderungen am Beispiel von GC.9.1 Festlegung einer Sicherheitsorganisation (Ebenen 1 bis 3)
 ///
-
-Wählen Sie eine Anforderung auf anderem Weg aus, etwa über die Suche, den Breadcrumb oder die Liste der Unteranforderungen in der Detailansicht, klappt der Explorer die Baumansicht bis zu dieser Anforderung auf.
 
 ## Übersicht einer Praktik oder eines Teilbereichs
 
-![Übersicht einer Praktik](bilder/praktik-uebersicht.png)
+Wählen Sie eine Praktik oder einen Teilbereich aus, blendet die rechte Seite eine übersichtliche Zusammenfassung ein:
 
-/// figure-caption
-    attrs: {id: fig-praktik-uebersicht}
-Übersicht einer Praktik
-///
+Die Übersicht liefert auf einen Blick:
+- Die offizielle Zweckbestimmung und Beschreibung des BSI.
+- Statistische Kennzahlen: Gesamtzahl der Anforderungen, gegliedert nach Basis- und Unteranforderungen.
+- Verteilung der Modalverben auf MUSS, SOLLTE und KANN.
+- Die Liste der untergeordneten Teilbereiche oder Anforderungen.
+- Im Vergleichsmodus: Die Anzahl neu hinzugekommener, geänderter oder entfallener Anforderungen.
 
-Die Übersicht zeigt:
+## Pfadleiste (Breadcrumb)
 
-- bei einer Praktik die Beschreibung des BSI und die Liste ihrer Teilbereiche,
-- bei einem Teilbereich die Liste seiner Anforderungen mit Modalverb und Zahl der Unteranforderungen,
-- die Anzahl der Anforderungen und Unteranforderungen,
-- die Verteilung auf MUSS, SOLLTE und KANN,
-- im Vergleichsmodus zusätzlich die Zahl der neuen, geänderten und gelöschten Anforderungen.
-
-Ein Klick auf einen Eintrag der Liste führt eine Ebene tiefer.
-
-## Breadcrumb
-
-Über dem Titel der Detailansicht steht der Pfad zur aktuellen Anforderung. Bei einer Unteranforderung enthält er alle übergeordneten Anforderungen, zum Beispiel:
+Über der Überschrift der Detailansicht zeigt die Pfadleiste Ihre aktuelle Position im Katalog:
 
 ```text
-GC Governance und Compliance  »  GC.9 Sicherheitsorganisation
-  »  GC.9.1 …  »  GC.9.1.1 …  »  GC.9.1.1.1 …
+[Buch-Symbol]  »  DEV Entwicklung  »  DEV.4 Softwareentwicklung - Code
 ```
 
-Ein Klick auf eine Praktik oder einen Teilbereich öffnet die Übersicht dieser Ebene, ein Klick auf eine übergeordnete Anforderung öffnet diese Anforderung. In beiden Fällen zeigt der Explorer das Ziel in der Baumansicht. Der Breadcrumb setzt dabei keine Filter, er dient nur der Navigation.
+- **Buch-Symbol am Anfang:** Führt mit einem Klick zur **Katalogübersicht** mit allgemeinen Metadaten, Normverweisen und Versionsständen zurück (zugeklapptes Buch = Katalogübersicht aktiv, aufgeschlagenes Buch = Anforderung aktiv).
+- **Hierarchische Knoten:** Zeigt den exakten Pfad von der Praktik über den Teilbereich bis zu eventuellen Elternanforderungen. Jeder Knoten lässt sich anklicken, um direkt zur entsprechenden Ebene zu springen.
+- **Fokus auf das Wesentliche:** Die Pfadleiste endet übersichtlich bei der übergeordneten Gruppe, da Kennung und Titel der aktuellen Anforderung bereits prominent als Hauptüberschrift darunter stehen.
 
 ## Flache Trefferliste
 
-Sobald Sie einen Filter setzen oder suchen, wechselt die Liste automatisch in die **flache Trefferliste**. Sie zeigt nur die passenden Anforderungen, ohne die Ebenen der Praktiken und Teilbereiche. Heben Sie alle Filter auf, wechselt der Explorer wieder in die Baumansicht. Über die beiden Schaltflächen rechts über der Liste können Sie jederzeit selbst zwischen **Baumansicht** und **flacher Trefferliste** wählen.
+Sobald Sie einen Filter setzen oder einen Suchbegriff eingeben, wechselt der Explorer automatisch in die **flache Trefferliste**. Sie blendet die Zwischenebenen aus und listet alle Treffer kompakt untereinander.
 
-## Mit der Tastatur blättern
+Über die beiden Symbole oben rechts in der mittleren Spalte können Sie jederzeit manuell zwischen **Baumansicht** und **flacher Trefferliste** umschalten.
 
-Mit den Pfeiltasten **↑** und **↓** (oder **k** und **j**) wählen Sie die vorige oder nächste sichtbare Anforderung. Aus der Übersicht einer Praktik oder eines Teilbereichs heraus springen Sie damit zur ersten bzw. letzten Anforderung dieser Ebene. Alle Tastenkürzel finden Sie im Anhang.
+## Tastaturnavigation
+
+Für zügiges und barrierefreies Arbeiten lässt sich der Katalog vollständig per Tastatur erkunden:
+
+- **↑ / ↓** (oder **k / j**): Springt zur vorherigen bzw. nächsten Anforderung.
+- **→ (Rechtspfeil):** Klappt die Unteranforderungen der aktuell ausgewählten Anforderung auf.
+- **← (Linkspfeil):** Klappt geöffnete Unteranforderungen zu oder springt von einer Unteranforderung direkt zur übergeordneten Anforderung.
+- **Eingabe:** Wählt das fokussierte Element aus.

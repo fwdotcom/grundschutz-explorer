@@ -291,6 +291,9 @@ export function parseOscalCatalog(rawJson) {
     lastModified,
     oscalVersion,
     remarks,
+    // Vollständige OSCAL-Metadaten und Anhang (back-matter) für die Katalogübersicht
+    metadata,
+    backMatter: catalog['back-matter'] || {},
     practices,
     allControls,
     controlMap,

@@ -1,51 +1,60 @@
 # Begriffe
 
-Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt der Explorer direkt an der jeweiligen Stelle, per Tooltip oder Info-Button.
+Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt der Explorer direkt an der jeweiligen Stelle per Tooltip oder Info-Button.
 
 ## Aufbau des Katalogs
 
 Praktik
-: Oberste Gliederungsebene, etwa „GC Governance und Compliance“ oder „ARCH Architektur“. Jede Praktik hat eine Beschreibung des BSI.
+: Oberste Gliederungsebene, etwa „DEV Entwicklung“, „GC Governance und Compliance“ oder „ARCH Architektur“. Jede Praktik besitzt eine offizielle Zweckbestimmung des BSI.
 
 Teilbereich
-: Gliederung innerhalb einer Praktik, etwa „GC.1 Grundlagen“.
+: Fachliche Untergliederung innerhalb einer Praktik, etwa „DEV.4 Softwareentwicklung - Code“.
 
 Anforderung
-: Ein zu erreichender Zielzustand, etwa „GC.1.1“. Eine Anforderung kann Unteranforderungen haben.
+: Ein verbindlich zu erreichender Zielzustand, etwa „DEV.4.3“. Eine Anforderung kann ihrerseits konkretere Unteranforderungen enthalten.
 
 Unteranforderung
-: Konkretisierung einer Anforderung, etwa „GC.1.1.1“.
+: Spezifizierung einer übergeordneten Anforderung, etwa „DEV.1.1.1“. Im Grundschutz++-Katalog reicht die Hierarchie bis zu vier Ebenen tief.
 
 ## Angaben an einer Anforderung
 
 Modalverb
-: Grad der Verbindlichkeit. **MUSS**: unbedingt zu erfüllen. **SOLLTE**: normalerweise zu erfüllen, Abweichungen sind sorgfältig abzuwägen und zu begründen. **KANN**: keine generelle Verpflichtung, sondern ein Vorschlag je nach Situation.
+: Grad der Verbindlichkeit:
+  - **MUSS:** Unbedingt und ausnahmslos zu erfüllen.
+  - **SOLLTE:** Im Regelfall verbindlich; Abweichungen sind fundiert zu begründen und zu dokumentieren.
+  - **KANN:** Fakultative Empfehlung je nach Schutzbedarfsanalyse und Risikosituation.
 
 Schutzbedarf
-: Sicherheitsstufe, für die eine Anforderung gedacht ist: **Standard-Sicherheitsstufe** (im Katalog `normal-SdT`) oder **erhöhte Sicherheitsstufe** (`erhöht`).
+: Sicherheitsniveau, für das eine Anforderung konzipiert ist: **Standard-Sicherheitsstufe** (im Katalog `normal-SdT`) oder **Erhöhte Sicherheitsstufe** (`erhöht`).
 
 Handlungswort
-: Das Verb, das die geforderte Handlung festlegt. Das BSI definiert jedes Handlungswort genau, etwa was „verankern“ im Unterschied zu „dokumentieren“ bedeutet.
+: Das Verb, das die geforderte Handlung operationalisiert (z. B. *verankern*, *dokumentieren*, *durchführen*).
 
 Dokumentationsvorgabe
-: Das Dokument, in dem das Ergebnis der Anforderung festgehalten wird, etwa „IT-Betriebskonzept“.
+: Die Dokumentenart oder der Nachweis, in dem das Resultat der Anforderung formal festgehalten wird (z. B. *Sicherheitskonzept*, *Freigabeplan*).
 
 Aufwand
-: Einschätzung des Aufwands für Umsetzung und Aufrechterhaltung in den Stufen 0 bis 5. Stufe 1 steht für schnelle Umsetzung mit wenig Aufwand, Stufe 5 für aufwendige, komplexe Maßnahmen. Stufe 0 bedeutet: Der Aufwand wird nicht bewertet, weil die Anforderung in jedem Fall umzusetzen ist.
+: Schätzung des Umsetzungs- und Pflegeaufwands in den Stufen 0 bis 5. Stufe 1 steht für unkomplizierte Sofortmaßnahmen, Stufe 5 für komplexe Infrastrukturprojekte. Stufe 0 bedeutet: Der Aufwand wird nicht bewertet, da die Maßnahme als zwingende Grundvoraussetzung gilt.
 
 Schutzziele
-: Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität. Für jedes Schutzziel gibt der Katalog an, wie stark eine Anforderung darauf wirkt: 0 (nicht oder kaum), 1 (wirkt hin) oder 2 (im Zentrum).
+: Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au). Für jedes Schutzziel quantifiziert der Katalog die Wirkung: 0 (keine), 1 (wirkt hin) oder 2 (im Zentrum der Anforderung).
 
 Elementare Gefährdung
-: Eine der 47 grundlegenden Gefährdungen G 0.1 bis G 0.47 des BSI, etwa „G 0.18 Fehlplanung oder fehlende Anpassung“.
+: Eine der 47 elementaren Gefährdungen G 0.1 bis G 0.47 des IT-Grundschutzes (z. B. „G 0.18 Fehlplanung oder fehlende Anpassung“).
 
 Tag
-: Schlagwort des BSI zur thematischen Einordnung, etwa „Zero Trust“ oder „Lateral Movement“.
+: Schlagwort aus dem kontrollierten BSI-Vokabular zur thematischen Querschnittsklassifikation (z. B. „Zero Trust“, „Lieferketten“ oder „Kryptografie“).
 
-## Weitere Begriffe
+## Arbeitsfunktionen des Explorers
+
+Eigene Liste
+: Eine benutzerdefinierte Sammlung von Anforderungen (z. B. für eine konkrete Projektgruppe, ein Audit oder Maßnahmenpakete).
+
+Notiz
+: Ein individueller Textkommentar, der einer Anforderung innerhalb einer bestimmten Liste zugeordnet und lokal gespeichert wird.
+
+Wortvergleich (Word-Diff)
+: Algorithmus (Longest Common Subsequence), der Texte zweier Katalogversionen vergleicht und entfernte Wörter durchgestrichen sowie hinzugefügte Wörter farbig markiert.
 
 OSCAL
-: Open Security Controls Assessment Language, ein offenes, maschinenlesbares Format für Sicherheitskataloge. Das BSI veröffentlicht den Grundschutz++-Katalog in diesem Format.
-
-Basis und Vergleichsversion
-: Im Vergleichsmodus ist die Basis der angezeigte Katalog, die Vergleichsversion der Stand, gegen den er verglichen wird.
+: Open Security Controls Assessment Language (NIST SP 800-53 / NIST OSCAL 1.1.3), das internationale XML/JSON/YAML-Standardformat für maschinenlesbare Sicherheitskataloge.

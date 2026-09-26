@@ -1,57 +1,84 @@
-# Eine Anforderung lesen
+# Die Detailansichten
 
-Die Detailansicht zeigt alle Angaben, die das BSI zu einer Anforderung veröffentlicht.
+Die Detailansicht auf der rechten Seite des Bildschirms bereitet alle Fach- und Metadaten des Katalogs übersichtlich auf. Sie umfasst die allgemeine **Katalogübersicht**, die vollständige **Anforderungsansicht** mit ihren fachlichen Reitern sowie den interaktiven **Wortvergleich** im Vergleichsmodus.
 
-![Detailansicht einer Anforderung](bilder/detailansicht.png)
+## Katalogübersicht
 
-/// figure-caption
-    attrs: {id: fig-detailansicht}
-Detailansicht einer Anforderung
-///
+Solange keine konkrete Anforderung ausgewählt ist – oder wenn Sie in der Pfadleiste auf das **Buch-Symbol** am Anfang klicken –, zeigt die Detailansicht eine umfassende Übersicht über den geladenen Katalog und seine übergeordneten NIST-OSCAL-Metadaten. Dazu gehören Versionsstand, gesetzliche Grundlagen, Herausgeberangaben des BSI sowie offizielle Dokumentenverweise.
 
-## Kopf der Detailansicht
+## Aufbau der Anforderungsansicht
 
-Unter dem Breadcrumb stehen Kennung und Titel der Anforderung. Die Kennzeichnungen darunter zeigen:
+Sobald Sie eine Anforderung in der Baumansicht oder der Trefferliste auswählen, wechselt die Detailansicht in den Anforderungsmodus. Der Kopfbereich fasst die Einordnung und Kernattribute zusammen:
 
-- die Art: **Anforderung** oder **Unteranforderung**,
-- das **Modalverb** (MUSS, SOLLTE, KANN),
-- den **Schutzbedarf** (Standard-Sicherheitsstufe oder erhöhte Sicherheitsstufe),
-- im Vergleichsmodus den Änderungsstatus.
-
-Fahren Sie mit der Maus über das Modalverb oder den Schutzbedarf, um die Definition des BSI zu sehen.
+- **Pfadleiste (Breadcrumb):** Führt vom Buch-Symbol (Katalogübersicht) über Praktik und Teilbereich bis zur Anforderung. Jeder Knoten lässt sich anklicken, um in der Hierarchie zurückzuspringen.
+- **Kennung und Titel:** Eindeutige Kennzeichnung der Anforderung (z. B. `DEV.3.1`) und ihr offizieller Titel.
+- **Stern-Symbol:** Fügt die Anforderung mit einem Klick zur aktuellen Arbeitsliste hinzu oder entfernt sie wieder (Gelb = in aktiver Liste, Grau = in anderer Liste, Umriss = in keiner Liste).
+- **Status-Badges:** Kennzeichnen Art (*Anforderung* oder *Unteranforderung*), Verbindlichkeit (*MUSS*, *SOLLTE*, *KANN*), Schutzbedarf (*Standard* oder *Erhöht*) und im Vergleichsmodus den Änderungsstatus (*Neu*, *Geändert*, *Gelöscht*).
+- **Reiterleiste (Tabs):** Erlaubt den schnellen Wechsel zwischen *Übersicht*, *Hilfestellung*, *Notizen* und im Vergleichsmodus *Änderungen*.
 
 ## Registerkarte „Übersicht“
 
-**Anforderungstext.** Der Text der Anforderung, das Modalverb ist farbig hervorgehoben. Enthält der Text Parameter, sind ihre Werte in eckigen Klammern eingesetzt.
+Die Registerkarte **Übersicht** bündelt alle operativen Vorgaben der gewählten Anforderung.
 
-**Schutzziele.** Für Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität zeigen zwei Punkte, wie stark die Anforderung darauf wirkt: zwei kräftig blaue Punkte bedeuten „im Zentrum“, ein blasser Punkt „wirkt hin“, keine gefüllten Punkte „keine“. Hat das BSI keine Schutzziele zugeordnet, etwa bei vielen Governance-Anforderungen, steht dort „Keine Zuordnung im Katalog“.
+![Detailansicht einer Anforderung: Reiter Übersicht](bilder/detailansicht.png){width=42%}
 
-**Handlung und Dokumentation.** Das Handlungswort beschreibt, was zu tun ist, die Dokumentationsvorgabe, in welchem Dokument das Ergebnis festgehalten wird.
+/// figure-caption
+    attrs: {id: fig-detailansicht}
+Detailansicht einer Anforderung mit Breadcrumb, Metadaten und Reiter „Übersicht“ (am Beispiel DEV.3.1 Replay-Angriffe)
+///
 
-**Gefordertes Ergebnis und Spezifikation.** Was am Ende vorliegen muss, gegebenenfalls mit näherer Spezifikation.
+Die Übersicht gliedert sich in folgende funktionale Abschnitte:
 
-**Aufwand.** Ein Balken aus fünf Segmenten zeigt die Aufwandsstufe, von grün (gering) bis rot (hoch). Stufe 0 bedeutet nach der Definition des BSI nicht „kein Aufwand“, sondern: Der Aufwand wird nicht bewertet, weil die Anforderung in jedem Fall umzusetzen ist.
-
-**Tags.** Schlagwörter des BSI zur thematischen Einordnung.
-
-**Elementare Gefährdungen.** Die Gefährdungen, denen die Anforderung entgegenwirkt, mit Kennung und Bezeichnung.
-
-**Unteranforderungen.** Bei Anforderungen mit Unteranforderungen deren Liste. Ein Klick öffnet die Unteranforderung.
-
-**UUID.** Ganz unten steht klein die eindeutige Kennung der Anforderung im Katalog, etwa für den Abgleich mit anderen Werkzeugen.
-
-### Definitionen nachschlagen
-
-Neben Handlung, Dokumentation, Aufwand, Schutzzielen und Tags steht ein kleiner Info-Button **i**. Ein Klick darauf klappt die Definition des BSI auf, bei Handlungswörtern mit Synonymen, bei Dokumentationsvorgaben mit Kategorie und Zielgruppe. Ein weiterer Klick klappt sie wieder zu.
-
-### Mit einem Klick filtern
-
-Gestrichelt unterstrichene Angaben sind Filter: Ein Klick zeigt alle Anforderungen mit derselben Eigenschaft. Mehr dazu im Kapitel **Suchen und filtern**.
+- **Anforderungstext:** Der normative Kern der Anforderung. Das maßgebliche Modalverb ist farbig hervorgehoben; Parameterplatzhalter sind mit konkreten Werten aufgelöst.
+- **Schutzziele:** Zwei Punkte symbolisieren die Schutzwirkung auf Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au) (●● = im Zentrum, ●○ = wirkt hin, ○○ = keine Zuordnung).
+- **Handlung und Dokumentation:** Das Handlungswort beschreibt die auszuführende Tätigkeit; die Dokumentationsvorgabe bestimmt den geforderten Nachweis.
+- **Gefordertes Ergebnis & Spezifikation:** Definiert den verbindlichen Endzustand der Umsetzung.
+- **Aufwandsstufe:** Ein fünfstufiger Farbbalken verdeutlicht den geschätzten Realisierungsaufwand nach BSI-Definition (Stufe 0 = zwingend umzusetzen / Aufwand nicht bewertet).
+- **Tags & Gefährdungen:** Thematische Schlagwörter und abgewendete BSI-Gefährdungen (G 0.1 bis G 0.47), die direkt als Klickfilter nutzbar sind.
+- **Definitionen (i-Symbol):** Neben Handlung, Dokumentation, Aufwand und Schutzzielen klappt ein Klick auf das Info-Symbol die offizielle BSI-Definition (inkl. Synonymen und Vorgaben) auf.
+- **UUID:** Am Ende der Übersicht steht die eindeutige, unveränderliche Kennung der Anforderung im NIST-OSCAL-Datenbestand.
 
 ## Registerkarte „Hilfestellung“
 
-Die Erläuterungen des BSI zur Umsetzung der Anforderung. Nicht jede Anforderung hat eine Hilfestellung.
+Reicht der normative Anforderungstext für die praktische Ausgestaltung nicht aus, verweist die Registerkarte **Hilfestellung** auf praxisnahe Empfehlungen des BSI. Hier finden sich Erläuterungen zur Implementierung, empfohlene Werkzeuge (z. B. für Software Composition Analysis) sowie Querverweise auf Technische Richtlinien (wie BSI TR-03183 oder TR-02102):
 
-## Registerkarte „Änderungen“
+![Registerkarte Hilfestellung mit Hinweisen zur praktischen Umsetzung](bilder/detail-hilfestellung.png){width=26%}
 
-Erscheint nur im Vergleichsmodus. Sie zeigt, was sich an der Anforderung gegenüber der Vergleichsversion geändert hat. Bei Texten sind entfernte Wörter durchgestrichen und neue Wörter hervorgehoben.
+/// figure-caption
+    attrs: {id: fig-detail-hilfestellung}
+Registerkarte „Hilfestellung“ mit Verweisen auf Technische Richtlinien
+///
+
+## Registerkarte „Notizen“
+
+Direkt an jeder Anforderung können Sie individuelle Notizen und Umsetzungskommentare erfassen:
+
+![Registerkarte Notizen mit Textfeld, Statuspunkt und Zeitstempel](bilder/detail-notizen.png){width=26%}
+
+/// figure-caption
+    attrs: {id: fig-detail-notizen}
+Registerkarte „Notizen“ mit Textfeld, Statuspunkt und Zeitstempel
+///
+
+- **Notizen schreiben:** Eingaben werden direkt in der aktuell **aktiven Liste** gespeichert.
+- **Notizen anderer Listen einsehen:** Über das Auswahlmenü können Notizen aus anderen Listen schreibgeschützt eingesehen werden.
+- **Statuspunkt am Reiter:** Ein grüner Punkt signalisiert eine Notiz in der aktiven Liste; ein grauer Punkt weist auf Notizen in anderen Listen hin.
+- **Zeitstempel:** Dokumentiert das Datum der letzten Bearbeitung.
+
+*(Eine ausführliche Beschreibung der Listenverwaltung finden Sie im Kapitel **Listen und Notizen**.)*
+
+## Registerkarte „Änderungen“ (Vergleichsmodus)
+
+Befindet sich der Explorer im Vergleichsmodus, wird bei allen geänderten Anforderungen automatisch der Reiter **Änderungen** eingeblendet:
+
+![Registerkarte Änderungen mit Feld-Gegenüberstellung und Wort-Diff](bilder/detail-aenderungen.png){width=38%}
+
+/// figure-caption
+    attrs: {id: fig-detail-aenderungen}
+Registerkarte „Änderungen“ mit direkter Feld-Gegenüberstellung und Wortvergleich
+///
+
+Dieser Reiter bietet zwei wesentliche Analysewerkzeuge:
+
+1. **Gegenüberstellung veränderter Eigenschaften:** Zeigt übersichtlich alle modifizierten Attribute (z. B. ein geändertes Modalverb von `SOLLTE` auf `MUSS`, angepasste Schutzziele oder geänderte Gefährdungen).
+2. **Wortvergleich (Word-Diff):** Im Anforderungstext und in der Hilfestellung werden gestrichene Textstellen rot durchgestrichen und neu hinzugekommene Formulierungen grün hervorgehoben.

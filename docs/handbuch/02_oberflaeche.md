@@ -1,8 +1,8 @@
 # Die Oberfläche im Überblick
 
-Der Bildschirm ist in vier Bereiche gegliedert: die **Kopfzeile** oben, die **Filterleiste** links, die **Liste** der Anforderungen in der Mitte und die **Detailansicht** rechts.
+Der Arbeitsbereich des Grundschutz++ Explorers gliedert sich in vier Hauptbereiche: die **Kopfzeile** oben, die **Filterleiste** links, die **Liste der Anforderungen** in der Mitte und die **Detailansicht** auf der rechten Seite.
 
-![Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht](bilder/oberflaeche.png)
+![Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht](bilder/oberflaeche.png){width=100%}
 
 /// figure-caption
     attrs: {id: fig-oberflaeche}
@@ -11,52 +11,77 @@ Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht
 
 ## Kopfzeile
 
-![Kopfzeile](bilder/kopfzeile.png)
+![Kopfzeile](bilder/kopfzeile.png){width=100%}
 
 /// figure-caption
     attrs: {id: fig-kopfzeile}
-Kopfzeile
+Kopfzeile mit Logo, Suche, Katalogen und Darstellungsschaltern
 ///
 
-Von links nach rechts finden Sie:
+Von links nach rechts bietet die Kopfzeile folgende Funktionen:
 
 | Element | Funktion |
 | :--- | :--- |
-| Logo und Titel | Zeigt den geladenen Katalog und seinen Stand. |
-| Suchfeld | Durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, Gefährdungen und Tags. |
-| Kataloge | Listet die gespeicherten Katalogversionen, startet den Vergleich und lädt neue Kataloge. |
-| A A A | Stellt die Schriftgröße ein: normal, groß oder sehr groß. |
-| Mond / Sonne | Wechselt zwischen hellem und dunklem Design. |
-| Halbkreis | Schaltet den hohen Kontrast ein und aus. |
+| **Logo und Titel** | Zeigt das Schutzschild-Logo, den Namen des geladenen Katalogs und dessen Stand. |
+| **Suchfeld** | Durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, Gefährdungsbezeichnungen und Tags in Echtzeit (Tastaturkürzel: `Strg + K` oder `/`). |
+| **Kataloge** | Öffnet den Dialog zur Verwaltung gespeicherter Versionen, zum Starten/Beenden des Vergleichs und zum Laden neuer Kataloge. |
+| **A A A** | Dreistufige Skalierung der Schriftgröße: normal (100 %), groß (112,5 %) oder sehr groß (125 %). |
+| **Sonne / Mond** | Wechselt zwischen hellem und dunklem Oberflächendesign. |
+| **Halbkreis** | Schaltet den hohen Kontrastmodus ein oder aus (garantiert WCAG-Kontrastverhältnis ≥ 7:1 für alle Texte). |
 
 ## Filterleiste
 
-Die Filterleiste links enthält alle Filter, gegliedert in aufklappbare Abschnitte. Ein Klick auf die Überschrift eines Abschnitts klappt ihn auf oder zu. Die Schaltflächen oben rechts heben alle Filter auf (Pfeil im Kreis, nur bei aktiven Filtern), blenden Werte ohne Treffer aus (Trichter) und klappen alle Abschnitte gemeinsam auf oder zu. Eine blaue Zahl neben einer Überschrift zeigt, wie viele Filter in diesem Abschnitt aktiv sind.
+Die linke Spalte enthält alle Filter-Facetten in aufklappbaren Abschnitten:
 
-Wie Sie filtern, beschreibt das Kapitel **Suchen und filtern**.
+1. **Listen:** Eigene Sammlungen von Anforderungen mit Notizen (z. B. Audit-Vorbereitung oder Maßnahmenkataloge).
+2. **Modalverben:** Verbindlichkeitsgrad nach BSI (MUSS, SOLLTE, KANN).
+3. **Schutzbedarf:** Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe.
+4. **Aufwand:** Geschätzte Aufwandsstufe von 0 bis 5 mit farbiger Balkenanzeige.
+5. **Handlungswort & Dokumentation:** Fachliche Vorgaben des BSI mit Definitions-Tooltips.
+6. **Schutzziele:** Gezielte Filterung nach Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au).
+7. **Praktiken:** Thematische Schwerpunkte wie Governance (GC), Architektur (ARCH) oder Entwicklung (DEV).
+8. **Elementare Gefährdungen:** BSI-Gefährdungen G 0.1 bis G 0.47.
+9. **Tags:** Offizielle Schlagwörter des BSI.
+10. **Änderungen:** Erscheint nur im Vergleichsmodus (neu, geändert, gelöscht).
+
+Oben rechts in der Filterleiste befinden sich drei Funktionsschaltflächen:
+- **Alle Filter zurücksetzen** (Kreispfeil): Setzt alle aktiven Filter zurück.
+- **Werte ohne Treffer ausblenden** (Trichter): Komprimiert die Filterleiste auf Werte, die zu den übrigen Kriterien passen.
+- **Alle Abschnitte auf-/zuklappen**: Klappt alle Facettengruppen gleichzeitig auf oder zu.
 
 ## Liste der Anforderungen
 
-Die Liste in der Mitte zeigt den Katalog entweder als **Baumansicht** (Praktik → Teilbereich → Anforderung → Unteranforderungen) oder als **flache Trefferliste**. Über der Liste stehen die aktiven Filter, die Anzahl der Treffer und die Schaltflächen zum Umschalten der Ansicht sowie zum Auf- und Zuklappen aller Ebenen.
+Die mittlere Spalte präsentiert die Anforderungen wahlweise als strukturierte **Baumansicht** oder als **flache Trefferliste**:
 
-Jede Zeile zeigt Kennung und Titel, rechts daneben kurze Hinweise:
-
-- ein Pfeil mit Zahl: Anzahl der Unteranforderungen,
-- ein Warndreieck mit Zahl: Anzahl der elementaren Gefährdungen,
-- die Buchstaben **C**, **I**, **A** oder **Au**: Schutzziele, die im Zentrum der Anforderung stehen (Vertraulichkeit, Integrität, Verfügbarkeit, Authentizität),
-- das Modalverb **MUSS**, **SOLLTE** oder **KANN**.
+- Über der Liste fassen **Filter-Chips** alle aktuell gesetzten Filterkriterien zusammen.
+- Die Trefferzahl nennt die Anzahl der angezeigten Anforderungen.
+- Jede Zeile zeigt Kennung, Titel, das Modalverb sowie informative Statusmarkierungen:
+  - Ein **Stern**: Gelb = Anforderung ist in der aktiven Liste; Grau = in einer anderen Liste; Umriss = in keiner Liste.
+  - Ein **Notizsymbol**: Grün = Notiz in der aktiven Liste vorhanden; Grau = Notiz in anderer Liste vorhanden.
+  - Pfeil mit Zahl: Anzahl untergeordneter Anforderungen.
+  - Warndreieck mit Zahl: Anzahl zugeordneter elementarer Gefährdungen.
+  - Kürzel **C**, **I**, **A**, **Au**: Schutzziele, die für diese Anforderung im Zentrum stehen.
+  - Im Vergleichsmodus: Farbige Kennzeichnung für **Neu** (grün), **Geändert** (gelb) oder **Gelöscht** (rot).
 
 ## Detailansicht
 
-Die Detailansicht rechts zeigt alle Angaben zur ausgewählten Anforderung, oder eine Übersicht, wenn Sie eine Praktik oder einen Teilbereich ausgewählt haben. Die Breite zwischen Liste und Detailansicht verstellen Sie, indem Sie die Trennlinie mit der Maus ziehen.
+Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten Anforderung:
+
+- **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Teilbereich und gegebenenfalls übergeordneten Anforderungen.
+- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Modalverb, Schutzbedarf und Änderungsstatus.
+- **Reiter (Tabs):**
+  - **Übersicht:** Vollständiger Anforderungstext, Schutzziele, Handlungswort, Dokumentationsvorgabe, Ergebnis, Aufwand, Tags, Gefährdungen und Unteranforderungen.
+  - **Hilfestellung:** BSI-Hinweise zur praktischen Umsetzung.
+  - **Notizen:** Eigenes Notizfeld für die aktive Liste, Umschaltung zwischen Listennotizen und Änderungsdatum.
+  - **Änderungen:** Im Vergleichsmodus Gegenüberstellung aller veränderten Felder und Wort-für-Wort-Vergleich.
+
+> [!TIP]
+> Die Breite der Detailansicht lässt sich mit der Maus an der Trennlinie zwischen Liste und Detailbereich stufenlos anpassen.
 
 ## Darstellung anpassen
 
-Der Explorer merkt sich die folgenden Einstellungen in Ihrem Browser:
+Der Explorer speichert Ihre Anzeigeeinstellungen dauerhaft im Browser:
 
-- **Schriftgröße:** Die drei „A“ in der Kopfzeile vergrößern die Schrift auf 112,5 % oder 125 %. Die Filterleiste wird dabei etwas breiter, damit alle Beschriftungen lesbar bleiben.
-- **Helles oder dunkles Design:** Beim ersten Aufruf folgt der Explorer der Einstellung Ihres Betriebssystems.
-- **Hoher Kontrast:** verstärkt Schrift, Rahmen und Signalfarben. Alle Textfarben erreichen dann mindestens das Kontrastverhältnis 7:1. Auch hier gilt beim ersten Aufruf die Einstellung Ihres Betriebssystems.
-
-> [!TIP]
-> Schriftgröße und hoher Kontrast lassen sich kombinieren, im hellen wie im dunklen Design.
+- **Schriftgröße:** Über den dreiteiligen Knopf **A A A** schalten Sie zwischen drei Schriftgrößen um. Bei größeren Schriften wächst die Filterleiste proportional mit, damit alle Bezeichnungen vollständig lesbar bleiben.
+- **Dunkel- und Hell-Modus:** Beim Erstaufruf übernimmt der Explorer die Systemeinstellung Ihres Betriebssystems.
+- **Hoher Kontrast:** Hebt Rahmen, Texte und Signalfarben hervor, um maximale Lesbarkeit bei eingeschränktem Sehvermögen oder ungünstigen Lichtverhältnissen zu gewährleisten.

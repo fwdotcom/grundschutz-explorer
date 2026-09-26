@@ -64,7 +64,7 @@ const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
 // Handbuch, von scripts/build_manual.py je Version erzeugt
 const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
 
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.1.0';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -75,6 +75,46 @@ const FONT_SCALES = [
   { value: 1.125, label: 'groß' },
   { value: 1.25, label: 'sehr groß' },
 ];
+
+// Aufklapp-Zustand der Filterbereiche beim ersten Start und nach dem Laden eines Katalogs:
+// die kurzen, häufig genutzten Bereiche offen, die langen Listen zu
+const RAIL_COLLAPSED_DEFAULT = {
+  lists: false,
+  modalVerbs: false,
+  secLevels: false,
+  effort: false,
+  actionWords: true,
+  documentation: true,
+  securityTargets: true,
+  practices: true,
+  threats: true,
+  tags: true,
+  diffs: false,
+};
+
+// Übliche Rollen-, Eigenschafts- und Verweisbezeichnungen aus OSCAL auf Deutsch; Unbekanntes erscheint unverändert
+const OSCAL_ROLES = {
+  creator: 'Ersteller',
+  'prepared-by': 'Erstellt von',
+  'prepared-for': 'Erstellt für',
+  'content-approver': 'Inhaltlich freigegeben von',
+  contact: 'Kontakt',
+  maintainer: 'Pflege',
+  publisher: 'Herausgeber',
+};
+const OSCAL_PROPS = {
+  keywords: 'Schlagwörter',
+  scope_implements_norm: 'Umgesetzte Norm',
+  marking: 'Kennzeichnung',
+};
+const OSCAL_LINK_RELS = {
+  reference: 'Referenz',
+  'canonical': 'Kanonische Fassung',
+  alternate: 'Alternative Fassung',
+  'latest-version': 'Neueste Fassung',
+  'predecessor-version': 'Vorgängerfassung',
+  'successor-version': 'Nachfolgefassung',
+};
 
 const app = createApp({
   setup() {
@@ -170,6 +210,11 @@ const app = createApp({
       }
     );
 
+    // Suchbegriff in Wörter zerlegt; in Anführungszeichen gesetzte Teile bleiben als Wortfolge zusammen
+    const searchWords = computed(() =>
+      (searchTerm.value.match(/"[^"]+"|„[^“”"]+[“”"]|\S+/g) || []).map((w) => w.replace(/^["„]|["“”]$/g, '').trim()).filter(Boolean)
+    );
+
     // Tag-based Facet Filters: Array of { key, category, value, mode: 'include'|'exclude', label, categoryLabel }
     const activeTags = ref([]);
 
@@ -182,19 +227,7 @@ const app = createApp({
     const listViewMode = ref('tree');
 
     // Aufklapp-Status der Rail-Sektionen
-    const railCollapsed = ref({
-      modalVerbs: false,
-      secLevels: false,
-      practices: false,
-      threats: false,
-      diffs: false,
-      effort: false,
-      actionWords: true,
-      documentation: true,
-      securityTargets: false,
-      tags: true,
-      lists: false,
-    });
+    const railCollapsed = ref({ ...RAIL_COLLAPSED_DEFAULT });
 
     const tagRailSearch = ref('');
 
@@ -233,15 +266,6 @@ const app = createApp({
         map.get(e.controlId).push(e);
       }
       return map;
-    });
-
-    // Computed: Practice options
-    const practiceOptions = computed(() => {
-      if (!activeCatalog.value) return [];
-      return activeCatalog.value.practices.map((p) => ({
-        id: p.id,
-        title: p.title,
-      }));
     });
 
     // Computed: Available Security Levels
@@ -328,10 +352,6 @@ const app = createApp({
       return SECURITY_TARGET_LEVEL_LABELS[Number(value)] ?? '–';
     }
 
-    function securityTargetChipLabel(target, value) {
-      return `${target.label}: ${value} (${securityTargetLevelLabel(value)})`;
-    }
-
     // Erster Absatz einer Definition (für Tooltips)
     function shortDefinition(name, value) {
       return definition(name, value).split(/\n\s*\n/)[0];
@@ -362,9 +382,11 @@ const app = createApp({
     function matchesFilterCategory(ctrl, ignoreCategory = null) {
       const f = filters.value;
 
-      // 1. Volltextsuche
-      const query = searchTerm.value;
-      if (query && !searchText(ctrl).includes(query)) return false;
+      // 1. Volltextsuche: jedes Wort muss vorkommen, in beliebiger Reihenfolge; "…" sucht eine Wortfolge
+      if (searchWords.value.length) {
+        const text = searchText(ctrl);
+        if (!searchWords.value.every((w) => text.includes(w))) return false;
+      }
 
       // 2. Drilldowns (Subgroup & Control)
       if (f.subgroupFilter && ctrl.subgroupId !== f.subgroupFilter) return false;
@@ -412,11 +434,8 @@ const app = createApp({
           return ctrl.tags || [];
         case 'list':
           return (entriesByControl.value.get(ctrl.id) || []).map((e) => e.listId);
-        case 'diff': {
-          // „Alle Änderungen“ passt auf jede neue, geänderte oder gelöschte Anforderung
-          const status = ctrl.diff?.status || 'unchanged';
-          return status === 'unchanged' ? [status] : [status, 'all_diffs'];
-        }
+        case 'diff':
+          return [ctrl.diff?.status || 'unchanged'];
         default:
           return [];
       }
@@ -520,15 +539,12 @@ const app = createApp({
 
     // Diff Counts (ignoring diff facet)
     const diffCounts = computed(() => {
-      const counts = { all_diffs: 0, added: 0, modified: 0, deleted: 0 };
+      const counts = { added: 0, modified: 0, deleted: 0 };
       if (!activeCatalog.value) return counts;
       for (const ctrl of activeCatalog.value.allControls) {
         if (!matchesFilterCategory(ctrl, 'diff')) continue;
         const status = ctrl.diff?.status || 'unchanged';
-        if (status !== 'unchanged') {
-          counts.all_diffs++;
-          if (counts[status] !== undefined) counts[status]++;
-        }
+        if (counts[status] !== undefined) counts[status]++;
       }
       return counts;
     });
@@ -631,12 +647,6 @@ const app = createApp({
       return activeTags.value.filter((t) => t.category === category).length;
     }
 
-    function countTagsForCategory(category) {
-      return activeTagCountFor(category);
-    }
-
-    const activeTagFilterCount = computed(() => activeTagCountFor('tags'));
-
     function tagDefinition(name) {
       return definition('tags', name);
     }
@@ -724,11 +734,6 @@ const app = createApp({
       }
       return counts;
     });
-
-    // Einträge je Liste insgesamt (für Rückfragen und den leeren Zustand)
-    function listEntryCount(listId) {
-      return Object.values(listEntries.value).filter((e) => e.listId === listId).length;
-    }
 
     // Stern der gewählten Anforderung: 'none' | 'other' (in einer anderen Liste) | 'here' (in der Zielliste)
     const selectedStarState = computed(() => {
@@ -832,6 +837,11 @@ const app = createApp({
       return scopePractice.value.subgroups.find((sg) => sg.id === detailScope.value.id) || null;
     });
 
+    // Gewählte Zeile der Liste für Screenreader (aria-activedescendant der Listbox)
+    const activeRowId = computed(() =>
+      selectedControl.value && !detailScope.value && !selectionFilteredOut.value ? 'row-' + selectedControl.value.id : null
+    );
+
     // Die Auswahl rechts hat links keinen sichtbaren Eintrag mehr (durch Filter ausgeblendet)
     const selectionFilteredOut = computed(() => {
       if (!activeCatalog.value) return false;
@@ -844,6 +854,87 @@ const app = createApp({
       return !(listViewMode.value === 'tree' && isControlVisible(ctrl));
     });
 
+    // Metadaten des Katalogs nach dem OSCAL-Metadatenmodell, für die Katalogübersicht aufbereitet.
+    // Verweise auf "#uuid" zeigen auf eine Ressource im Anhang (back-matter), deren rlinks die Adresse tragen.
+    const catalogMeta = computed(() => {
+      const cat = activeCatalog.value;
+      if (!cat) return null;
+      const m = cat.metadata || {};
+      const resources = new Map((cat.backMatter?.resources || []).map((r) => [r.uuid, r]));
+      const parties = new Map((m.parties || []).map((p) => [p.uuid, p]));
+      const roles = new Map((m.roles || []).map((r) => [r.id, r]));
+
+      const link = (l) => {
+        const res = l.href?.startsWith('#') ? resources.get(l.href.slice(1)) : null;
+        const href = res ? res.rlinks?.[0]?.href || '' : l.href || '';
+        return { text: l.text || res?.title || href, href: safeHref(href), rel: OSCAL_LINK_RELS[l.rel] || l.rel || '' };
+      };
+      const party = (p) => ({
+        name: p.name || p['short-name'] || p.uuid,
+        email: p['email-addresses']?.[0] || '',
+        links: (p.links || []).map(link),
+      });
+
+      // Stand des Katalogs: Version, Veröffentlichung (falls angegeben), letzte Änderung
+      const dates = [
+        ['Version', formatTimestamp(m.version)],
+        ['Veröffentlicht', formatTimestamp(m.published)],
+        ['Zuletzt geändert', formatTimestamp(m['last-modified'])],
+      ].filter(([, v]) => v);
+      // Eigenschaften: Norm und Schlagwörter an festen Stellen, alle übrigen als "weitere Eigenschaften"
+      const props = m.props || [];
+      const propValues = (name) => props.filter((p) => p.name === name).map((p) => p.value).filter(Boolean);
+      const otherProps = props
+        .filter((p) => !['scope_implements_norm', 'keywords'].includes(p.name))
+        .map((p) => ({ label: OSCAL_PROPS[p.name] || p.name, name: p.name, value: p.value }));
+
+      const responsibleUuids = new Set();
+      const responsible = (m['responsible-parties'] || []).map((rp) => {
+        (rp['party-uuids'] || []).forEach((u) => responsibleUuids.add(u));
+        return {
+          role: OSCAL_ROLES[rp['role-id']] || roles.get(rp['role-id'])?.title || rp['role-id'],
+          parties: (rp['party-uuids'] || []).map((u) => parties.get(u)).filter(Boolean).map(party),
+        };
+      });
+      // Beteiligte ohne zugeordnete Rolle
+      const otherParties = (m.parties || []).filter((p) => !responsibleUuids.has(p.uuid)).map(party);
+
+      return {
+        remarks: m.remarks || '',
+        dates,
+        norms: propValues('scope_implements_norm'),
+        keywords: propValues('keywords'),
+        otherProps,
+        responsible,
+        otherParties,
+        links: (m.links || []).map(link),
+        revisions: (m.revisions || []).map((r) => ({
+          title: r.title || '',
+          version: r.version || '',
+          date: formatTimestamp(r.published || r['last-modified']),
+          remarks: r.remarks || '',
+        })),
+      };
+    });
+
+    // Adressen aus Katalogen nur als Link, wenn sie ungefährlich sind (kein javascript: o. Ä.)
+    function safeHref(href) {
+      return /^(https?:|mailto:)/i.test(href || '') ? href : '';
+    }
+
+    // OSCAL-Zeitstempel (ISO 8601) als Datum und Uhrzeit, andere Angaben unverändert
+    function formatTimestamp(value) {
+      if (!value) return '';
+      return /^\d{4}-\d{2}-\d{2}T/.test(value) && !isNaN(new Date(value)) ? formatDate(value) : value;
+    }
+
+    // Bezeichnung der Auswahl, die durch Filter ausgeblendet ist
+    const hiddenSelectionLabel = computed(() => {
+      if (scopeSubgroup.value) return `${scopeSubgroup.value.id} ${scopeSubgroup.value.title}`;
+      if (scopePractice.value) return `${scopePractice.value.id} ${scopePractice.value.title}`;
+      return selectedControl.value ? `${selectedControl.value.id} ${selectedControl.value.title}` : '';
+    });
+
     const scopeStats = computed(() => {
       if (scopeSubgroup.value) return summarizeControls(flattenControls(scopeSubgroup.value.controls));
       if (scopePractice.value) return summarizeControls(scopePractice.value.controls);
@@ -854,15 +945,6 @@ const app = createApp({
     const scopeDirectControls = computed(() => {
       if (!scopePractice.value || scopeSubgroup.value) return [];
       return scopePractice.value.controls.filter((c) => !c.subgroupId && !c.parentControlId);
-    });
-
-    // Example controls with threats for quick jumping
-    const exampleControlsWithThreats = computed(() => {
-      if (!activeCatalog.value) return [];
-      const candidateIds = ['ARCH.1.1', 'ARCH.2.2', 'UMS.1.1', 'ASST.1.1', 'CON.1.1', 'OPS.1.1'];
-      return candidateIds
-        .map((id) => activeCatalog.value.controlMap.get(id))
-        .filter((c) => c && c.elementareGefaehrdungen.length > 0);
     });
 
     // Base Control for Diff Comparison in Detail View
@@ -925,9 +1007,7 @@ const app = createApp({
             },
             // Reaktive Proxys lassen sich nicht in IndexedDB klonen → einfache Kopien speichern
             activeTags: activeTags.value.map((t) => ({ ...t })),
-            threatRailSearch: threatRailSearch.value,
             railOnlyMatching: railOnlyMatching.value,
-            tagRailSearch: tagRailSearch.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Filter:', err);
@@ -1009,7 +1089,6 @@ const app = createApp({
         filters.value.subgroupFilter,
         filters.value.controlFilter,
         activeTags.value,
-        threatRailSearch.value,
         railOnlyMatching.value,
       ],
       () => {
@@ -1018,17 +1097,30 @@ const app = createApp({
       { deep: true }
     );
 
-    // Wenn von ungefiltert auf gefiltert gewechselt wird: automatisch auf flache Liste wechseln
+    // Wenn von ungefiltert auf gefiltert gewechselt wird: automatisch auf flache Liste wechseln.
+    // Filter klappen im Baum die Zweige mit Treffern auf; ohne Filter gelten wieder Ansicht und Aufklapp-Zustand
+    // von vorher (die Auswahl bleibt dabei sichtbar).
+    let treeKeysBeforeFilter = null;
+    let viewModeBeforeFilter = null;
     watch(
       () => hasActiveFilters.value,
       (isActive, wasActive) => {
         if (isRestoringState.value) return;
         if (isActive && !wasActive) {
+          treeKeysBeforeFilter = new Set(expandedKeys.value);
+          viewModeBeforeFilter = listViewMode.value;
           listViewMode.value = 'flat';
           scheduleSaveCollapse();
         } else if (!isActive && wasActive) {
-          listViewMode.value = 'tree';
+          if (treeKeysBeforeFilter) {
+            expandedKeys.value = treeKeysBeforeFilter;
+            if (selectedControl.value) expandPathTo(selectedControl.value);
+            treeKeysBeforeFilter = null;
+          }
+          listViewMode.value = viewModeBeforeFilter || 'tree';
+          viewModeBeforeFilter = null;
           scheduleSaveCollapse();
+          scrollSelectedIntoView();
         }
       }
     );
@@ -1045,6 +1137,7 @@ const app = createApp({
         railCollapsed.value.actionWords,
         railCollapsed.value.documentation,
         railCollapsed.value.securityTargets,
+        railCollapsed.value.tags,
         railCollapsed.value.lists,
         selectedControlId.value,
         listViewMode.value,
@@ -1115,16 +1208,10 @@ const app = createApp({
           if (Array.isArray(savedFilterState.activeTags)) {
             activeTags.value = savedFilterState.activeTags;
           }
-          if (typeof savedFilterState.threatRailSearch === 'string') {
-            threatRailSearch.value = savedFilterState.threatRailSearch;
-          }
           // threatShowOnlyMatching: frühere Einstellung, galt nur für die Gefährdungen
           const onlyMatching = savedFilterState.railOnlyMatching ?? savedFilterState.threatShowOnlyMatching;
           if (typeof onlyMatching === 'boolean') {
             railOnlyMatching.value = onlyMatching;
-          }
-          if (typeof savedFilterState.tagRailSearch === 'string') {
-            tagRailSearch.value = savedFilterState.tagRailSearch;
           }
         }
 
@@ -1229,9 +1316,10 @@ const app = createApp({
           'in diesem Fenster keinen lokalen Speicher, etwa im privaten Modus.';
       } finally {
         isLoadingInitial.value = false;
-        setTimeout(() => {
-          isRestoringState.value = false;
-        }, 200);
+        // Erst wenn die Beobachter auf den wiederhergestellten Zustand reagiert haben, wieder speichern
+        // (sonst schriebe das Wiederherstellen selbst den Zustand zurück bzw. schaltete die Ansicht um)
+        await nextTick();
+        isRestoringState.value = false;
       }
     });
 
@@ -1301,9 +1389,13 @@ const app = createApp({
       if (isCatalogModalOpen.value || isLoadModalOpen.value || isImpressumModalOpen.value || isDatenschutzModalOpen.value || isLicenseModalOpen.value) return;
       const tag = e.target?.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      // Pfeiltasten, die ein Element schon selbst verarbeitet hat (Reiter, Trenner), nicht noch einmal auswerten
+      if (e.defaultPrevented) return;
       if (e.key === '/') {
         e.preventDefault();
         searchInput.value?.focus();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        if (stepTree(e.key === 'ArrowRight')) e.preventDefault();
       } else if (e.key === 'ArrowDown' || e.key === 'j') {
         e.preventDefault();
         stepSelection(1);
@@ -1343,6 +1435,28 @@ const app = createApp({
       e.preventDefault();
       tabs[next].focus();
       tabs[next].click();
+    }
+
+    // → klappt die Unteranforderungen der gewählten Anforderung auf, ← klappt sie zu bzw. springt zur übergeordneten
+    // (wie in einem Baum); liefert true, wenn etwas geschehen ist
+    function stepTree(open) {
+      const ctrl = selectedControl.value;
+      if (!ctrl || detailScope.value || listViewMode.value !== 'tree') return false;
+      const key = 'ctrl_' + ctrl.id;
+      const hasChildren = ctrl.subcontrols?.length > 0;
+      if (open) {
+        if (!hasChildren || expandedKeys.value.has(key)) return false;
+        toggleControlExpand(ctrl.id);
+        return true;
+      }
+      if (hasChildren && expandedKeys.value.has(key)) {
+        toggleControlExpand(ctrl.id);
+        return true;
+      }
+      const parent = ctrl.parentControlId && activeCatalog.value?.controlMap.get(ctrl.parentControlId);
+      if (!parent) return false;
+      selectControl(parent);
+      return true;
     }
 
     function stepSelection(delta) {
@@ -1469,7 +1583,9 @@ const app = createApp({
     // Nach dem Laden neuer Daten: Filter zurücksetzen, Filter-Abschnitte und Explorer einklappen
     function resetViewForNewData() {
       resetFilters();
-      collapseAllRail();
+      treeKeysBeforeFilter = null;
+      viewModeBeforeFilter = null;
+      railCollapsed.value = { ...RAIL_COLLAPSED_DEFAULT };
       collapseAll();
       detailScope.value = null;
       selectedControlId.value = '';
@@ -1692,6 +1808,13 @@ const app = createApp({
       detailScope.value = null;
       selectedControlId.value = ctrl.id;
 
+      expandPathTo(ctrl);
+      scheduleSaveCollapse();
+      scrollSelectedIntoView();
+    }
+
+    // Klappt den Weg zu einer Anforderung auf (Praktik, Teilbereich, übergeordnete Anforderungen) und ihre Unteranforderungen
+    function expandPathTo(ctrl) {
       let changedKeys = false;
       // Auto-expand control if it has subcontrols so they are immediately visible
       if (ctrl.subcontrols && ctrl.subcontrols.length > 0) {
@@ -1722,8 +1845,6 @@ const app = createApp({
       if (changedKeys) {
         expandedKeys.value = new Set(expandedKeys.value);
       }
-      scheduleSaveCollapse();
-      scrollSelectedIntoView();
     }
 
     function selectControlById(id) {
@@ -1758,25 +1879,6 @@ const app = createApp({
       return t.mode === mode;
     }
 
-    function setTag(category, value, mode = 'include', label = '', categoryLabel = '') {
-      const key = `${category}:${value}`;
-      const idx = activeTags.value.findIndex((t) => t.category === category && t.value === value);
-      if (idx >= 0) {
-        activeTags.value[idx].mode = mode;
-        if (label) activeTags.value[idx].label = label;
-        if (categoryLabel) activeTags.value[idx].categoryLabel = categoryLabel;
-      } else {
-        activeTags.value.push({
-          key,
-          category,
-          value,
-          mode,
-          label: label || value,
-          categoryLabel: categoryLabel || category,
-        });
-      }
-    }
-
     function toggleTag(category, value, targetMode = 'include', label = '', categoryLabel = '') {
       const key = `${category}:${value}`;
       const idx = activeTags.value.findIndex((t) => t.category === category && t.value === value);
@@ -1808,10 +1910,6 @@ const app = createApp({
       }
     }
 
-    function activeTagCountFor(category) {
-      return activeTags.value.filter((t) => t.category === category).length;
-    }
-
     function removeChip(chip) {
       if (chip.type === 'search') {
         filters.value.searchQuery = '';
@@ -1832,12 +1930,6 @@ const app = createApp({
       const label = `${code} ${title}`.trim();
       toggleTag('threat', code, 'include', label, 'Gefährdung');
       scrollSelectedIntoView();
-    }
-
-    function toggleDiffFilter(status, targetMode = 'include') {
-      const labelMap = { all_diffs: 'Alle Änderungen', added: 'Neu', modified: 'Geändert', deleted: 'Gelöscht' };
-      const label = labelMap[status] || status;
-      toggleTag('diff', status, targetMode, label, 'Status');
     }
 
     function resetFilters() {
@@ -2214,14 +2306,6 @@ const app = createApp({
       return definition('securityLevels', lvl) || (lvl === 'normal-SdT' ? 'Standard-Sicherheitsstufe' : (lvl === 'erhöht' ? 'Erhöhte Sicherheitsstufe' : (lvl || '')));
     }
 
-    function secLevelDefinition(lvl) {
-      return secLevelDisplayLabel(lvl);
-    }
-
-    function secLevelDescription() {
-      return '';
-    }
-
     function onBreadcrumbClick(level, target, extra) {
       listViewMode.value = 'tree';
       scheduleSaveCollapse();
@@ -2255,6 +2339,13 @@ const app = createApp({
       expandedKeys.value = new Set(expandedKeys.value);
       scheduleSaveCollapse();
       scrollSubgroupIntoView(subgroupId);
+      resetDetailScroll();
+    }
+
+    // Pfadleiste "Katalog": Auswahl aufheben, rechts erscheint die Übersicht über den Katalog
+    function showCatalogOverview() {
+      detailScope.value = null;
+      selectedControlId.value = '';
       resetDetailScroll();
     }
 
@@ -2332,14 +2423,14 @@ const app = createApp({
     function scrollPracticeIntoView(practiceId) {
       nextTick(() => {
         const el = listScroll.value?.querySelector(`[data-practice-id="${CSS.escape(practiceId)}"]`);
-        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
     }
 
     function scrollSubgroupIntoView(subgroupId) {
       nextTick(() => {
         const el = listScroll.value?.querySelector(`[data-sub-id="${CSS.escape(subgroupId)}"]`);
-        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
     }
 
@@ -2623,7 +2714,6 @@ const app = createApp({
       listMenuId,
       listNotice,
       listCounts,
-      listEntryCount,
       selectedStarState,
       selectedStarTitle,
       selectedNoteState,
@@ -2650,7 +2740,6 @@ const app = createApp({
       selectedControlId,
       selectedControl,
       ancestorControls,
-      exampleControlsWithThreats,
       baseControlForDiff,
       statementDiffTokens,
       guidanceDiffTokens,
@@ -2704,7 +2793,6 @@ const app = createApp({
       // Filters & Tags
       filters,
       activeTags,
-      practiceOptions,
       availableSecLevels,
       practiceCounts,
       modalVerbCounts,
@@ -2723,7 +2811,6 @@ const app = createApp({
       hasSecurityTargets,
       centralSecurityTargets,
       securityTargetLevelLabel,
-      securityTargetChipLabel,
       definition,
       namespaceEntry,
       shortDefinition,
@@ -2738,7 +2825,6 @@ const app = createApp({
       tagCounts,
       tagRailSearch,
       displayedTagOptions,
-      activeTagFilterCount,
       tagDefinition,
       railCollapsed,
       filteredControlIds,
@@ -2748,11 +2834,9 @@ const app = createApp({
       // Tag Helpers
       getTagMode,
       isTagActive,
-      setTag,
       toggleTag,
       removeTag,
       activeTagCountFor,
-      countTagsForCategory,
       removeChip,
 
       // Actions
@@ -2765,6 +2849,10 @@ const app = createApp({
       setFontScale,
       chooseActiveCatalog,
       catalogLabel,
+      catalogMeta,
+      activeRowId,
+      showCatalogOverview,
+      hiddenSelectionLabel,
       formatChangeValue,
       chooseComparisonCatalog,
       startupError,
@@ -2793,7 +2881,6 @@ const app = createApp({
       manualUrl: `${MANUAL_PATH}${APP_VERSION}.pdf`,
       toggleControlExpand,
       filterByThreat,
-      toggleDiffFilter,
       stepSelection,
       resetFilters,
       toggleGroup,
@@ -2815,8 +2902,6 @@ const app = createApp({
       listViewMode,
       flatFilteredControls,
       secLevelDisplayLabel,
-      secLevelDefinition,
-      secLevelDescription,
       onBreadcrumbClick,
       verbKey,
       diffLabel,
