@@ -38,4 +38,9 @@ Fehlermeldungen und Vorschläge sind als Issue willkommen, Pull Requests werden 
 ## Lizenz
 
 © 2026 Frank Winter – [MIT-Lizenz](LICENSE).
-Die Schrift Open Sans steht unter der SIL Open Font License 1.1, Vue.js unter der MIT-Lizenz.
+
+Verwendete Komponenten:
+
+- **Vue.js** – MIT-Lizenz ([LICENSE-vue.txt](src/vendor/LICENSE-vue.txt))
+- **Schrift Open Sans** – SIL Open Font License 1.1 ([OFL.txt](src/css/fonts/OFL.txt))
+- **Symbole** – teilweise nach [Lucide](https://lucide.dev) (ISC-Lizenz) und [Feather Icons](https://feathericons.com) (MIT-Lizenz) ([LICENSE-lucide.txt](src/vendor/LICENSE-lucide.txt))

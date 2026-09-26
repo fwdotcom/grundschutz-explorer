@@ -17,10 +17,30 @@ Die Inhalte der Stand-der-Technik-Bibliothek stehen unter der Lizenz **Creative 
 
 ## Verwendete Komponenten
 
-| Komponente | Rechteinhaber | Lizenz | Quelle |
-| :--- | :--- | :--- | :--- |
-| **Vue.js** | © Yuxi (Evan) You und Vue-Mitwirkende | MIT-Lizenz | `https://github.com/vuejs/core` |
-| **Schrift Open Sans** | © The Open Sans Project Authors | SIL Open Font License 1.1 | `https://github.com/googlefonts/opensans` |
+### Vue.js
+
+JavaScript-Framework, auf dem die Oberfläche des Explorers aufbaut. Es wird mit der Anwendung ausgeliefert und nicht von einem fremden Server geladen.
+
+| Rechteinhaber | Lizenz | Quelle |
+| :--- | :--- | :--- |
+| © Yuxi (Evan) You und Vue-Mitwirkende | MIT-Lizenz | `https://github.com/vuejs/core` |
+
+### Schrift Open Sans
+
+Schriftart der Oberfläche. Sie wird mit der Anwendung ausgeliefert und nicht von einem Schriftdienst geladen.
+
+| Rechteinhaber | Lizenz | Quelle |
+| :--- | :--- | :--- |
+| © The Open Sans Project Authors | SIL Open Font License 1.1 | `https://github.com/googlefonts/opensans` |
+
+### Symbole
+
+Die Symbole der Oberfläche sind direkt in die Anwendung eingebettet. Ein Teil davon entspricht Symbolen aus Lucide bzw. dem Vorgängerprojekt Feather Icons.
+
+| Rechteinhaber | Lizenz | Quelle |
+| :--- | :--- | :--- |
+| © Lucide Icons and Contributors | ISC-Lizenz | `https://github.com/lucide-icons/lucide` |
+| © Cole Bemis (Feather Icons) | MIT-Lizenz | `https://github.com/feathericons/feather` |
 
 ## Der Grundschutz++ Explorer
 

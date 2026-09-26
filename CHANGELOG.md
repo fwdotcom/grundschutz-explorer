@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unreleased]
+
+### Geändert
+
+- Sobald Listen bestehen, ist immer genau eine aktiv. Die aktive Liste lässt sich nicht mehr abwählen, nur durch Wahl einer anderen wechseln; wird sie gelöscht oder mit ✕ ausgeschlossen, wird eine andere Liste aktiv. Bisher blieb nach dem Abwählen der Merkliste deren Stern gelb, obwohl keine Liste aktiv war.
+- Lizenz-Dialog, README und Handbuch nennen die Herkunft der Symbole (teilweise nach Lucide und Feather Icons); der Lizenztext liegt unter `vendor/LICENSE-lucide.txt`. Auch der Lizenztext von Vue.js wird jetzt mitgeliefert (`vendor/LICENSE-vue.txt`) und ist im Lizenz-Dialog und im README verlinkt.
+
 ## [1.1.0] – 2026-09-26
 
 ### Neu

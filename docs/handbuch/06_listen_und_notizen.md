@@ -14,7 +14,7 @@ Listenbereich in der Filterleiste mit aktiver Liste, Trefferzahlen und Aktionen
 Der Abschnitt **Listen** steht ganz oben in der Filterleiste:
 
 - **Neue Liste anlegen:** Klicken Sie auf **„+ Neue Liste“**, tragen Sie einen aussagekräftigen Namen ein (z. B. *Audit 2026* oder *Entwicklungsteam*) und bestätigen Sie mit der Eingabetaste.
-- **Aktive Liste festlegen:** Klicken Sie auf den runden Auswahlknopf oder auf den Listennamen. Ein **grün leuchtender Punkt** signalisiert, dass diese Liste aktiv ist. Stern-Klicks und geschriebene Notizen beziehen sich stets auf die aktive Liste (es kann immer nur eine Liste aktiv sein).
+- **Aktive Liste festlegen:** Klicken Sie auf den runden Auswahlknopf oder auf den Listennamen. Ein **grün leuchtender Punkt** signalisiert, dass diese Liste aktiv ist. Stern-Klicks und geschriebene Notizen beziehen sich stets auf die aktive Liste. Sobald Listen bestehen, ist immer genau eine davon aktiv; Sie wechseln sie, indem Sie eine andere Liste wählen.
 - **Listenmenü (Drei Punkte):** Über das Symbol **···** rechts neben dem Listennamen können Sie eine Liste umbenennen, einzeln als JSON exportieren oder löschen.
 
 ## Listen als Filter nutzen
@@ -24,7 +24,7 @@ Listen verhalten sich in der Filterleiste wie jede andere Facette:
 - **✓ (Nur diese Liste):** Schränkt die Trefferliste auf die Anforderungen dieser Liste ein.
 - **✕ (Liste ausschließen):** Blendet alle Anforderungen aus, die in dieser Liste stehen.
 - **Kombinationen:** Mehrere Listen mit **✓** zeigen alle Anforderungen, die in mindestens einer dieser Listen vorkommen (ODER-Verknüpfung).
-- **Ausschluss der aktiven Liste:** Schließen Sie eine derzeit aktive Liste mit **✕** aus, wird sie automatisch deaktiviert.
+- **Ausschluss der aktiven Liste:** Schließen Sie die aktive Liste mit **✕** aus, wird automatisch eine andere, nicht ausgeschlossene Liste aktiv. Sind alle Listen ausgeschlossen, bleibt die bisherige aktiv.
 
 ## Anforderungen in Listen aufnehmen (Stern-Symbol)
 
@@ -35,7 +35,7 @@ Im Kopf der Detailansicht jeder Anforderung befindet sich rechts neben dem Titel
 - **Leerer Stern (Umriss):** Die Anforderung ist in noch keiner Liste hinterlegt. Ein Klick nimmt sie in die aktive Liste auf.
 
 > [!TIP]
-> Ist keine Liste als aktiv ausgewählt und Sie klicken auf einen Stern, legt der Explorer automatisch die Liste **Merkliste** an, aktiviert diese und fügt die Anforderung dort ein.
+> Gibt es noch keine Liste und Sie klicken auf einen Stern oder schreiben eine Notiz, legt der Explorer automatisch die Liste **Merkliste** an, aktiviert diese und fügt die Anforderung dort ein.
 
 Auch in der mittleren Trefferliste signalisiert das Stern-Symbol auf einen Blick, ob eine Anforderung zu einer Liste gehört.
 

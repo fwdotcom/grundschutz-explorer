@@ -259,13 +259,13 @@
                         role="radio"
                         :aria-checked="activeListId === list.id"
                         :aria-label="'Aktive Liste: ' + list.name"
-                        :title="activeListId === list.id ? 'Aktive Liste – Klicken zum Deaktivieren' : 'Als aktive Liste wählen (Stern und Notizen schreiben hierhin)'"
+                        :title="activeListId === list.id ? 'Aktive Liste für Favoriten und Notizen' : 'Als aktive Liste wählen'"
                         @click.stop="setActiveList(list.id)"
                       ><span class="list-radio-dot"></span></button>
                       <div
                         class="rail-row-main"
                         @click="setActiveList(list.id)"
-                        :title="activeListId === list.id ? 'Aktive Liste – Klicken zum Deaktivieren' : 'Als aktive Liste wählen (Stern und Notizen schreiben hierhin)'"
+                        :title="activeListId === list.id ? 'Aktive Liste für Favoriten und Notizen' : 'Als aktive Liste wählen'"
                       >
                         <span class="rail-row-label">{{ list.name }}</span>
                         <span class="rail-row-count">{{ listCounts[list.id] || 0 }}</span>
@@ -2098,11 +2098,16 @@ SOFTWARE.</pre>
             </li>
             <li>
               <strong>Vue.js</strong> – © Yuxi (Evan) You und Vue-Mitwirkende,
-              <a href="https://github.com/vuejs/core/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT-Lizenz</a>.
+              <a href="vendor/LICENSE-vue.txt" target="_blank" rel="noopener">MIT-Lizenz</a>.
             </li>
             <li>
               <strong>Schrift Open Sans</strong> – © The Open Sans Project Authors,
               <a href="css/fonts/OFL.txt" target="_blank" rel="noopener">SIL Open Font License 1.1</a>.
+            </li>
+            <li>
+              <strong>Symbole</strong> – teilweise nach Lucide (© Lucide Icons and Contributors, ISC-Lizenz) und
+              Feather Icons (© Cole Bemis, MIT-Lizenz),
+              <a href="vendor/LICENSE-lucide.txt" target="_blank" rel="noopener">Lizenztext</a>.
             </li>
           </ul>
         </div>

@@ -252,11 +252,8 @@ const app = createApp({
       [...lists.value].sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }))
     );
     const activeList = computed(() => lists.value.find((l) => l.id === activeListId.value) || null);
-    const defaultList = computed(
-      () => lists.value.find((l) => l.name.toLocaleLowerCase('de') === DEFAULT_LIST_NAME.toLocaleLowerCase('de')) || null
-    );
-    // Ziel von Stern und Notizfeld: aktive Liste, sonst die Merkliste (id '' = wird beim ersten Schreiben angelegt)
-    const writeList = computed(() => activeList.value || defaultList.value || { id: '', name: DEFAULT_LIST_NAME });
+    // Ziel von Stern und Notizfeld: die aktive Liste; gibt es noch keine Liste, die Merkliste (wird beim ersten Schreiben angelegt)
+    const writeList = computed(() => activeList.value || { id: '', name: DEFAULT_LIST_NAME });
 
     // Anforderung → Einträge (in welchen Listen sie steht)
     const entriesByControl = computed(() => {
@@ -1174,17 +1171,11 @@ const app = createApp({
       }
     );
 
-    // Aktive Liste merken; wird sie ausgeschlossen, ist sie nicht mehr aktiv
+    // Aktive Liste merken; wird sie ausgeschlossen, wird eine andere Liste aktiv
     watch(activeListId, (id) => {
       saveSetting('active_list_id', id).catch(() => {});
     });
-    watch(
-      () => activeTags.value,
-      () => {
-        if (activeListId.value && getTagMode('list', activeListId.value) === 'exclude') activeListId.value = '';
-      },
-      { deep: true }
-    );
+    watch(() => activeTags.value, ensureActiveList, { deep: true });
     // Beim Wechsel der Anforderung ausstehende Notizen sofort speichern und wieder die aktive Liste zeigen
     watch(selectedControlId, () => {
       flushNoteSaves();
@@ -1947,7 +1938,7 @@ const app = createApp({
         listEntries.value = Object.fromEntries(storedEntries.map((e) => [e.key, e]));
         const savedActive = await getSetting('active_list_id', '');
         activeListId.value = storedLists.some((l) => l.id === savedActive) ? savedActive : '';
-        if (!activeListId.value && storedLists.length === 1) activeListId.value = storedLists[0].id;
+        ensureActiveList();
       } catch (err) {
         console.warn('Fehler beim Laden der Listen:', err);
       }
@@ -1975,11 +1966,20 @@ const app = createApp({
       navigator.storage?.persist?.().catch(() => {});
     }
 
+    // Gibt es Listen, ist immer genau eine aktiv, möglichst eine nicht ausgeschlossene.
+    // Sind alle ausgeschlossen, bleibt die bisherige aktiv.
+    function ensureActiveList() {
+      const isExcluded = (id) => getTagMode('list', id) === 'exclude';
+      const current = activeList.value;
+      if (current && !isExcluded(current.id)) return;
+      const next = sortedLists.value.find((l) => !isExcluded(l.id));
+      if (next) activeListId.value = next.id;
+      else if (!current) activeListId.value = sortedLists.value[0]?.id || '';
+    }
+
+    // Die aktive Liste lässt sich nur durch Wahl einer anderen wechseln, nicht abwählen
     function setActiveList(id) {
-      if (activeListId.value === id) {
-        activeListId.value = '';
-        return;
-      }
+      if (activeListId.value === id) return;
       // Eine ausgeschlossene Liste kann nicht zugleich aktiv sein
       if (getTagMode('list', id) === 'exclude') removeTag('list', id);
       activeListId.value = id;
@@ -2063,8 +2063,7 @@ const app = createApp({
       lists.value = lists.value.filter((l) => l.id !== list.id);
       listEntries.value = Object.fromEntries(Object.entries(listEntries.value).filter(([, e]) => e.listId !== list.id));
       removeTag('list', list.id);
-      if (activeListId.value === list.id) activeListId.value = '';
-      if (!activeListId.value && lists.value.length === 1) activeListId.value = lists.value[0].id;
+      ensureActiveList();
     }
 
     // Filter auf eine Liste (✓ / ✕), wie bei den übrigen Facetten
@@ -2104,13 +2103,10 @@ const app = createApp({
       }
     }
 
-    // Liefert die ID der Zielliste; ohne aktive Liste wird die Merkliste aktiviert bzw. angelegt
+    // Liefert die ID der Zielliste; gibt es noch keine Liste, wird die Merkliste angelegt
     function ensureWriteList() {
+      ensureActiveList();
       if (activeListId.value) return activeListId.value;
-      if (defaultList.value) {
-        activeListId.value = defaultList.value.id;
-        return activeListId.value;
-      }
       const now = new Date().toISOString();
       const list = { id: createListId(), name: DEFAULT_LIST_NAME, createdAt: now, updatedAt: now };
       lists.value = [...lists.value, list];
@@ -2283,7 +2279,7 @@ const app = createApp({
       }
       lists.value = nextLists;
       listEntries.value = nextEntries;
-      if (!activeListId.value && nextLists.length === 1) activeListId.value = nextLists[0].id;
+      ensureActiveList();
       railCollapsed.value.lists = false;
       requestPersistentStorage();
       showListNotice(

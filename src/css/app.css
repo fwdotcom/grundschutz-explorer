@@ -1482,5 +1482,10 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
 
 /* Button "Offiziellen BSI Grundschutz++ Anwenderkatalog laden" mit Quelle darunter */
 .official-btn { height: auto; min-height: 42px; padding-top: 8px; padding-bottom: 8px; white-space: normal; }
+/* Primärer Weg: in Akzentfarbe getönt, aber schwächer als der gefüllte Button "Laden" */
+.official-btn { background: var(--accent-soft); border-color: var(--accent-border); }
+.official-btn:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
+.official-btn > .icon, .official-btn-text > span { color: var(--accent-text); }
+.official-btn-text small { color: var(--text-2); }
 .official-btn-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; text-align: left; }
 .official-btn-text small { font-size: calc(11px * var(--font-scale)); font-weight: 400; opacity: 0.85; word-break: break-all; line-height: 1.35; }
