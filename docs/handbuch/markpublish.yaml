@@ -9,7 +9,7 @@ document:
   subtitle: "Benutzerhandbuch"
   summary: "Der Grundschutz++ Explorer macht den Anwenderkatalog Grundschutz++ des BSI im Browser durchsuchbar: Anforderungen finden, nach Modalverb, Schutzbedarf, Aufwand, Schutzzielen und Gefährdungen filtern, eigene Listen mit Notizen führen, Definitionen nachschlagen und Katalogversionen miteinander vergleichen."
   author: "Frank Winter"
-  version: "1.1.0"
+  version: "1.1.1"
   date: "auto"
   copyright: "© 2026 Frank Winter"
   language: "de"

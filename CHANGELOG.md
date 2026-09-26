@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unreleased]
+## [1.1.1] – 2026-09-26
 
 ### Geändert
 
