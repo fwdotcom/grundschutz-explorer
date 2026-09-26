@@ -2,8 +2,9 @@
 
 Der Grundschutz++ Explorer ist ein Werkzeug zum Lesen, Auswerten und Verwalten des **Anwenderkatalogs Grundschutz++**, den das Bundesamt für Sicherheit in der Informationstechnik (BSI) maschinenlesbar im Format NIST OSCAL veröffentlicht. Der Katalog umfasst rund tausend Anforderungen. Im Explorer finden Sie die für Sie relevanten Anforderungen schnell, erfassen eigene Notizen in flexiblen Listen, schlagen Definitionen nach und vergleichen zwei Katalogstände Wort für Wort miteinander.
 
-Das Projekt wurde von Frank Winter, selbst Informationssicherheitsbeauftragter
-einer deutschen Landesbehörde, nebenberuflich als freies Open-Source-Projekt (MIT-Lizenz) konzipiert und entwickelt. Ziel ist es, Sicherheitsverantwortlichen, Auditoren und IT-Teams ein schnelles, datensparsames und intuitives Werkzeug für den Arbeitsalltag an die Hand zu geben. Der Autor und das Projekt stehen in keiner organisatorischen oder geschäftlichen Verbindung zum BSI. Sämtliche amtlichen Katalogdaten und Begriffsdefinitionen werden neutral, originalgetreu und ungefiltert visualisiert, sodass Sie stets auf verlässlicher und unverfälschter Grundlage arbeiten.
+Der Autor ist selbst Informationssicherheitsbeauftragter einer deutschen Landesbehörde und hat das Projekt nebenberuflich als freies Open-Source-Vorhaben unter MIT-Lizenz konzipiert und entwickelt. Ziel ist es, Sicherheitsverantwortlichen, Auditoren und IT-Teams ein schnelles, datensparsames und intuitives Werkzeug für den Arbeitsalltag an die Hand zu geben.
+
+> Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stammen aus der öffentlich zugänglichen Stand-der-Technik-Bibliothek des BSI und stehen unter der Lizenz CC BY-SA 4.0. Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
 
 ## Wofür der Explorer gedacht ist
 

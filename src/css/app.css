@@ -756,14 +756,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .practice-head {
   position: sticky; top: 0; z-index: 3;
   width: 100%; display: flex; align-items: center; gap: 10px;
-  height: 38px; padding: 0 16px; text-align: left;
+  height: 38px; padding: 0 16px; text-align: left; cursor: pointer;
   background: var(--surface-2); border-bottom: 1px solid var(--border);
   font-size: calc(13px * var(--font-scale)); font-weight: 600;
 }
 .practice-head:hover { background: var(--surface-hover); }
 /* Beim Hineinscrollen (Auswahl, Pfeiltasten) nicht unter der mitlaufenden Praktik-Überschrift verschwinden */
 .list-scroll .subgroup-head, .list-scroll .ctrl-row { scroll-margin-top: 38px; }
-/* Fokus der Listbox (Tab): Rahmen innen, sonst schnitte der Scrollbereich ihn ab */
+/* Fokus der Liste (Tab): Rahmen innen, sonst schnitte der Scrollbereich ihn ab */
 .list-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 0; }
 .practice-head.active { background: var(--accent-soft); }
 .practice-head .code { font-family: var(--mono); font-size: calc(12px * var(--font-scale)); color: var(--accent-text); font-weight: 600; }
@@ -775,7 +775,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .subgroup-head {
   width: 100%; display: flex; align-items: center; gap: 8px;
-  height: 34px; padding: 0 16px 0 22px; text-align: left;
+  height: 34px; padding: 0 16px 0 22px; text-align: left; cursor: pointer;
   font-size: calc(12.5px * var(--font-scale)); font-weight: 600; color: var(--text-2);
   border-bottom: 1px solid var(--border);
 }
@@ -1238,12 +1238,16 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
 .app-footer .footer-left {
   display: flex;
   align-items: center;
+  gap: 8px;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .app-footer .footer-version { color: var(--text-2); font-variant-numeric: tabular-nums; }
-.app-footer .footer-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-/* Würde die Fußzeile umbrechen, entfallen App-Name und Version (siehe updateFooterCompact) */
-.app-footer .footer-links.is-compact .footer-meta { display: none; }
+/* Reicht der Platz nicht, entfallen links nacheinander App-Name, Version und Projektlink (siehe updateFooterCompact) */
+.app-footer .footer-left[data-hide="1"] .footer-hide-1,
+.app-footer .footer-left[data-hide="2"] :is(.footer-hide-1, .footer-hide-2),
+.app-footer .footer-left[data-hide="3"] :is(.footer-hide-1, .footer-hide-2, .footer-hide-3) { display: none; }
 .app-footer .footer-brand {
   font-weight: 600;
   color: var(--text-2);
@@ -1252,6 +1256,7 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -1308,9 +1313,8 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   .kv, .kv:nth-child(-n + 2) { border-top: 1px solid var(--border); border-right: 0; }
   .kv:first-child { border-top: 0; }
   .ctrl-meta .meta-num { display: none; }
-  .app-footer { padding: 4px 10px; font-size: calc(11px * var(--font-scale)); }
+  .app-footer { padding: 4px 10px; }
   .app-footer .footer-right { gap: 8px; }
-  .app-footer .footer-link { font-size: calc(11px * var(--font-scale)); }
 }
 
 /* Schriftgröße (Header) */
@@ -1380,15 +1384,16 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   --accent-border: #1a3fa0;
   --accent-text: #1a3fa0;
 
-  --muss: #9b1c12;
-  --muss-border: #9b1c12;
-  --sollte: #7a4304;
-  --sollte-border: #7a4304;
-  --kann: #075766;
-  --kann-border: #075766;
-  --added: #05603a;
-  --added-border: #05603a;
-  --threat: #8a3505;
+  /* Auch auf der Auswahlfläche (--accent-soft) mindestens 7:1 */
+  --muss: #901a11;
+  --muss-border: #901a11;
+  --sollte: #6f3d04;
+  --sollte-border: #6f3d04;
+  --kann: #07515f;
+  --kann-border: #07515f;
+  --added: #045534;
+  --added-border: #045534;
+  --threat: #803105;
 }
 .dark.hc {
   --star: #ffd27a;

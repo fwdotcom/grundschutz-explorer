@@ -331,7 +331,7 @@ async function main() {
     console.log('\n--- 6. Mehrstufige Unteranforderungen im Baum aufnehmen ---');
     await evalJs(`(() => {
       // GC aufklappen falls noch zu
-      const gcHead = document.querySelector('button.practice-head[data-practice-id="GC"]');
+      const gcHead = document.querySelector('.practice-head[data-practice-id="GC"]');
       if (gcHead && !gcHead.closest('.practice-group')?.classList.contains('open')) {
         gcHead.querySelector('.head-toggle')?.click();
       }
@@ -339,7 +339,7 @@ async function main() {
     await wait(300);
     await evalJs(`(() => {
       // GC.9 aufklappen
-      const gc9Head = document.querySelector('button.subgroup-head[data-sub-id="GC.9"]');
+      const gc9Head = document.querySelector('.subgroup-head[data-sub-id="GC.9"]');
       if (gc9Head && !gc9Head.closest('.subgroup')?.classList.contains('open')) {
         gc9Head.querySelector('.head-toggle')?.click();
       }
@@ -381,14 +381,14 @@ async function main() {
     // 7. DETAILANSICHT: REITER ÜBERSICHT (DEV.3.1 mit kurzem Text)
     console.log('\n--- 7. Detailansicht: Reiter Übersicht aufnehmen (DEV.3.1) ---');
     await evalJs(`(() => {
-      const devHead = document.querySelector('button.practice-head[data-practice-id="DEV"]');
+      const devHead = document.querySelector('.practice-head[data-practice-id="DEV"]');
       if (devHead && !devHead.closest('.practice-group')?.classList.contains('open')) {
         devHead.querySelector('.head-toggle')?.click();
       }
     })()`);
     await wait(300);
     await evalJs(`(() => {
-      const dev3Head = document.querySelector('button.subgroup-head[data-sub-id="DEV.3"]');
+      const dev3Head = document.querySelector('.subgroup-head[data-sub-id="DEV.3"]');
       if (dev3Head && !dev3Head.closest('.subgroup')?.classList.contains('open')) {
         dev3Head.querySelector('.head-toggle')?.click();
       }
@@ -544,7 +544,7 @@ async function main() {
     // 16. DETAILANSICHT: REITER ÄNDERUNGEN (DEV.4.3)
     console.log('\n--- 16. Detailansicht: Reiter Änderungen aufnehmen ---');
     await evalJs(`(() => {
-      const dev4Head = document.querySelector('button.subgroup-head[data-sub-id="DEV.4"]');
+      const dev4Head = document.querySelector('.subgroup-head[data-sub-id="DEV.4"]');
       if (dev4Head && !dev4Head.closest('.subgroup')?.classList.contains('open')) {
         dev4Head.querySelector('.head-toggle')?.click();
       }

@@ -17,9 +17,8 @@ Bitte nehmen Sie das nicht persönlich, so bleibt das Projekt überschaubar.
 ### Was willkommen ist
 
 - **Fehlermeldungen:** Eröffnen Sie ein Issue mit den Schritten zum Nachvollziehen,
-  Ihrem Browser und dessen Version sowie der App-Version aus der Fußzeile.
-- **Vorschläge für Funktionen:** Eröffnen Sie ein Issue und beschreiben Sie Ihren Anwendungsfall.
-  Ich lese jeden Vorschlag, kann aber nicht versprechen, ihn umzusetzen.
+  Ihrem Browser und dessen Version sowie der App-Version aus der Fußzeile am Desktop.
+- **Vorschläge für Funktionen:** Eröffnen Sie ein Issue und beschreiben Sie Ihren Anwendungsfall. Ich lese jeden Vorschlag, kann aber nicht versprechen, ihn umzusetzen.
 - **Fehler in der Dokumentation:** Tippfehler oder unklare Stellen können
   ebenfalls als Issue gemeldet werden.
 

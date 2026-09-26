@@ -18,4 +18,4 @@ Der Grundschutz++ Explorer lässt sich vollständig ohne Maus mit der Tastatur b
 > [!NOTE]
 > Die Pfeiltasten **↑**, **↓**, **←** und **→** zur Listennavigation sind inaktiv, solange sich der Cursor in einem Eingabefeld (Suche, Notizfeld, Filtereingabe) befindet.
 
-Im **hohen Kontrastmodus** wird das jeweils fokussierte Element mit einem kontraststarken, zweifarbigen Fokusrahmen hervorgehoben (WCAG 2.4.7 Fokus sichtbar). Screenreader erfassen die Anforderungsliste als barrierefreie hierarchische Auswahlliste (`listbox`) mit ARIA-Ebenenansage.
+Im **hohen Kontrastmodus** wird das jeweils fokussierte Element mit einem kontraststarken, zweifarbigen Fokusrahmen hervorgehoben (WCAG 2.4.7 Fokus sichtbar). Screenreader erfassen die Baumansicht als Baumstruktur (`tree`) mit Ansage der Ebene und des Auf- oder Zugeklappt-Zustands, die flache Trefferliste als Auswahlliste (`listbox`).

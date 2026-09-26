@@ -1042,7 +1042,7 @@
             <div
               class="list-scroll"
               ref="listScroll"
-              role="listbox"
+              :role="filteredControlIds.size === 0 ? 'group' : listViewMode === 'flat' ? 'listbox' : 'tree'"
               aria-label="Anforderungen"
               tabindex="0"
               :aria-activedescendant="activeRowId"
@@ -1090,22 +1090,44 @@
               <template v-else>
                 <template v-for="practice in activeCatalog.practices" :key="practice.id">
                 <div v-if="countMatchingControlsInPractice(practice) > 0" role="group" :aria-label="practice.id + ' ' + practice.title">
-                  <button class="practice-head" :data-practice-id="practice.id" :class="{ active: !scopeSubgroup && scopePractice?.id === practice.id }" @click="onPracticeHeadClick(practice.id)">
+                  <div
+                    class="practice-head"
+                    :data-practice-id="practice.id"
+                    :class="{ active: !scopeSubgroup && scopePractice?.id === practice.id }"
+                    role="treeitem"
+                    tabindex="0"
+                    aria-level="1"
+                    :aria-expanded="expandedKeys.has('p_' + practice.id)"
+                    :aria-selected="!scopeSubgroup && scopePractice?.id === practice.id"
+                    @click="onPracticeHeadClick(practice.id)"
+                    @keydown.enter.space.prevent="onPracticeHeadClick(practice.id)"
+                  >
                     <span class="head-toggle" @click.stop="toggleGroup('p_' + practice.id)" :title="expandedKeys.has('p_' + practice.id) ? 'Einklappen' : 'Ausklappen'"><svg class="icon-sm chev" :class="{ open: expandedKeys.has('p_' + practice.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
                     <span class="code">{{ practice.id }}</span>
                     <span class="title">{{ practice.title }}</span>
                     <span class="count">{{ countMatchingControlsInPractice(practice) }}</span>
-                  </button>
+                  </div>
 
                   <template v-if="expandedKeys.has('p_' + practice.id)">
                     <template v-for="sub in practice.subgroups" :key="sub.id">
                       <div v-if="countMatchingControlsInSubgroup(sub) > 0" role="group" :aria-label="sub.id + ' ' + sub.title">
-                        <button class="subgroup-head" :data-sub-id="sub.id" :class="{ active: filters.subgroupFilter === sub.id || scopeSubgroup?.id === sub.id }" @click="onSubgroupHeadClick(sub.id, practice.id)">
+                        <div
+                          class="subgroup-head"
+                          :data-sub-id="sub.id"
+                          :class="{ active: filters.subgroupFilter === sub.id || scopeSubgroup?.id === sub.id }"
+                          role="treeitem"
+                          tabindex="0"
+                          aria-level="2"
+                          :aria-expanded="expandedKeys.has('sub_' + sub.id)"
+                          :aria-selected="filters.subgroupFilter === sub.id || scopeSubgroup?.id === sub.id"
+                          @click="onSubgroupHeadClick(sub.id, practice.id)"
+                          @keydown.enter.space.prevent="onSubgroupHeadClick(sub.id, practice.id)"
+                        >
                           <span class="head-toggle" @click.stop="toggleGroup('sub_' + sub.id)" :title="expandedKeys.has('sub_' + sub.id) ? 'Einklappen' : 'Ausklappen'"><svg class="icon-xs chev" :class="{ open: expandedKeys.has('sub_' + sub.id) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></span>
                           <span class="code">{{ sub.id }}</span>
                           <span class="title">{{ sub.title }}</span>
                           <span class="count">{{ countMatchingControlsInSubgroup(sub) }}</span>
-                        </button>
+                        </div>
 
                         <template v-if="expandedKeys.has('sub_' + sub.id)">
                           <div
@@ -1115,9 +1137,10 @@
                             :class="{ sub: row.depth > 0, selected: !scopePractice && selectedControlId === row.ctrl.id, dimmed: !filteredControlIds.has(row.ctrl.id), deleted: row.ctrl.diff?.status === 'deleted' }"
                             :style="row.depth > 0 ? { '--depth': row.depth } : null"
                             :id="'row-' + row.ctrl.id"
-                            role="option"
+                            role="treeitem"
                             :aria-selected="!scopePractice && selectedControlId === row.ctrl.id"
-                            :aria-level="row.depth + 1"
+                            :aria-level="row.depth + 3"
+                            :aria-expanded="row.ctrl.subcontrols?.length ? expandedKeys.has('ctrl_' + row.ctrl.id) : null"
                             :data-ctrl-id="row.ctrl.id"
                             @click="selectControl(row.ctrl)"
                           >
@@ -1768,20 +1791,18 @@
 
     <!-- ============ Footer ============ -->
     <footer class="app-footer" :inert="isRailOpen || null">
-      <div class="footer-left">
-        <span class="footer-links" ref="footerLinks">
-          <span class="footer-brand footer-meta">Grundschutz++ Explorer</span>
-          <span class="footer-sep footer-meta">|</span>
-          <span class="footer-version footer-meta">Version {{ appVersion }}</span>
-          <span class="footer-sep footer-meta">|</span>
-          <a :href="PROJECT_URL" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub-Projektseite</a>
-          <span class="footer-sep">|</span>
-          <a :href="manualUrl" target="_blank" rel="noopener" class="footer-link">Handbuch</a>
-          <span class="footer-sep">|</span>
-          <button class="footer-link" @click="isLicenseModalOpen = true">Lizenz</button>
-        </span>
+      <div class="footer-left" ref="footerLeft">
+        <span class="footer-brand footer-hide-1">Grundschutz++ Explorer</span>
+        <span class="footer-sep footer-hide-1">|</span>
+        <span class="footer-version footer-hide-2">Version {{ appVersion }}</span>
+        <span class="footer-sep footer-hide-2">|</span>
+        <a :href="PROJECT_URL" target="_blank" rel="noopener noreferrer" class="footer-link footer-hide-3">GitHub-Projektseite</a>
       </div>
       <div class="footer-right">
+        <a :href="manualUrl" target="_blank" rel="noopener" class="footer-link">Handbuch</a>
+        <span class="footer-sep">|</span>
+        <button class="footer-link" @click="isLicenseModalOpen = true">Lizenz</button>
+        <span class="footer-sep">|</span>
         <button class="footer-link" @click="isImpressumModalOpen = true">Impressum</button>
         <span class="footer-sep">|</span>
         <button class="footer-link" @click="isDatenschutzModalOpen = true">Datenschutz</button>
@@ -2006,7 +2027,7 @@
             Informationstechnik (BSI).
           </p>
           <p>
-            Die angezeigten Katalogdaten (Grundschutz++-Anwenderkatalog) und Begriffsdefinitionen stammen aus der öffentlich zugänglichen
+            Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stammen aus der öffentlich zugänglichen
             <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
             des BSI und stehen unter der Lizenz
             <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>.
@@ -2045,7 +2066,7 @@
       <div class="modal-body license-body">
         <p class="license-note">Rechtlich maßgeblich ist der folgende englische Originaltext der Lizenz.</p>
         <!-- Wörtlich aus der Datei LICENSE im Projekt; ein Test prüft die Übereinstimmung -->
-        <pre class="license-text" id="license-text">MIT License
+        <pre class="license-text" id="license-text" tabindex="0" role="region" aria-label="Lizenztext (englisches Original)">MIT License
 
 Copyright (c) 2026 Frank Winter
 

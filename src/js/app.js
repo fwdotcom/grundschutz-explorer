@@ -167,7 +167,7 @@ const app = createApp({
     const splitEl = ref(null);
     const listScroll = ref(null);
     const detailBody = ref(null);
-    const footerLinks = ref(null);
+    const footerLeft = ref(null);
     let footerObserver = null;
 
     // Detail Tab State
@@ -837,7 +837,7 @@ const app = createApp({
       return scopePractice.value.subgroups.find((sg) => sg.id === detailScope.value.id) || null;
     });
 
-    // Gewählte Zeile der Liste für Screenreader (aria-activedescendant der Listbox)
+    // Gewählte Zeile der Liste für Screenreader (aria-activedescendant des Baums bzw. der Listbox)
     const activeRowId = computed(() =>
       selectedControl.value && !detailScope.value && !selectionFilteredOut.value ? 'row-' + selectedControl.value.id : null
     );
@@ -1258,9 +1258,9 @@ const app = createApp({
       fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
       applyFontScale(fontScale.value);
 
-      if (footerLinks.value && window.ResizeObserver) {
+      if (footerLeft.value && window.ResizeObserver) {
         footerObserver = new ResizeObserver(updateFooterCompact);
-        footerObserver.observe(footerLinks.value.closest('.app-footer'));
+        footerObserver.observe(footerLeft.value.closest('.app-footer'));
       }
       updateFooterCompact();
       // Nach dem Laden der Webschrift ändern sich die Textbreiten
@@ -1333,16 +1333,14 @@ const app = createApp({
       footerObserver?.disconnect();
     });
 
-    // Fußzeile: App-Name und Version ausblenden, sobald die Links sonst umbrechen würden.
-    // Gemessen wird immer mit allen Einträgen, damit der Zustand nicht hin- und herspringt.
+    // Fußzeile: Reicht der Platz links nicht, werden nacheinander App-Name, Version und Projektlink ausgeblendet.
+    // Gemessen wird jeweils ab voller Anzeige, damit wieder eingeblendet wird, sobald Platz frei wird.
     function updateFooterCompact() {
-      const el = footerLinks.value;
+      const el = footerLeft.value;
       if (!el) return;
-      el.classList.remove('is-compact');
-      const items = el.children;
-      const first = items[0].getBoundingClientRect();
-      const last = items[items.length - 1].getBoundingClientRect();
-      el.classList.toggle('is-compact', last.top > first.top + first.height / 2);
+      let level = 0;
+      el.dataset.hide = level;
+      while (level < 3 && el.scrollWidth > el.clientWidth) el.dataset.hide = ++level;
     }
 
     // Zeigt einen modalen Bestätigungsdialog und liefert true (bestätigt) oder false (abgebrochen, Escape, Klick daneben);
@@ -2698,7 +2696,7 @@ const app = createApp({
     }
 
     return {
-      footerLinks,
+      footerLeft,
       lists,
       sortedLists,
       activeListId,
