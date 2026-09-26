@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+  SPDX-FileCopyrightText: 2026 Frank Winter
+  SPDX-License-Identifier: MIT
+
+  GitHub Pages liefert diese Seite für jede nicht vorhandene Adresse aus. Links auf ein älteres
+  Handbuch (…/grundschutz-explorer-handbuch-v<VERSION>.pdf) führen zur Weiterleitung unter
+  /docs/manual/ und damit auf das aktuelle Handbuch.
+-->
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/webp" href="/media/gsexplorer_logo.webp" />
+  <title>Seite nicht gefunden – Grundschutz++ Explorer</title>
+  <script>
+    if (/^\/docs\/manual\/grundschutz-explorer-handbuch-v[^/]+\.pdf$/.test(location.pathname)) {
+      location.replace('/docs/manual/');
+    }
+  </script>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 4rem auto; padding: 0 1rem; line-height: 1.5; }
+    .logo { display: block; width: 96px; height: auto; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <a href="/"><img class="logo" src="/media/gsexplorer_logo.webp" alt="Grundschutz++ Explorer – zur Startseite" /></a>
+  <h1>Seite nicht gefunden</h1>
+  <p>Diese Adresse gibt es nicht (mehr).</p>
+  <p><a href="/">Zum Grundschutz++ Explorer</a> · <a href="/docs/manual/">Zum aktuellen Benutzerhandbuch</a></p>
+</body>
+</html>

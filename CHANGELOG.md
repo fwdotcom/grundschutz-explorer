@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Neu
+
+- Feste Adresse für das Benutzerhandbuch: `https://www.grundschutz-explorer.de/docs/manual/` leitet immer auf die aktuelle Fassung weiter. Links auf ältere Handbuch-Versionen (`…-handbuch-v<Version>.pdf`) führen ebenfalls dorthin, statt ins Leere zu laufen; andere nicht vorhandene Adressen zeigen eine eigene Fehlerseite mit Link zur App.
+
 ## [1.1.1] – 2026-09-26
 
 ### Geändert

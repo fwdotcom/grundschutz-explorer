@@ -14,7 +14,7 @@ Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne 
 
 **→ [www.grundschutz-explorer.de](https://www.grundschutz-explorer.de)**
 
-**→ [Benutzerhandbuch (PDF)](https://www.grundschutz-explorer.de/docs/manual/grundschutz-explorer-handbuch-v1.1.1.pdf)**, auch in der App über die Fußzeile erreichbar.
+**→ [Benutzerhandbuch (PDF)](https://www.grundschutz-explorer.de/docs/manual/)**, auch in der App über die Fußzeile erreichbar.
 
 ## Funktionen
 

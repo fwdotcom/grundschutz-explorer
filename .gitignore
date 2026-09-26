@@ -1,2 +1,4 @@
 *.pdf
 testdaten/
+# Von scripts/build_manual.py erzeugte Weiterleitung auf das aktuelle Handbuch
+src/docs/manual/index.html
