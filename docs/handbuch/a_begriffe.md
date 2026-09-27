@@ -1,6 +1,6 @@
 # Begriffe
 
-Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt der Explorer direkt an der jeweiligen Stelle per Tooltip oder Info-Button.
+Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt Grundschutz++ Explorer direkt an der jeweiligen Stelle per Tooltip oder Info-Button.
 
 ## Aufbau des Katalogs
 
@@ -47,17 +47,3 @@ Elementare Gefährdung
 
 Tag
 : Schlagwort aus dem kontrollierten BSI-Vokabular zur thematischen Querschnittsklassifikation (z. B. „Zero Trust“, „Lieferketten“ oder „Kryptografie“).
-
-## Arbeitsfunktionen des Explorers
-
-Eigene Liste
-: Eine benutzerdefinierte Sammlung von Anforderungen (z. B. für eine konkrete Projektgruppe, ein Audit oder Maßnahmenpakete).
-
-Notiz
-: Ein individueller Textkommentar, der einer Anforderung innerhalb einer bestimmten Liste zugeordnet und lokal gespeichert wird.
-
-Wortvergleich (Word-Diff)
-: Algorithmus (Longest Common Subsequence), der Texte zweier Katalogversionen vergleicht und entfernte Wörter durchgestrichen sowie hinzugefügte Wörter farbig markiert.
-
-OSCAL
-: Open Security Controls Assessment Language (NIST SP 800-53 / NIST OSCAL 1.1.3), das internationale XML/JSON/YAML-Standardformat für maschinenlesbare Sicherheitskataloge.

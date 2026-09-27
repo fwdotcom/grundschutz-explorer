@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unveröffentlicht]
+## [1.1.4] – 2026-09-27
 
 ### Neu
 
@@ -14,6 +14,7 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
 - Die Übersicht einer Anforderung ist kompakter: Zielobjekt, Modalverb, Handlung und Dokumentation stehen in einem Viererblock, darunter die Tags. Schutzziele und Aufwand teilen sich einen Kasten vor den Gefährdungen. Gefordertes Ergebnis und Spezifikation stehen jetzt im Satzaufbau.
 - Die Filterleiste folgt der Reihenfolge der Detailansicht: Listen, Praktiken, Schutzbedarf, Zielobjekte, Modalverben, Handlungswort, Dokumentation, Tags, Schutzziele, Aufwand, Gefährdungen, Änderungen.
+- Beim Laden wird die Katalogstruktur geprüft: Kataloge mit Gruppen unterhalb der Themen werden mit einer Fehlermeldung abgewiesen, statt dass Anforderungen stillschweigend fehlen. Handbuch und Ladedialog sprechen nun von Katalogen im Schema des BSI-Grundschutz++ statt allgemein von OSCAL-Katalogen.
 - Im Kopf der Detailansicht entfällt das Modalverb-Badge; stattdessen stehen dort die Zahl der Unteranforderungen und der elementaren Gefährdungen (jeweils einschließlich aller Unteranforderungen).
 
 ## [1.1.3] – 2026-09-26

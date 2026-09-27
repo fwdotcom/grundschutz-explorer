@@ -549,12 +549,14 @@ async function main() {
     await waitFor('document.querySelector(".diff-banner")');
     await wait(500);
 
-    // Screenshot Vergleichsmodus gesamt
+    // Screenshot Vergleichsmodus: Kopfzeile mit Hinweisbalken in voller Breite
+    // (die geänderte Detailansicht zeigt detail-aenderungen.png)
+    const diffBannerRect = await getRect('.diff-banner');
     await capture('vergleich.png', {
       x: 0,
       y: 0,
       width: 1200,
-      height: 540,
+      height: Math.ceil(diffBannerRect.y + diffBannerRect.height),
     });
 
     // 16. DETAILANSICHT: REITER ÄNDERUNGEN (DEV.4.3)

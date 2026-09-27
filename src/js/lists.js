@@ -52,10 +52,10 @@ export function buildListExport(lists, entries, appVersion = '') {
  */
 export function parseListImport(data) {
   if (!data || typeof data !== 'object' || data.format !== LIST_EXPORT_FORMAT) {
-    throw new Error('Die Datei ist keine Listen-Sicherung des Grundschutz++ Explorers.');
+    throw new Error('Die Datei ist keine Listen-Sicherung.');
   }
   if (typeof data.version !== 'number' || data.version > LIST_EXPORT_VERSION) {
-    throw new Error('Die Listen-Sicherung stammt aus einer neueren Version des Explorers.');
+    throw new Error('Die Listen-Sicherung stammt aus einer neueren Version der Anwendung.');
   }
   if (!Array.isArray(data.lists)) {
     throw new Error('Die Listen-Sicherung enthält keine Listen.');

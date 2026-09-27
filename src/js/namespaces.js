@@ -2,28 +2,31 @@
  * SPDX-FileCopyrightText: 2026 Frank Winter
  * SPDX-License-Identifier: MIT
  *
- * BSI-Namespace-Definitionen (kontrollierte Vokabulare der Stand-der-Technik-Bibliothek)
+ * Namespace-Definitionen (kontrollierte Vokabulare der Stand-der-Technik-Bibliothek
+ * und anwendungsspezifische Ergänzungen)
  *
- * Die CSV-Dateien liegen unverändert unter data/namespaces/ und stammen aus
+ * Die BSI-CSV-Dateien liegen unverändert unter data/namespaces/bsi/ und stammen aus
  * https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek/tree/main/documentation/namespaces
  * Für ein Update genügt es, die Dateien dort neu herunterzuladen.
+ * Eigene Namespaces (wie Quellkataloge) liegen unter data/namespaces/custom/.
  */
 
 const NAMESPACE_BASE = 'data/namespaces/';
 
 // Genutzte Namespaces: Datei und Spalte mit dem Schlüssel
 const NAMESPACE_FILES = {
-  effortLevels: { file: 'effort_level.csv', key: 'Aufwand' },
-  basethreats: { file: 'basethreats.csv', key: 'ID' },
-  actionWords: { file: 'action_words.csv', key: 'Infinitiv' },
-  documentation: { file: 'documentation_guidelines.csv', key: 'Begriff' },
-  modalVerbs: { file: 'modal_verbs.csv', key: 'Begriff' },
-  securityLevels: { file: 'security_level.csv', key: 'Begriff' },
-  securityTargets: { file: 'security_targets.csv', key: 'Begriff' },
-  securityTargetLevels: { file: 'security_targets_levels.csv', key: 'Wert' },
-  tags: { file: 'tags.csv', key: 'Tag' },
-  targetObjects: { file: 'target_object_categories.csv', key: 'Zielobjekt' },
-  topics: { file: 'topics.csv', key: 'UUID' },
+  effortLevels: { file: 'bsi/effort_level.csv', key: 'Aufwand' },
+  basethreats: { file: 'bsi/basethreats.csv', key: 'ID' },
+  actionWords: { file: 'bsi/action_words.csv', key: 'Infinitiv' },
+  documentation: { file: 'bsi/documentation_guidelines.csv', key: 'Begriff' },
+  modalVerbs: { file: 'bsi/modal_verbs.csv', key: 'Begriff' },
+  securityLevels: { file: 'bsi/security_level.csv', key: 'Begriff' },
+  securityTargets: { file: 'bsi/security_targets.csv', key: 'Begriff' },
+  securityTargetLevels: { file: 'bsi/security_targets_levels.csv', key: 'Wert' },
+  tags: { file: 'bsi/tags.csv', key: 'Tag' },
+  targetObjects: { file: 'bsi/target_object_categories.csv', key: 'Zielobjekt' },
+  topics: { file: 'bsi/topics.csv', key: 'UUID' },
+  sourceCatalogs: { file: 'custom/source_catalogs.csv', key: 'Quellkatalog' },
 };
 
 /**
@@ -151,4 +154,12 @@ export function lookupNamespace(name, value) {
 export function namespaceDefinition(name, value) {
   const entry = lookupNamespace(name, value);
   return entry?.Definition || entry?.Bedeutung || '';
+}
+
+/**
+ * Titel eines Quellkatalogs (Spalte "Titel"), Fallback auf Quellkatalog-Schlüssel.
+ */
+export function sourceCatalogTitle(value) {
+  const entry = lookupNamespace('sourceCatalogs', value);
+  return entry?.Titel || entry?.Quellkatalog || value || '';
 }

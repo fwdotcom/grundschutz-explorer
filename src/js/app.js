@@ -6,7 +6,7 @@
  */
 
 import { parseOscalCatalog, formatBsiThreat } from './oscalParser.js';
-import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition } from './namespaces.js';
+import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition, sourceCatalogTitle } from './namespaces.js';
 import { compareCatalogs, applyDiff, computeWordDiff } from './diffEngine.js';
 import { matchesFacets } from './filters.js';
 import {
@@ -52,6 +52,7 @@ const VALUE_FACETS = {
   documentation: 'documentation',
   result: 'result',
   resultSpecification: 'resultSpecification',
+  sourceCatalog: 'class',
   ...Object.fromEntries(SECURITY_TARGETS.map((t) => [t.key, t.key])),
 };
 
@@ -66,7 +67,7 @@ const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
 // Handbuch, von scripts/build_manual.py je Version erzeugt
 const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
 
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.4';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -92,6 +93,7 @@ const RAIL_COLLAPSED_DEFAULT = {
   securityTargets: true,
   effort: false,
   threats: true,
+  sourceCatalogs: false,
   diffs: false,
 };
 
@@ -136,6 +138,7 @@ const app = createApp({
     const catalogError = ref('');
     const storedCatalogs = ref([]);
     const selectedControlId = ref('');
+    const previousControlId = ref(null);
 
     // UI State
     // Dialog "Kataloge": Versionen verwalten und Kataloge laden
@@ -278,9 +281,9 @@ const app = createApp({
       return Array.from(levels).sort((a, b) => (b.startsWith('normal') - a.startsWith('normal')) || a.localeCompare(b, 'de'));
     });
 
-    // Computed: Werte der Facetten Zielobjekt, Aufwand, Handlungswort und Dokumentation
+    // Computed: Werte der Facetten Zielobjekt, Aufwand, Handlungswort, Dokumentation und Quellkatalog
     const facetOptions = computed(() => {
-      const opts = { targetObject: [], effort: [], actionWord: [], documentation: [] };
+      const opts = { targetObject: [], effort: [], actionWord: [], documentation: [], sourceCatalog: [] };
       if (!activeCatalog.value) return opts;
       opts.targetObject = [...new Set(activeCatalog.value.allControls.flatMap((c) => c.targetObjects))].sort((a, b) =>
         a.localeCompare(b, 'de')
@@ -292,7 +295,9 @@ const app = createApp({
           if (c[field] !== undefined && c[field] !== null && c[field] !== '') values.add(String(c[field]));
         }
         opts[category] = Array.from(values).sort((a, b) =>
-          category === 'effort' ? Number(a) - Number(b) : a.localeCompare(b, 'de')
+          category === 'effort' ? Number(a) - Number(b) :
+          category === 'sourceCatalog' ? sourceCatalogTitle(a).localeCompare(sourceCatalogTitle(b), 'de') :
+          a.localeCompare(b, 'de')
         );
       }
       return opts;
@@ -310,7 +315,7 @@ const app = createApp({
       const q = (facetSearch.value[category] || '').trim().toLowerCase();
       const counts = facetCounts.value[category] || {};
       const list = (facetOptions.value[category] || []).filter((v) => railRowVisible(category, v, counts[v] || 0));
-      if (category === 'effort') return list;
+      if (category === 'effort' || category === 'sourceCatalog') return list;
       const selected = list.filter((v) => getTagMode(category, v));
       const rest = list.filter((v) => !getTagMode(category, v) && (!q || v.toLowerCase().includes(q)));
       return [...selected, ...rest];
@@ -411,7 +416,16 @@ const app = createApp({
     function searchText(ctrl) {
       let text = searchTexts.get(ctrl);
       if (text === undefined) {
-        text = [ctrl.id, ctrl.title, ctrl.statementProse, ctrl.guidanceProse, ...ctrl.elementareGefaehrdungen, ...(ctrl.tags || [])]
+        text = [
+          ctrl.id,
+          ctrl.title,
+          ctrl.statementProse,
+          ctrl.guidanceProse,
+          ctrl.class,
+          sourceCatalogTitle(ctrl.class),
+          ...ctrl.elementareGefaehrdungen,
+          ...(ctrl.tags || []),
+        ]
           .filter(Boolean)
           .join('\n')
           .toLowerCase();
@@ -508,9 +522,9 @@ const app = createApp({
       return counts;
     });
 
-    // Counts für Zielobjekt, Aufwand, Handlungswort, Dokumentation (jeweils ohne eigene Facette)
+    // Counts für Zielobjekt, Aufwand, Handlungswort, Dokumentation und Quellkatalog (jeweils ohne eigene Facette)
     const facetCounts = computed(() => {
-      const result = { targetObject: {}, effort: {}, actionWord: {}, documentation: {} };
+      const result = { targetObject: {}, effort: {}, actionWord: {}, documentation: {}, sourceCatalog: {} };
       for (const t of SECURITY_TARGETS) result[t.key] = {};
       if (!activeCatalog.value) return result;
       // Zielobjekte: mehrere Werte je Anforderung
@@ -819,6 +833,11 @@ const app = createApp({
       return activeCatalog.value.controlMap.get(selectedControlId.value) || null;
     });
 
+    const previousControl = computed(() => {
+      if (!activeCatalog.value || !previousControlId.value) return null;
+      return activeCatalog.value.controlMap.get(previousControlId.value) || null;
+    });
+
     // Übergeordnete Anforderungen der Auswahl, von oben nach unten (Unteranforderungen sind beliebig tief verschachtelt)
     function controlAncestors(ctrl) {
       const out = [];
@@ -961,7 +980,38 @@ const app = createApp({
       };
     });
 
-    // Kennzahlen der gewählten Anforderung: Unteranforderungen und Gefährdungen über alle Ebenen darunter
+    // Verknüpfte Anforderungen (Voraussetzungen, wird vorausgesetzt von, verwandte Anforderungen)
+    const linkedControls = computed(() => {
+      const ctrl = selectedControl.value;
+      const map = activeCatalog.value?.controlMap;
+      if (!ctrl || !map) {
+        return { requires: [], requiredBy: [], related: [], total: 0 };
+      }
+      const resolve = (ids) =>
+        (ids || [])
+          .map((id) => map.get(id))
+          .filter(Boolean)
+          .map((c) => ({
+            id: c.id,
+            title: c.title,
+            modalVerb: c.modalVerb,
+            secLevel: c.secLevel,
+            isSubcontrol: c.isSubcontrol,
+          }));
+
+      const requires = resolve(ctrl.requires);
+      const requiredBy = resolve(ctrl.requiredBy);
+      const related = resolve(ctrl.related);
+
+      return {
+        requires,
+        requiredBy,
+        related,
+        total: requires.length + requiredBy.length + related.length,
+      };
+    });
+
+    // Kennzahlen der gewählten Anforderung: Unteranforderungen, Gefährdungen und Verknüpfungen
     const selectedControlStats = computed(() => {
       const ctrl = selectedControl.value;
       if (!ctrl) return null;
@@ -970,7 +1020,7 @@ const app = createApp({
       for (const c of [ctrl, ...descendants]) {
         for (const t of c.elementareGefaehrdungen || []) threats.add(t);
       }
-      return { sub: descendants.length, threats: threats.size };
+      return { sub: descendants.length, threats: threats.size, links: linkedControls.value.total };
     });
 
     // Beschreibung der Übersicht: Thema, Praktik oder Katalog
@@ -1176,6 +1226,7 @@ const app = createApp({
         railCollapsed.value.documentation,
         railCollapsed.value.securityTargets,
         railCollapsed.value.tags,
+        railCollapsed.value.sourceCatalogs,
         railCollapsed.value.lists,
         selectedControlId.value,
         listViewMode.value,
@@ -1217,6 +1268,10 @@ const app = createApp({
       saveSetting('active_list_id', id).catch(() => {});
     });
     watch(() => activeTags.value, ensureActiveList, { deep: true });
+    // Filteränderungen heben ein evtl. vorhandenes Navigations-Ziel "Zurück zu..." auf
+    watch([filters, () => activeTags.value], () => {
+      previousControlId.value = null;
+    }, { deep: true });
     // Beim Wechsel der Anforderung ausstehende Notizen sofort speichern und wieder die aktive Liste zeigen
     watch(selectedControlId, () => {
       flushNoteSaves();
@@ -1662,6 +1717,7 @@ const app = createApp({
       if (selectedControlId.value && !catalog.controlMap.has(selectedControlId.value)) {
         selectedControlId.value = '';
       }
+      previousControlId.value = null;
       if (resetView) resetViewForNewData();
     }
 
@@ -1701,6 +1757,7 @@ const app = createApp({
       comparisonRecordId.value = '';
       diffSummary.value = null;
       selectedControlId.value = '';
+      previousControlId.value = null;
       saveSetting('last_active_catalog_id', '').catch(() => {});
       saveSetting('comparison_catalog_id', '').catch(() => {});
     }
@@ -1777,11 +1834,11 @@ const app = createApp({
       try {
         parsed = parseOscalCatalog(jsonData);
       } catch (err) {
-        importError.value = `Die Datei enthält keinen lesbaren OSCAL-Katalog: ${err.message}`;
+        importError.value = `Die Datei enthält keinen lesbaren Katalog im Schema des BSI-Grundschutz++: ${err.message}`;
         return;
       }
       if (parsed.allControls.length === 0) {
-        importError.value = 'Die Datei enthält keinen OSCAL-Katalog mit Anforderungen.';
+        importError.value = 'Die Datei enthält keinen Katalog im Schema des BSI-Grundschutz++ mit Anforderungen.';
         return;
       }
 
@@ -1835,12 +1892,37 @@ const app = createApp({
 
     function selectControl(ctrl) {
       if (!ctrl) return;
+      previousControlId.value = null;
       detailScope.value = null;
       selectedControlId.value = ctrl.id;
 
       expandPathTo(ctrl);
       scheduleSaveCollapse();
       scrollSelectedIntoView();
+    }
+
+    function selectControlById(id) {
+      if (!id) return;
+      const ctrl = activeCatalog.value?.controlMap.get(id);
+      if (ctrl) selectControl(ctrl);
+    }
+
+    // Klick auf eine verknüpfte Anforderung: vorherige Anforderung für den "Zurück zu..."-Button merken
+    function selectLinkedControl(id) {
+      if (!id) return;
+      const ctrl = activeCatalog.value?.controlMap.get(id);
+      if (ctrl) {
+        const fromId = selectedControlId.value;
+        selectControl(ctrl);
+        previousControlId.value = fromId || null;
+      }
+    }
+
+    function navigateBack() {
+      if (previousControl.value) {
+        const target = previousControl.value;
+        selectControl(target);
+      }
     }
 
     // Klappt den Weg zu einer Anforderung auf (Praktik, Thema, übergeordnete Anforderungen) und ihre Unteranforderungen
@@ -1874,14 +1956,6 @@ const app = createApp({
       }
       if (changedKeys) {
         expandedKeys.value = new Set(expandedKeys.value);
-      }
-    }
-
-    function selectControlById(id) {
-      if (!activeCatalog.value || !id) return;
-      const ctrl = activeCatalog.value.controlMap.get(id);
-      if (ctrl) {
-        selectControl(ctrl);
       }
     }
 
@@ -1968,6 +2042,10 @@ const app = createApp({
       filters.value.controlFilter = '';
       activeTags.value = [];
       scheduleSaveFilters();
+      if (selectedControl.value) {
+        expandPathTo(selectedControl.value);
+        scrollSelectedIntoView();
+      }
     }
 
     // ---------- Eigene Listen ----------
@@ -2381,6 +2459,7 @@ const app = createApp({
     function showCatalogOverview() {
       detailScope.value = null;
       selectedControlId.value = '';
+      previousControlId.value = null;
       resetDetailScroll();
     }
 
@@ -2687,11 +2766,23 @@ const app = createApp({
       return '';
     }
 
+    function sourceCatalogTitleReactive(value) {
+      namespacesVersion.value;
+      return sourceCatalogTitle(value);
+    }
+
+    function facetItemLabel(category, value) {
+      if (category === 'effort') return 'Stufe ' + value;
+      if (category === 'sourceCatalog') return sourceCatalogTitleReactive(value);
+      return value;
+    }
+
     // Wert einer Änderung (Reiter "Änderungen") so, wie ihn die Detailansicht zeigt
     function formatChangeValue(field, value) {
       if (value === '' || value === undefined || value === null) return '–';
       if (field === 'secLevel') return secLevelDisplayLabel(value);
       if (field === 'effortLevel') return `Stufe ${value}`;
+      if (field === 'class') return sourceCatalogTitleReactive(value);
       if (SECURITY_TARGETS.some((st) => st.key === field)) return `${value} (${securityTargetLevelLabel(value)})`;
       return value;
     }
@@ -2774,7 +2865,12 @@ const app = createApp({
       storedCatalogs,
       selectedControlId,
       selectedControl,
+      selectControlById,
+      selectLinkedControl,
+      linkedControls,
       ancestorControls,
+      previousControl,
+      navigateBack,
       baseControlForDiff,
       statementDiffTokens,
       guidanceDiffTokens,
@@ -2835,7 +2931,9 @@ const app = createApp({
       facetCounts,
       facetOptions,
       facetOptionsFiltered,
+      facetItemLabel,
       facetSearch,
+      sourceCatalogTitle: sourceCatalogTitleReactive,
       maxEffort,
       hasEffort,
       effortColor,
@@ -2894,7 +2992,6 @@ const app = createApp({
       catalogError,
       fetchFromUrl,
       selectControl,
-      selectControlById,
       navigateToPractice,
       navigateToSubgroup,
       onPracticeHeadClick,

@@ -153,7 +153,7 @@
             </button>
 
             <p class="welcome-disclaimer">
-              Der Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt und steht in keiner Verbindung zum
+              Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt und steht in keiner Verbindung zum
               Bundesamt für Sicherheit in der Informationstechnik (BSI).
             </p>
           </section>
@@ -166,13 +166,13 @@
                 Der offizielle Katalog kommt direkt aus der
                 <a href="https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek" target="_blank" rel="noopener noreferrer">Stand-der-Technik-Bibliothek</a>
                 des BSI (Lizenz <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>).
-                Eigene OSCAL-Kataloge laden Sie als Datei oder über eine URL.
+                Andere Kataloge im Schema des BSI-Grundschutz++ laden Sie als Datei oder über eine URL.
               </p>
             </div>
             <div class="feature">
               <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M7 6.5h.01M10 6.5h.01"/></svg></div>
               <h2>Nur im Browser</h2>
-              <p>Der Explorer wird als statische Seite ausgeliefert und läuft danach vollständig in Ihrem Browser. Kein Benutzerkonto, keine Anmeldung.</p>
+              <p>Grundschutz++ Explorer wird als statische Seite ausgeliefert und läuft danach vollständig in Ihrem Browser. Kein Benutzerkonto, keine Anmeldung.</p>
             </div>
             <div class="feature">
               <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
@@ -486,9 +486,9 @@
               </div>
             </div>
 
-            <!-- 4a. Zielobjekte -->
+            <!-- 4a. Zielobjektkategorien -->
             <template v-for="fs in [
-              { cat: 'targetObject', rail: 'targetObjects', ns: 'targetObjects', title: 'Zielobjekte', chip: 'Zielobjekt', search: true, placeholder: 'Zielobjekt suchen …' }
+              { cat: 'targetObject', rail: 'targetObjects', ns: 'targetObjects', title: 'Zielobjektkategorien', chip: 'Zielobjektkategorie', search: true, placeholder: 'Zielobjektkategorie suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
                 <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
@@ -1007,6 +1007,77 @@
               </div>
             </div>
 
+            <!-- 6a. Quellkataloge -->
+            <template v-for="fs in [
+              { cat: 'sourceCatalog', rail: 'sourceCatalogs', ns: 'sourceCatalogs', title: 'Quellkataloge', chip: 'Quellkatalog', search: false }
+            ]" :key="fs.cat">
+              <div v-if="facetOptions[fs.cat] && facetOptions[fs.cat].length > 0" class="rail-section">
+                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                  <span class="rail-heading-title">{{ fs.title }}</span>
+                  <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
+                  <span class="spacer"></span>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+                </div>
+                <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
+                  <div>
+                    <div
+                      v-for="v in facetOptionsFiltered(fs.cat)"
+                      :key="v"
+                      class="rail-row"
+                      :class="{
+                        'is-included': getTagMode(fs.cat, v) === 'include',
+                        'is-excluded': getTagMode(fs.cat, v) === 'exclude',
+                        'is-empty': !facetCounts[fs.cat][v]
+                      }"
+                    >
+                      <div
+                        class="rail-row-main"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
+                        :title="getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ filtern')"
+                      >
+                        <span class="rail-row-label">{{ facetItemLabel(fs.cat, v) }}</span>
+                        <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode(fs.cat, v)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
+                          @click.stop="removeTag(fs.cat, v)"
+                          :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                          </svg>
+                        </button>
+                        <template v-else>
+                          <button
+                            class="rail-btn btn-check"
+                            @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
+                            title="Nur diesen Wert einschließen (✓)"
+                          >
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button
+                            class="rail-btn btn-cross"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
+                            title="Diesen Wert ausschließen (✕)"
+                          >
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                    <p v-if="facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">Keine Werte mit Treffern</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
             <!-- 7. Änderungen (Diff) -->
             <div v-if="diffSummary?.hasDiff" class="rail-section">
               <div class="rail-heading" @click="railCollapsed.diffs = !railCollapsed.diffs" title="Änderungen ein-/ausklappen">
@@ -1346,8 +1417,8 @@
 
           <!-- ---------- Detail pane ---------- -->
           <section id="detail-pane" class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
-            <!-- Die Auswahl ist links durch die Filter ausgeblendet -->
-            <div v-if="selectionFilteredOut" class="detail-empty">
+            <!-- Die Auswahl ist links durch die Filter ausgeblendet (bei Strukturebenen ohne Treffer) -->
+            <div v-if="selectionFilteredOut && (!selectedControl || scopePractice)" class="detail-empty">
               <div>
                 <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
                 <h3>Durch Filter ausgeblendet</h3>
@@ -1528,6 +1599,22 @@
             </template>
 
             <template v-else>
+              <!-- Hinweisbanner, falls diese Anforderung durch Filter in der Liste links ausgeblendet ist -->
+              <div v-if="selectionFilteredOut" class="detail-filtered-banner" role="status">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div class="detail-filtered-banner-text">
+                  <strong>In Liste ausgeblendet:</strong> Diese Anforderung passt nicht zu den aktiven Filtern.
+                </div>
+                <div class="detail-filtered-banner-actions">
+                  <button v-if="previousControl" class="btn btn-sm btn-secondary" @click="navigateBack" :title="'Zurück zu ' + previousControl.id + ' ' + previousControl.title">
+                    Zurück zu {{ previousControl.id }}
+                  </button>
+                  <button class="btn btn-sm btn-secondary" @click="resetFilters" title="Alle Filter und Suche aufheben">
+                    Filter zurücksetzen
+                  </button>
+                </div>
+              </div>
+
               <div class="detail-head">
                 <nav class="crumbs" aria-label="Hierarchie">
                   <button @click="showCatalogOverview" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="sr-only">Katalog</span></button>
@@ -1596,6 +1683,13 @@
                     :class="selectedControl.secLevel === 'erhöht' ? 'tag-sec-erhoeht' : 'tag-outline'"
                     :title="'Schutzbedarf: ' + secLevelDisplayLabel(selectedControl.secLevel)"
                   >{{ secLevelDisplayLabel(selectedControl.secLevel) }}</span>
+                  <button
+                    v-if="selectedControl.class"
+                    class="tag tag-lg tag-outline tag-interactive"
+                    :class="{ 'is-active': getTagMode('sourceCatalog', selectedControl.class) === 'include' }"
+                    @click="toggleTag('sourceCatalog', selectedControl.class, 'include', sourceCatalogTitle(selectedControl.class), 'Quellkatalog')"
+                    :title="'Quellkatalog: ' + sourceCatalogTitle(selectedControl.class) + (definition('sourceCatalogs', selectedControl.class) ? ' – ' + definition('sourceCatalogs', selectedControl.class) : '') + (getTagMode('sourceCatalog', selectedControl.class) ? ' (Filter aktiv – klicken zum Aufheben)' : ' (Klicken zum Filtern)')"
+                  >{{ sourceCatalogTitle(selectedControl.class) }}</button>
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 
@@ -1622,157 +1716,7 @@
 
                 <!-- Übersicht -->
                 <div v-if="detailActiveTab === 'overview'" class="stack">
-                  <div>
-                    <div class="section-label">Anforderungstext</div>
-                    <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
-                  </div>
-
-                  <div class="card">
-                    <dl class="kv-grid" style="margin:0">
-                      <div class="kv">
-                        <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjekte' : 'Zielobjekt' }}</dt>
-                        <dd v-if="selectedControl.targetObjects.length">
-                          <div class="kv-value-list">
-                            <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
-                              <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjekt')" title="Nach diesem Zielobjekt filtern">{{ t }}</button>
-                              <button
-                                v-if="definition('targetObjects', t)"
-                                class="info-btn"
-                                :class="{ on: openDefs['to_' + t] }"
-                                @click="openDefs['to_' + t] = !openDefs['to_' + t]"
-                                :aria-expanded="openDefs['to_' + t]"
-                                :title="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                            </span>
-                          </div>
-                          <template v-for="t in selectedControl.targetObjects" :key="'def_' + t">
-                            <div v-if="openDefs['to_' + t] && definition('targetObjects', t)" class="def-text">
-                              <p><strong v-if="selectedControl.targetObjects.length > 1">{{ t }}: </strong>{{ definition('targetObjects', t) }}</p>
-                              <p v-if="namespaceEntry('targetObjects', t)?.Kategorie" class="def-meta">Kategorie: {{ namespaceEntry('targetObjects', t).Kategorie }}</p>
-                            </div>
-                          </template>
-                        </dd>
-                        <dd v-else class="muted">–</dd>
-                      </div>
-                      <div class="kv">
-                        <dt>Modalverb</dt>
-                        <dd v-if="verbKey(selectedControl.modalVerb)">
-                          <span class="kv-value">
-                            <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
-                            <button
-                              v-if="definition('modalVerbs', selectedControl.modalVerb)"
-                              class="info-btn"
-                              :class="{ on: openDefs.modalVerb }"
-                              @click="openDefs.modalVerb = !openDefs.modalVerb"
-                              :aria-expanded="openDefs.modalVerb"
-                              :title="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              :aria-label="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
-                            >
-                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                            </button>
-                          </span>
-                          <div v-if="openDefs.modalVerb && definition('modalVerbs', selectedControl.modalVerb)" class="def-text">
-                            <p>{{ definition('modalVerbs', selectedControl.modalVerb) }}</p>
-                          </div>
-                        </dd>
-                        <dd v-else class="muted">–</dd>
-                      </div>
-                      <div class="kv">
-                        <dt>Handlung</dt>
-                        <dd v-if="selectedControl.actionWord">
-                          <span class="kv-value">
-                            <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
-                            <button
-                              v-if="definition('actionWords', selectedControl.actionWord)"
-                              class="info-btn"
-                              :class="{ on: openDefs.actionWord }"
-                              @click="openDefs.actionWord = !openDefs.actionWord"
-                              :aria-expanded="openDefs.actionWord"
-                              :title="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              :aria-label="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
-                            >
-                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                            </button>
-                          </span>
-                          <div v-if="openDefs.actionWord && definition('actionWords', selectedControl.actionWord)" class="def-text">
-                            <p>{{ definition('actionWords', selectedControl.actionWord) }}</p>
-                            <p v-if="namespaceEntry('actionWords', selectedControl.actionWord)?.Synonyme" class="def-meta">Synonyme: {{ namespaceEntry('actionWords', selectedControl.actionWord).Synonyme }}</p>
-                          </div>
-                        </dd>
-                        <dd v-else class="muted">–</dd>
-                      </div>
-                      <div class="kv">
-                        <dt>Dokumentation</dt>
-                        <dd v-if="selectedControl.documentation">
-                          <span class="kv-value">
-                            <button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button>
-                            <button
-                              v-if="definition('documentation', selectedControl.documentation)"
-                              class="info-btn"
-                              :class="{ on: openDefs.documentation }"
-                              @click="openDefs.documentation = !openDefs.documentation"
-                              :aria-expanded="openDefs.documentation"
-                              :title="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              :aria-label="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
-                            >
-                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                            </button>
-                          </span>
-                          <div v-if="openDefs.documentation && definition('documentation', selectedControl.documentation)" class="def-text">
-                            <p>{{ definition('documentation', selectedControl.documentation) }}</p>
-                            <p v-if="namespaceEntry('documentation', selectedControl.documentation)?.Kategorie || namespaceEntry('documentation', selectedControl.documentation)?.Zielgruppe" class="def-meta">
-                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie">Kategorie: {{ namespaceEntry('documentation', selectedControl.documentation).Kategorie }}</template>
-                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie && namespaceEntry('documentation', selectedControl.documentation).Zielgruppe"> · </template>
-                              <template v-if="namespaceEntry('documentation', selectedControl.documentation).Zielgruppe">Zielgruppe: {{ namespaceEntry('documentation', selectedControl.documentation).Zielgruppe }}</template>
-                            </p>
-                          </div>
-                        </dd>
-                        <dd v-else class="muted">Nicht vorgegeben</dd>
-                      </div>
-                      <div v-if="selectedControl.tags?.length" class="kv full">
-                        <dt>Tags</dt>
-                        <dd>
-                          <div class="tag-chip-group">
-                            <span
-                              v-for="tag in selectedControl.tags"
-                              :key="tag"
-                              class="tag-item"
-                              :class="{ active: isTagActive('tags', tag) }"
-                            >
-                              <button
-                                class="tag-item-btn"
-                                @click="toggleTag('tags', tag, 'include', tag, 'Tag')"
-                                :title="(tagDefinition(tag) ? tagDefinition(tag) + '\n\n' : '') + (isTagActive('tags', tag) ? 'Filter aufheben: ' + tag : 'Filtern nach: ' + tag)"
-                              >
-                                <svg class="icon-tag-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                <span>{{ tag }}</span>
-                              </button>
-                              <button
-                                v-if="tagDefinition(tag)"
-                                class="info-btn"
-                                :class="{ on: openDefs['tag_' + tag] }"
-                                @click.stop="openDefs['tag_' + tag] = !openDefs['tag_' + tag]"
-                                :aria-expanded="openDefs['tag_' + tag]"
-                                :title="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                                :aria-label="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                            </span>
-                          </div>
-                          <!-- Ausgeklappte Erläuterungen für aktive Info-Buttons -->
-                          <template v-for="tag in selectedControl.tags" :key="'def_' + tag">
-                            <div v-if="openDefs['tag_' + tag] && tagDefinition(tag)" class="def-text" style="margin-top: 8px;">
-                              <p><strong>{{ tag }}:</strong> {{ tagDefinition(tag) }}</p>
-                            </div>
-                          </template>
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
+                  <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
 
                   <div class="card">
                     <dl class="st-box" style="margin:0">
@@ -1889,6 +1833,107 @@
                     </ul>
                   </div>
 
+                  <!-- Verknüpfte Anforderungen -->
+                  <div v-if="linkedControls.total > 0" class="card">
+                    <div class="card-head">
+                      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      <h4>Verknüpfte Anforderungen</h4>
+                      <span class="hint">{{ linkedControls.total }}</span>
+                    </div>
+
+                    <!-- 1. Setzt voraus (Vorausgesetzte Anforderungen / required) -->
+                    <div v-if="linkedControls.requires.length" class="link-group">
+                      <div class="link-group-head">
+                        <span class="link-group-title">Setzt voraus</span>
+                      </div>
+                      <ul class="sub-list">
+                        <li v-for="c in linkedControls.requires" :key="'req_' + c.id">
+                          <button class="sub-item" @click="selectLinkedControl(c.id)" :title="c.id + ' ' + c.title">
+                            <span class="mono">{{ c.id }}</span>
+                            <span class="grow">{{ c.title }}</span>
+                            <span v-if="c.modalVerb" class="verb-label" :class="verbKey(c.modalVerb)">{{ verbKey(c.modalVerb) ? c.modalVerb : '' }}</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <!-- 2. Voraussetzung für (Wird vorausgesetzt von / requiredBy) -->
+                    <div v-if="linkedControls.requiredBy.length" class="link-group">
+                      <div class="link-group-head">
+                        <span class="link-group-title">Voraussetzung für</span>
+                      </div>
+                      <ul class="sub-list">
+                        <li v-for="c in linkedControls.requiredBy" :key="'reqby_' + c.id">
+                          <button class="sub-item" @click="selectLinkedControl(c.id)" :title="c.id + ' ' + c.title">
+                            <span class="mono">{{ c.id }}</span>
+                            <span class="grow">{{ c.title }}</span>
+                            <span v-if="c.modalVerb" class="verb-label" :class="verbKey(c.modalVerb)">{{ verbKey(c.modalVerb) ? c.modalVerb : '' }}</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <!-- 3. Verwandte Anforderungen (related) -->
+                    <div v-if="linkedControls.related.length" class="link-group">
+                      <div class="link-group-head">
+                        <span class="link-group-title">Verwandte Anforderungen</span>
+                      </div>
+                      <ul class="sub-list">
+                        <li v-for="c in linkedControls.related" :key="'rel_' + c.id">
+                          <button class="sub-item" @click="selectLinkedControl(c.id)" :title="c.id + ' ' + c.title">
+                            <span class="mono">{{ c.id }}</span>
+                            <span class="grow">{{ c.title }}</span>
+                            <span v-if="c.modalVerb" class="verb-label" :class="verbKey(c.modalVerb)">{{ verbKey(c.modalVerb) ? c.modalVerb : '' }}</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div v-if="selectedControl.tags?.length" class="card">
+                    <dl class="kv-grid" style="margin:0">
+                      <div class="kv full">
+                        <dt>Tags</dt>
+                        <dd>
+                          <div class="tag-chip-group">
+                            <span
+                              v-for="tag in selectedControl.tags"
+                              :key="tag"
+                              class="tag-item"
+                              :class="{ active: isTagActive('tags', tag) }"
+                            >
+                              <button
+                                class="tag-item-btn"
+                                @click="toggleTag('tags', tag, 'include', tag, 'Tag')"
+                                :title="(tagDefinition(tag) ? tagDefinition(tag) + '\n\n' : '') + (isTagActive('tags', tag) ? 'Filter aufheben: ' + tag : 'Filtern nach: ' + tag)"
+                              >
+                                <svg class="icon-tag-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                                <span>{{ tag }}</span>
+                              </button>
+                              <button
+                                v-if="tagDefinition(tag)"
+                                class="info-btn"
+                                :class="{ on: openDefs['tag_' + tag] }"
+                                @click.stop="openDefs['tag_' + tag] = !openDefs['tag_' + tag]"
+                                :aria-expanded="openDefs['tag_' + tag]"
+                                :title="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                                :aria-label="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
+                          </div>
+                          <!-- Ausgeklappte Erläuterungen für aktive Info-Buttons -->
+                          <template v-for="tag in selectedControl.tags" :key="'def_' + tag">
+                            <div v-if="openDefs['tag_' + tag] && tagDefinition(tag)" class="def-text" style="margin-top: 8px;">
+                              <p><strong>{{ tag }}:</strong> {{ tagDefinition(tag) }}</p>
+                            </div>
+                          </template>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
                   <p v-if="selectedControl.altIdentifier" class="detail-uuid">UUID <span class="mono">{{ selectedControl.altIdentifier }}</span></p>
                 </div>
 
@@ -1936,16 +1981,53 @@
                     <div class="card">
                       <dl class="kv-grid" style="margin:0">
                         <div class="kv">
-                          <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjekte' : 'Zielobjekt' }}</dt>
-                          <dd v-if="selectedControl.targetObjects.length" class="kv-value-list">
-                            <button v-for="t in selectedControl.targetObjects" :key="t" class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjekt')" title="Nach diesem Zielobjekt filtern">{{ t }}</button>
+                          <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjektkategorien' : 'Zielobjektkategorie' }}</dt>
+                          <dd v-if="selectedControl.targetObjects.length">
+                            <div class="kv-value-list">
+                              <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
+                                <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjektkategorie')" title="Nach dieser Zielobjektkategorie filtern">{{ t }}</button>
+                                <button
+                                  v-if="definition('targetObjects', t)"
+                                  class="info-btn"
+                                  :class="{ on: openDefs['to_' + t] }"
+                                  @click="openDefs['to_' + t] = !openDefs['to_' + t]"
+                                  :aria-expanded="openDefs['to_' + t]"
+                                  :title="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                  :aria-label="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                >
+                                  <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                                </button>
+                              </span>
+                            </div>
+                            <template v-for="t in selectedControl.targetObjects" :key="'def_' + t">
+                              <div v-if="openDefs['to_' + t] && definition('targetObjects', t)" class="def-text">
+                                <p><strong v-if="selectedControl.targetObjects.length > 1">{{ t }}: </strong>{{ definition('targetObjects', t) }}</p>
+                                <p v-if="namespaceEntry('targetObjects', t)?.Kategorie" class="def-meta">Kategorie: {{ namespaceEntry('targetObjects', t).Kategorie }}</p>
+                              </div>
+                            </template>
                           </dd>
                           <dd v-else class="muted">–</dd>
                         </div>
                         <div class="kv">
                           <dt>Modalverb</dt>
                           <dd v-if="verbKey(selectedControl.modalVerb)">
-                            <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
+                            <span class="kv-value">
+                              <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
+                              <button
+                                v-if="definition('modalVerbs', selectedControl.modalVerb)"
+                                class="info-btn"
+                                :class="{ on: openDefs.modalVerb }"
+                                @click="openDefs.modalVerb = !openDefs.modalVerb"
+                                :aria-expanded="openDefs.modalVerb"
+                                :title="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
+                            <div v-if="openDefs.modalVerb && definition('modalVerbs', selectedControl.modalVerb)" class="def-text">
+                              <p>{{ definition('modalVerbs', selectedControl.modalVerb) }}</p>
+                            </div>
                           </dd>
                           <dd v-else class="muted">–</dd>
                         </div>
@@ -1965,9 +2047,54 @@
                         <div class="kv full">
                           <dt>Handlung</dt>
                           <dd v-if="selectedControl.actionWord">
-                            <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
+                            <span class="kv-value">
+                              <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
+                              <button
+                                v-if="definition('actionWords', selectedControl.actionWord)"
+                                class="info-btn"
+                                :class="{ on: openDefs.actionWord }"
+                                @click="openDefs.actionWord = !openDefs.actionWord"
+                                :aria-expanded="openDefs.actionWord"
+                                :title="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
+                            <div v-if="openDefs.actionWord && definition('actionWords', selectedControl.actionWord)" class="def-text">
+                              <p>{{ definition('actionWords', selectedControl.actionWord) }}</p>
+                              <p v-if="namespaceEntry('actionWords', selectedControl.actionWord)?.Synonyme" class="def-meta">Synonyme: {{ namespaceEntry('actionWords', selectedControl.actionWord).Synonyme }}</p>
+                            </div>
                           </dd>
                           <dd v-else class="muted">–</dd>
+                        </div>
+                        <div class="kv full">
+                          <dt>Dokumentation</dt>
+                          <dd v-if="selectedControl.documentation">
+                            <span class="kv-value">
+                              <button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button>
+                              <button
+                                v-if="definition('documentation', selectedControl.documentation)"
+                                class="info-btn"
+                                :class="{ on: openDefs.documentation }"
+                                @click="openDefs.documentation = !openDefs.documentation"
+                                :aria-expanded="openDefs.documentation"
+                                :title="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
+                            <div v-if="openDefs.documentation && definition('documentation', selectedControl.documentation)" class="def-text">
+                              <p>{{ definition('documentation', selectedControl.documentation) }}</p>
+                              <p v-if="namespaceEntry('documentation', selectedControl.documentation)?.Kategorie || namespaceEntry('documentation', selectedControl.documentation)?.Zielgruppe" class="def-meta">
+                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie">Kategorie: {{ namespaceEntry('documentation', selectedControl.documentation).Kategorie }}</template>
+                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie && namespaceEntry('documentation', selectedControl.documentation).Zielgruppe"> · </template>
+                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Zielgruppe">Zielgruppe: {{ namespaceEntry('documentation', selectedControl.documentation).Zielgruppe }}</template>
+                              </p>
+                            </div>
+                          </dd>
+                          <dd v-else class="muted">Nicht vorgegeben</dd>
                         </div>
                       </dl>
                     </div>
@@ -2157,7 +2284,7 @@
           </span>
         </button>
 
-        <div class="load-divider"><span>oder eigenen OSCAL-Katalog</span></div>
+        <div class="load-divider"><span>oder anderen Katalog im Grundschutz++-Schema</span></div>
 
         <div>
           <label class="field-label" for="load-url">URL zur JSON-Datei</label>
@@ -2253,7 +2380,7 @@
         <div>
           <h3>Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)</h3>
           <p>
-            Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der
+            Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der
             Informationstechnik (BSI).
           </p>
           <p>
@@ -2286,7 +2413,7 @@
       <div class="modal-head" style="padding-bottom:14px; border-bottom:1px solid var(--border)">
         <div style="flex:1">
           <h2 id="license-title">Lizenz</h2>
-          <p>Der Grundschutz++ Explorer steht unter der MIT-Lizenz</p>
+          <p>Grundschutz++ Explorer steht unter der MIT-Lizenz</p>
         </div>
         <button class="icon-btn" @click="isLicenseModalOpen = false" title="Schließen">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -2365,7 +2492,7 @@ SOFTWARE.</pre>
         <div>
           <h3>1. Datenschutz auf einen Blick</h3>
           <p>
-            Der Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
+            Grundschutz++ Explorer läuft vollständig in Ihrem Browser. Ich betreibe keinen eigenen Server, erhebe keine personenbezogenen Daten,
             setze keine Cookies und verwende keine Analyse-, Tracking- oder Werbedienste. Suchanfragen, Filter, hochgeladene Dateien,
             Vergleiche sowie Ihre Listen und Notizen verlassen Ihr Gerät nicht.
           </p>

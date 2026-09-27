@@ -2,7 +2,7 @@
 
 Mit eigenen Listen stellen Sie Anforderungen flexibel für konkrete Arbeitsschritte zusammen – etwa für anstehende Sicherheitsaudits, Entwicklungs-Sprints, Dienstleisterüberprüfungen oder Besprechungen. Jede Anforderung in einer Liste kann mit individuellen Notizen versehen werden.
 
-![Listenbereich in der Filterleiste mit aktiver Liste und Kontextmenü](bilder/listen.png){width=27%}
+![Listenbereich in der Filterleiste mit aktiver Liste und Kontextmenü](bilder/listen.png){width=23%}
 
 /// figure-caption
     attrs: {id: fig-listen}
@@ -35,7 +35,7 @@ Im Kopf der Detailansicht jeder Anforderung befindet sich rechts neben dem Titel
 - **Leerer Stern (Umriss):** Die Anforderung ist in noch keiner Liste hinterlegt. Ein Klick nimmt sie in die aktive Liste auf.
 
 > [!TIP]
-> Gibt es noch keine Liste und Sie klicken auf einen Stern oder schreiben eine Notiz, legt der Explorer automatisch die Liste **Merkliste** an, aktiviert diese und fügt die Anforderung dort ein.
+> Gibt es noch keine Liste und Sie klicken auf einen Stern oder schreiben eine Notiz, legt Grundschutz++ Explorer automatisch die Liste **Merkliste** an, aktiviert diese und fügt die Anforderung dort ein.
 
 Auch in der mittleren Trefferliste signalisiert das Stern-Symbol auf einen Blick, ob eine Anforderung zu einer Liste gehört.
 

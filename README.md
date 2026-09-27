@@ -7,10 +7,9 @@
 [![Version](https://img.shields.io/github/v/release/fwdotcom/grundschutz-explorer?label=Version)](https://github.com/fwdotcom/grundschutz-explorer/releases/latest)
 [![Lizenz](https://img.shields.io/github/license/fwdotcom/grundschutz-explorer?label=Lizenz)](LICENSE)
 
-Der Grundschutz++ Explorer macht den Anwenderkatalog Grundschutz++ des BSI im
-Browser durchsuchbar: Anforderungen finden, nach Modalverb, Schutzbedarf,
-Aufwand, Schutzzielen und Gefährdungen filtern, eigene Listen mit Notizen führen,
-Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne Server, ohne Anmeldung, alle Daten bleiben lokal.
+Grundschutz++ Explorer macht den Anwenderkatalog Grundschutz++ des BSI im
+Browser durchsuchbar: Anforderungen finden, flexibel filtern, eigene Listen mit
+Notizen führen, Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne Server, ohne Anmeldung, alle Daten bleiben lokal.
 
 **→ [www.grundschutz-explorer.de](https://www.grundschutz-explorer.de)**
 
@@ -20,16 +19,18 @@ Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne 
 
 - **Navigieren** in Praktiken, Themen, Anforderungen und Unteranforderungen, als Baumansicht oder flache Trefferliste, mit Übersichten je Praktik und Thema.
 - **Volltextsuche** über Kennungen, Titel, Anforderungstexte, Hilfestellungen und Gefährdungen.
-- **Filter** nach Modalverb, Schutzbedarf, Aufwand, Handlungswort, Dokumentationsvorgabe, Schutzzielen, Praktiken, elementaren Gefährdungen und Tags – jeweils einschließend oder ausschließend.
+- **Filter** nach Praktiken, Schutzbedarf, Zielobjekten, Modalverb, Handlungswort, Dokumentationsvorgabe, Tags, Schutzzielen, Aufwand und elementaren Gefährdungen – jeweils einschließend oder ausschließend.
+- **Satzaufbau** jeder Anforderung nach der BSI-Satzschablone (Zielobjekt, Modalverb, gefordertes Ergebnis, Spezifikation, Handlung); jeder Bestandteil ist per Klick filterbar.
 - **Listen mit Notizen**, etwa für Audits oder Besprechungen: Anforderungen per Stern sammeln, Notizen je Liste erfassen, nach Listen filtern, Listen als JSON exportieren und importieren.
-- **Definitionen des BSI** direkt an der Anforderung: Aufwandsstufen, Handlungswörter, Dokumentationsvorgaben, Schutzziele, Gefährdungen und Tags.
+- **Definitionen des BSI** direkt an der Anforderung: Zielobjekte, Aufwandsstufen, Handlungswörter, Dokumentationsvorgaben, Schutzziele, Gefährdungen und Tags.
+- **Kataloge laden:** den offiziellen Katalog direkt vom BSI oder andere Kataloge im Schema des BSI-Grundschutz++ als Datei oder über eine URL.
 - **Versionsvergleich** zweier Katalogstände mit neuen, geänderten und gelöschten Anforderungen und Wort-für-Wort-Unterschieden.
 - **Barrierearm:** drei Schriftgrößen, helles und dunkles Design, hoher Kontrast, vollständig per Tastatur bedienbar.
 - **Datenschutz:** Die App läuft vollständig im Browser; geladene Kataloge, Listen mit Notizen und Einstellungen werden nur lokal gespeichert.
 
 ## Bezug zum Bundesamt für Sicherheit in der Informationstechnik (BSI)
 
-Der Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stammen aus der öffentlich zugänglichen Stand-der-Technik-Bibliothek des BSI und stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de). Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
+Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stammen aus der öffentlich zugänglichen Stand-der-Technik-Bibliothek des BSI und stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de). Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
 
 ## Mitwirken
 

@@ -27,6 +27,7 @@ const SAMPLE = {
               {
                 id: 'GC.1.1',
                 title: 'Erste Anforderung',
+                class: 'BSI-Stand-der-Technik-Kernel-G0',
                 params: [{ id: 'gc.1.1-prm1', values: ['jährlich'] }],
                 props: [
                   { name: 'sec_level', value: 'normal-SdT' },
@@ -79,6 +80,7 @@ test('Beispielkatalog: Struktur, Felder und Unteranforderungen', () => {
 
   const c = cat.controlMap.get('GC.1.1');
   assert.equal(c.subgroupId, 'GC.1');
+  assert.equal(c.class, 'BSI-Stand-der-Technik-Kernel-G0');
   assert.equal(c.modalVerb, 'MUSS');
   assert.equal(c.secLevel, 'normal-SdT');
   assert.equal(c.effortLevel, '3');
@@ -106,6 +108,17 @@ test('Beispielkatalog: Struktur, Felder und Unteranforderungen', () => {
 test('ungültige Eingaben werden mit verständlicher Meldung abgelehnt', () => {
   assert.throws(() => parseOscalCatalog(null), /leer oder nicht definiert/);
   assert.throws(() => parseOscalCatalog({ foo: 1 }), /Kein gültiges OSCAL-Katalog-Objekt/);
+});
+
+test('Gruppen unterhalb der Themen werden abgelehnt', () => {
+  const raw = {
+    catalog: {
+      uuid: 'nested',
+      metadata: { title: 'Drei Ebenen' },
+      groups: [{ id: 'P', title: 'Praktik', groups: [{ id: 'P.1', title: 'Thema', groups: [{ id: 'P.1.a', title: 'Zu tief' }] }] }],
+    },
+  };
+  assert.throws(() => parseOscalCatalog(raw), /Gruppe „P\.1“ enthält weitere Gruppen/);
 });
 
 test('formatBsiThreat und resolveParamsInProse', () => {
@@ -200,3 +213,63 @@ test('Unteranforderungen über mehrere Ebenen', () => {
   assert.equal(deepest.subgroupId, 'P.1');
   assert.equal(deepest.groupId, 'P');
 });
+
+test('Relationen zwischen Anforderungen: required, requiredBy und related', () => {
+  const raw = {
+    catalog: {
+      uuid: 'rel-test',
+      metadata: { title: 'Relationen' },
+      groups: [
+        {
+          id: 'G',
+          title: 'Gruppe',
+          groups: [
+            {
+              id: 'G.1',
+              title: 'Thema',
+              controls: [
+                {
+                  id: 'G.1.1',
+                  title: 'Anforderung 1',
+                  links: [
+                    { href: '#G.1.2', rel: 'required' },
+                    { href: '#G.1.3', rel: 'related' },
+                  ],
+                },
+                {
+                  id: 'G.1.2',
+                  title: 'Anforderung 2',
+                },
+                {
+                  id: 'G.1.3',
+                  title: 'Anforderung 3',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  };
+
+  const cat = parseOscalCatalog(raw);
+  const c1 = cat.controlMap.get('G.1.1');
+  const c2 = cat.controlMap.get('G.1.2');
+  const c3 = cat.controlMap.get('G.1.3');
+
+  // c1 setzt c2 voraus und ist mit c3 verwandt
+  assert.deepEqual(c1.requires, ['G.1.2']);
+  assert.deepEqual(c1.requiredBy, []);
+  assert.deepEqual(c1.related, ['G.1.3']);
+
+  // c2 wird von c1 vorausgesetzt (Voraussetzung für c1)
+  assert.deepEqual(c2.requires, []);
+  assert.deepEqual(c2.requiredBy, ['G.1.1']);
+  assert.deepEqual(c2.related, []);
+
+  // c3 ist symmetrisch mit c1 verwandt
+  assert.deepEqual(c3.requires, []);
+  assert.deepEqual(c3.requiredBy, []);
+  assert.deepEqual(c3.related, ['G.1.1']);
+});
+

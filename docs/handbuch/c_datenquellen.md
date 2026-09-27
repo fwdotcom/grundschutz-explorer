@@ -8,12 +8,12 @@ Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stamme
 https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek
 ```
 
-| Inhalt | Quelle in der Bibliothek | Verwendung im Explorer |
+| Inhalt | Quelle in der Bibliothek | Verwendung |
 | :--- | :--- | :--- |
 | **Grundschutz++-Anwenderkatalog** | `control_layer/Grundschutz++/` | Wird beim Laden direkt und unverändert vom BSI (GitHub) abgerufen. Das Projekt liefert keine Katalogdaten mit. |
-| **BSI-Namespaces und Begriffsdefinitionen** | `documentation/namespaces/` | Lokale Kopien der CSV-Dateien (Aufwand, Gefährdungen, Handlungswörter, Dokumentation, Modalverben, Schutzbedarf, Schutzziele und Wirkungsstufen, Tags, Zielobjektkategorien). |
+| **BSI-Namespaces und Begriffsdefinitionen** | `documentation/namespaces/` | Lokale Kopien der CSV-Dateien unter `data/namespaces/bsi/` (Aufwand, Gefährdungen, Handlungswörter, Dokumentation, Modalverben, Schutzbedarf, Schutzziele und Wirkungsstufen, Tags, Zielobjektkategorien). Ergänzende Definitionen (z. B. Quellkataloge) liegen unter `data/namespaces/custom/`. |
 
-Die Inhalte der Stand-der-Technik-Bibliothek stehen unter der Lizenz **Creative Commons Namensnennung – Weitergabe unter gleichen Bedingungen 4.0 International (CC BY-SA 4.0)**. Der Explorer zeigt sie unverändert an. Die Rechte an diesen Inhalten liegen beim BSI.
+Die Inhalte der Stand-der-Technik-Bibliothek stehen unter der Lizenz **Creative Commons Namensnennung – Weitergabe unter gleichen Bedingungen 4.0 International (CC BY-SA 4.0)**. Grundschutz++ Explorer zeigt sie unverändert an. Die Rechte an diesen Inhalten liegen beim BSI.
 
 ## Verwendete Komponenten
 
@@ -44,7 +44,7 @@ Die Symbole der Oberfläche sind direkt in die Anwendung eingebettet. Ein Teil d
 
 ## Der Grundschutz++ Explorer
 
-Der Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt ohne Verbindung zum BSI und steht unter der **MIT-Lizenz**.
+Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt ohne Verbindung zum BSI und steht unter der **MIT-Lizenz**.
 
 | Eigenschaft | Angabe |
 | :--- | :--- |

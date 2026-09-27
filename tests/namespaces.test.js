@@ -5,7 +5,7 @@
 
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCsv, loadNamespaces, namespaces, lookupNamespace, namespaceDefinition } from '../src/js/namespaces.js';
+import { parseCsv, loadNamespaces, namespaces, lookupNamespace, namespaceDefinition, sourceCatalogTitle } from '../src/js/namespaces.js';
 import { installLocalFetch } from './helpers.js';
 
 before(async () => {
@@ -52,4 +52,13 @@ test('tolerante Suche ignoriert Groß-/Kleinschreibung, Leerzeichen und Bindestr
   assert.ok(lookupNamespace('documentation', 'outsourcing strategie'), 'outsourcing strategie ↔ Outsourcing-Strategie');
   assert.equal(lookupNamespace('documentation', 'gibt es nicht'), null);
   assert.equal(lookupNamespace('documentation', ''), null);
+});
+
+test('Quellkataloge / sourceCatalogs mit Titeln und Definitionen', () => {
+  assert.equal(lookupNamespace('sourceCatalogs', 'BSI-Stand-der-Technik-Kernel-G0')?.Titel, 'Stand-der-Technik Kernel G0');
+  assert.equal(lookupNamespace('sourceCatalogs', 'BSI-Methodik-Grundschutz-plus-plus')?.Titel, 'Methodik Grundschutz++');
+  assert.equal(lookupNamespace('sourceCatalogs', 'BSI-Anforderungen-zum-Risikomanagement')?.Titel, 'Anforderungen zum Risikomanagement');
+  assert.equal(sourceCatalogTitle('BSI-Stand-der-Technik-Kernel-G0'), 'Stand-der-Technik Kernel G0');
+  assert.equal(sourceCatalogTitle('Unbekannter-Katalog'), 'Unbekannter-Katalog');
+  assert.ok(namespaceDefinition('sourceCatalogs', 'BSI-Stand-der-Technik-Kernel-G0').length > 0);
 });

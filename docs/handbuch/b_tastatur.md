@@ -1,6 +1,6 @@
 # Tastenkürzel
 
-Der Grundschutz++ Explorer lässt sich vollständig ohne Maus mit der Tastatur bedienen:
+Grundschutz++ Explorer lässt sich vollständig ohne Maus mit der Tastatur bedienen:
 
 | Taste | Wirkung |
 | :--- | :--- |

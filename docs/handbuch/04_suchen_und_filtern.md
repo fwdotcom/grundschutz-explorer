@@ -2,7 +2,7 @@
 
 Suche und Filter lassen sich beliebig miteinander kombinieren. Sie arbeiten nach einer einheitlichen, logischen Regel und ermöglichen sowohl grobe thematische Eingrenzungen als auch hochspezifische Detailabfragen.
 
-![Kombinierte Filter-Chips und flache Trefferliste](bilder/filter.png){width=70%}
+![Kombinierte Filter-Chips und flache Trefferliste](bilder/filter.png){width=42%}
 
 /// figure-caption
     attrs: {id: fig-filter}
@@ -95,4 +95,4 @@ Oberhalb der Anforderungsliste erscheinen alle aktiven Filter als übersichtlich
 
 Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Zielobjekt, ein Handlungswort, eine Dokumentationsart, einen Tag oder eine elementare Gefährdung).
 
-Im Reiter **Hilfestellung** sind im Abschnitt **Satzaufbau** alle Bestandteile des Satzes anklickbar, auch **gefordertes Ergebnis** und **Spezifikation**. Diese beiden haben keinen eigenen Bereich in der Filterleiste, weil sie fast immer nur bei einer Anforderung vorkommen. Wiederkehrende Formulierungen wie „die Verfahren und Regelungen“ oder die Spezifikation `{{regelmäßig}}` lassen sich so aber gezielt finden. Der Filter erscheint wie jeder andere als Chip über dem Explorer.
+Im Reiter **Hilfestellung** sind im Abschnitt **Satzaufbau** alle Bestandteile des Satzes anklickbar, auch **gefordertes Ergebnis** und **Spezifikation**. Diese beiden haben keinen eigenen Bereich in der Filterleiste, weil sie fast immer nur bei einer Anforderung vorkommen. Wiederkehrende Formulierungen wie „die Verfahren und Regelungen“ oder die Spezifikation `{{regelmäßig}}` lassen sich so aber gezielt finden. Der Filter erscheint wie jeder andere als Chip über der Liste der Anforderungen.

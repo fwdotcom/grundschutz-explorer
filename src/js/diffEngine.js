@@ -78,8 +78,9 @@ export function computeWordDiff(oldText = '', newText = '') {
  */
 export const COMPARED_FIELDS = [
   { field: 'title', label: 'Titel', kind: 'value' },
+  { field: 'class', label: 'Quellkatalog', kind: 'value' },
   { field: 'placement', label: 'Einordnung', kind: 'value' },
-  { field: 'targetObjects', label: 'Zielobjekte', kind: 'list' },
+  { field: 'targetObjects', label: 'Zielobjektkategorien', kind: 'list' },
   { field: 'modalVerb', label: 'Modalverb', kind: 'value' },
   { field: 'secLevel', label: 'Schutzbedarf', kind: 'value' },
   { field: 'statementProse', label: 'Anforderungstext', kind: 'prose' },
@@ -94,6 +95,8 @@ export const COMPARED_FIELDS = [
   { field: 'effortLevel', label: 'Aufwand', kind: 'value' },
   { field: 'tags', label: 'Tags', kind: 'list' },
   { field: 'elementareGefaehrdungen', label: 'Elementare Gefährdungen', kind: 'list' },
+  { field: 'requires', label: 'Vorausgesetzte Anforderungen', kind: 'list' },
+  { field: 'related', label: 'Verwandte Anforderungen', kind: 'list' },
   { field: 'guidanceProse', label: 'Hilfestellung', kind: 'prose' },
   { field: 'altIdentifier', label: 'UUID', kind: 'value' },
 ];

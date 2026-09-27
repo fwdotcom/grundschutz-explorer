@@ -16,7 +16,7 @@ In der Baumansicht navigieren Sie intuitiv durch die hierarchische Struktur:
 - **Tiefere Ebenen:** Eingerückte Zeilen und vertikale Hilfslinien visualisieren die Überordnungen. Die Zahl am Pfeil rechts außen nennt die Anzahl der direkten Unteranforderungen.
 - **Alle auf- oder zuklappen:** Über die Schaltflächen oberhalb der Liste falten Sie alle Ebenen mit einem Klick auf oder zu.
 
-![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png){width=65%}
+![Mehrstufige Unteranforderungen in der Baumansicht](bilder/unteranforderungen.png){width=42%}
 
 /// figure-caption
     attrs: {id: fig-unteranforderungen}
@@ -49,7 +49,7 @@ Die Übersicht liefert auf einen Blick:
 
 ## Flache Trefferliste
 
-Sobald Sie einen Filter setzen oder einen Suchbegriff eingeben, wechselt der Explorer automatisch in die **flache Trefferliste**. Sie blendet die Zwischenebenen aus und listet alle Treffer kompakt untereinander.
+Sobald Sie einen Filter setzen oder einen Suchbegriff eingeben, wechselt Grundschutz++ Explorer automatisch in die **flache Trefferliste**. Sie blendet die Zwischenebenen aus und listet alle Treffer kompakt untereinander.
 
 Über die beiden Symbole oben rechts in der mittleren Spalte können Sie jederzeit manuell zwischen **Baumansicht** und **flacher Trefferliste** umschalten.
 

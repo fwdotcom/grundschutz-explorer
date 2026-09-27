@@ -20,7 +20,7 @@ Sobald Sie eine Anforderung in der Baumansicht oder der Trefferliste auswählen,
 
 Die Registerkarte **Übersicht** bündelt alle operativen Vorgaben der gewählten Anforderung.
 
-![Detailansicht einer Anforderung: Reiter Übersicht](bilder/detailansicht.png){width=32%}
+![Detailansicht einer Anforderung: Reiter Übersicht](bilder/detailansicht.png){width=36%}
 
 /// figure-caption
     attrs: {id: fig-detailansicht}
@@ -41,7 +41,7 @@ Die Übersicht gliedert sich in folgende funktionale Abschnitte:
 
 Reicht der normative Anforderungstext für die praktische Ausgestaltung nicht aus, verweist die Registerkarte **Hilfestellung** auf praxisnahe Empfehlungen des BSI. Hier finden sich Erläuterungen zur Implementierung, empfohlene Werkzeuge (z. B. für Software Composition Analysis) sowie Querverweise auf Technische Richtlinien (wie BSI TR-03183 oder TR-02102):
 
-![Registerkarte Hilfestellung mit Hinweisen zur praktischen Umsetzung](bilder/detail-hilfestellung.png){width=32%}
+![Registerkarte Hilfestellung mit Hinweisen zur praktischen Umsetzung](bilder/detail-hilfestellung.png){width=36%}
 
 /// figure-caption
     attrs: {id: fig-detail-hilfestellung}
@@ -54,7 +54,7 @@ Registerkarte „Hilfestellung“ mit Verweisen auf Technische Richtlinien
 
 Direkt an jeder Anforderung können Sie individuelle Notizen und Umsetzungskommentare erfassen:
 
-![Registerkarte Notizen mit Textfeld, Statuspunkt und Zeitstempel](bilder/detail-notizen.png){width=32%}
+![Registerkarte Notizen mit Textfeld, Statuspunkt und Zeitstempel](bilder/detail-notizen.png){width=36%}
 
 /// figure-caption
     attrs: {id: fig-detail-notizen}
@@ -70,16 +70,4 @@ Registerkarte „Notizen“ mit Textfeld, Statuspunkt und Zeitstempel
 
 ## Registerkarte „Änderungen“ (Vergleichsmodus)
 
-Befindet sich der Explorer im Vergleichsmodus, wird bei allen geänderten Anforderungen automatisch der Reiter **Änderungen** eingeblendet:
-
-![Registerkarte Änderungen mit Feld-Gegenüberstellung und Wort-Diff](bilder/detail-aenderungen.png){width=32%}
-
-/// figure-caption
-    attrs: {id: fig-detail-aenderungen}
-Registerkarte „Änderungen“ mit direkter Feld-Gegenüberstellung und Wortvergleich
-///
-
-Dieser Reiter bietet zwei wesentliche Analysewerkzeuge:
-
-1. **Gegenüberstellung veränderter Eigenschaften:** Zeigt übersichtlich alle modifizierten Attribute (z. B. ein geändertes Modalverb von `SOLLTE` auf `MUSS`, angepasste Schutzziele oder geänderte Gefährdungen).
-2. **Wortvergleich (Word-Diff):** Im Anforderungstext und in der Hilfestellung werden gestrichene Textstellen rot durchgestrichen und neu hinzugekommene Formulierungen grün hervorgehoben.
+Solange zwei unterschiedliche Katalogstände verglichen werden, erscheint zusätzlich der Reiter **Änderungen**. Er zeigt die veränderten Eigenschaften und einen Wortvergleich der Texte; beschrieben ist er im [Kapitel Kataloge laden und vergleichen](#fig-detail-aenderungen).

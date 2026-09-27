@@ -142,6 +142,14 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
     }
   }
 
+  // Verknüpfungen (Links auf andere Anforderungen: rel="required", rel="related")
+  const rawLinks = ctrl.links || [];
+  const links = rawLinks.map((l) => ({
+    href: l.href || '',
+    rel: l.rel || '',
+    targetId: l.href?.startsWith('#') ? l.href.slice(1) : '',
+  }));
+
   return {
     id: ctrl.id,
     title: ctrl.title || ctrl.id,
@@ -173,6 +181,10 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
     guidanceProse,
     elementareGefaehrdungen,
     tags: tagList,
+    links,
+    requires: [],
+    requiredBy: [],
+    related: [],
   };
 }
 
@@ -273,6 +285,17 @@ export function parseOscalCatalog(rawJson) {
     throw new Error('Ungültiges Format: Kein gültiges OSCAL-Katalog-Objekt ("catalog") gefunden.');
   }
 
+  // Nur das Schema des BSI-Grundschutz++: Gruppen in genau zwei Ebenen (Praktik → Thema)
+  for (const practice of catalog.groups || []) {
+    const nested = (practice.groups || []).find((sub) => sub.groups?.length);
+    if (nested) {
+      throw new Error(
+        `Nicht unterstützte Katalogstruktur: Die Gruppe „${nested.id}“ enthält weitere Gruppen. ` +
+          'Unterstützt werden nur Kataloge im Schema des BSI-Grundschutz++ mit den Ebenen Praktik und Thema.'
+      );
+    }
+  }
+
   const metadata = catalog.metadata || {};
   const uuid = catalog.uuid || metadata.uuid || crypto.randomUUID();
   const title = metadata.title || 'Grundschutz++ Katalog';
@@ -311,6 +334,35 @@ export function parseOscalCatalog(rawJson) {
         addWithChildren(parsed);
       }
     }
+  }
+
+  // Relationen auflösen: Voraussetzungen (requires), wird vorausgesetzt von (requiredBy), verwandte Anforderungen (related)
+  for (const c of allControls) {
+    for (const l of c.links || []) {
+      const targetId = l.targetId;
+      if (!targetId || targetId === c.id) continue;
+      if (l.rel === 'required') {
+        if (!c.requires.includes(targetId)) c.requires.push(targetId);
+        const targetCtrl = controlMap.get(targetId);
+        if (targetCtrl && !targetCtrl.requiredBy.includes(c.id)) {
+          targetCtrl.requiredBy.push(c.id);
+        }
+      } else if (l.rel === 'related') {
+        if (!c.related.includes(targetId)) c.related.push(targetId);
+        const targetCtrl = controlMap.get(targetId);
+        if (targetCtrl && !targetCtrl.related.includes(c.id)) {
+          targetCtrl.related.push(c.id);
+        }
+      }
+    }
+  }
+
+  // Natürlich sortieren (z. B. GC.2.1 vor GC.10.1)
+  const sortControlIds = (arr) => arr.sort((a, b) => a.localeCompare(b, 'de', { numeric: true }));
+  for (const c of allControls) {
+    sortControlIds(c.requires);
+    sortControlIds(c.requiredBy);
+    sortControlIds(c.related);
   }
 
   return {
