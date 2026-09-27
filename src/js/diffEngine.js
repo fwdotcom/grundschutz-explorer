@@ -79,6 +79,7 @@ export function computeWordDiff(oldText = '', newText = '') {
 export const COMPARED_FIELDS = [
   { field: 'title', label: 'Titel', kind: 'value' },
   { field: 'placement', label: 'Einordnung', kind: 'value' },
+  { field: 'targetObjects', label: 'Zielobjekte', kind: 'list' },
   { field: 'modalVerb', label: 'Modalverb', kind: 'value' },
   { field: 'secLevel', label: 'Schutzbedarf', kind: 'value' },
   { field: 'statementProse', label: 'Anforderungstext', kind: 'prose' },

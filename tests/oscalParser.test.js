@@ -41,6 +41,7 @@ const SAMPLE = {
                     name: 'statement',
                     prose: 'Die Institution MUSS die Regeln {{ insert: param, gc.1.1-prm1 }} prüfen.',
                     props: [
+                      { name: 'target_object_categories', value: 'Nutzende, Webbrowser' },
                       { name: 'modal_verb', value: 'muss' },
                       { name: 'action_word', value: 'überprüfen' },
                       { name: 'documentation', value: 'Detektions-Konzept' },
@@ -81,6 +82,7 @@ test('Beispielkatalog: Struktur, Felder und Unteranforderungen', () => {
   assert.equal(c.modalVerb, 'MUSS');
   assert.equal(c.secLevel, 'normal-SdT');
   assert.equal(c.effortLevel, '3');
+  assert.deepEqual(c.targetObjects, ['Nutzende', 'Webbrowser']);
   assert.equal(c.actionWord, 'überprüfen');
   assert.equal(c.documentation, 'Detektions-Konzept');
   assert.equal(c.confidentiality, '2');
@@ -126,6 +128,9 @@ test('aktueller BSI-Katalog: Plausibilität', async (t) => {
     for (const t of c.elementareGefaehrdungen) {
       const code = t.split(':')[0];
       assert.ok(lookupNamespace('basethreats', code), `${c.id}: unbekannte Gefährdung ${code}`);
+    }
+    for (const t of c.targetObjects) {
+      assert.ok(lookupNamespace('targetObjects', t), `${c.id}: unbekanntes Zielobjekt ${t}`);
     }
     for (const key of ['confidentiality', 'integrity', 'availability', 'authenticity']) {
       if (c[key] !== undefined) assert.ok(['0', '1', '2'].includes(c[key]), `${c.id}: ${key}=${c[key]}`);

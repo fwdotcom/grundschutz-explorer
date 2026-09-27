@@ -11,7 +11,7 @@ https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek
 | Inhalt | Quelle in der Bibliothek | Verwendung im Explorer |
 | :--- | :--- | :--- |
 | **Grundschutz++-Anwenderkatalog** | `control_layer/Grundschutz++/` | Wird beim Laden direkt und unverändert vom BSI (GitHub) abgerufen. Das Projekt liefert keine Katalogdaten mit. |
-| **BSI-Namespaces und Begriffsdefinitionen** | `documentation/namespaces/` | Lokale Kopien der CSV-Dateien (Aufwand, Gefährdungen, Handlungswörter, Dokumentation, Modalverben, Schutzbedarf, Schutzziele und Wirkungsstufen, Tags). |
+| **BSI-Namespaces und Begriffsdefinitionen** | `documentation/namespaces/` | Lokale Kopien der CSV-Dateien (Aufwand, Gefährdungen, Handlungswörter, Dokumentation, Modalverben, Schutzbedarf, Schutzziele und Wirkungsstufen, Tags, Zielobjektkategorien). |
 
 Die Inhalte der Stand-der-Technik-Bibliothek stehen unter der Lizenz **Creative Commons Namensnennung – Weitergabe unter gleichen Bedingungen 4.0 International (CC BY-SA 4.0)**. Der Explorer zeigt sie unverändert an. Die Rechte an diesen Inhalten liegen beim BSI.
 

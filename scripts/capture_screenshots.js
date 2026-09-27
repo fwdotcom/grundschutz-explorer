@@ -399,16 +399,24 @@ async function main() {
       dev31Row?.click();
     })()`);
     await waitFor('document.querySelector("#tab-overview.on")');
+    // Höheres Fenster, damit die Übersicht bis einschließlich Schutzziele und Aufwand Platz hat
+    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 1400, deviceScaleFactor: 2, mobile: false });
     await wait(400);
     const dev31DetailRect = await getRect('.detail-pane');
+    const dev31Bottom = await evalJs(`(() => {
+      const card = document.querySelector('.detail-body .st-box')?.closest('.card');
+      return card ? card.getBoundingClientRect().bottom + 12 : null;
+    })()`);
     if (dev31DetailRect) {
       await capture('detailansicht.png', {
         x: dev31DetailRect.x,
         y: dev31DetailRect.y,
         width: dev31DetailRect.width,
-        height: 528,
+        height: dev31Bottom ? Math.min(dev31Bottom - dev31DetailRect.y, dev31DetailRect.height) : 528,
       });
     }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 760, deviceScaleFactor: 2, mobile: false });
+    await wait(300);
 
     // Zurück zu DEV.3.4 für Hilfestellung und Notizen
     await evalJs(`(() => {
@@ -421,16 +429,24 @@ async function main() {
     console.log('\n--- 8. Detailansicht: Reiter Hilfestellung aufnehmen ---');
     await evalJs(`document.querySelector('#tab-guidance')?.click()`);
     await waitFor('document.querySelector("#tab-guidance.on")');
-    await wait(300);
+    // Höheres Fenster, damit unter dem Hinweistext der Anfang des Satzaufbaus (bis „Gefordertes Ergebnis“) Platz hat
+    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 1100, deviceScaleFactor: 2, mobile: false });
+    await wait(400);
     const gdnDetailRect = await getRect('.detail-pane');
+    const gdnBottom = await evalJs(`(() => {
+      const rows = document.querySelectorAll('.detail-body .kv');
+      return rows[2] ? rows[2].getBoundingClientRect().bottom : null;
+    })()`);
     if (gdnDetailRect) {
       await capture('detail-hilfestellung.png', {
         x: gdnDetailRect.x,
         y: gdnDetailRect.y,
         width: gdnDetailRect.width,
-        height: 405,
+        height: gdnBottom ? Math.min(gdnBottom - gdnDetailRect.y, gdnDetailRect.height) : 405,
       });
     }
+    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 760, deviceScaleFactor: 2, mobile: false });
+    await wait(300);
 
     // 9. DETAILANSICHT: REITER NOTIZEN
     console.log('\n--- 9. Detailansicht: Reiter Notizen aufnehmen ---');

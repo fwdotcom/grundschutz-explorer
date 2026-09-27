@@ -18,6 +18,9 @@ Unteranforderung
 
 ## Angaben an einer Anforderung
 
+Zielobjekt
+: Worauf sich eine Anforderung bezieht, etwa *IT-Systeme*, *Anwendungen* oder *Nutzende*. Eine Anforderung kann mehrere Zielobjekte haben. Grundlage ist das BSI-Vokabular der Zielobjektkategorien.
+
 Modalverb
 : Grad der Verbindlichkeit:
   - **MUSS:** Unbedingt und ausnahmslos zu erfüllen.

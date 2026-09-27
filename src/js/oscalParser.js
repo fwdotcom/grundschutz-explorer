@@ -82,6 +82,11 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
   else if (modalVerbRaw === 'SOLLTE') modalVerb = 'SOLLTE';
   else if (modalVerbRaw === 'KANN') modalVerb = 'KANN';
 
+  // Zielobjekte (kommagetrennt, kontrolliertes Vokabular aus target_object_categories.csv)
+  const targetObjects = (statementProps.find((p) => p.name === 'target_object_categories')?.value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   const actionWord = statementProps.find((p) => p.name === 'action_word')?.value;
   const result = statementProps.find((p) => p.name === 'result')?.value;
   const resultSpecification = statementProps.find((p) => p.name === 'result_specification')?.value;
@@ -159,6 +164,7 @@ function parseControl(ctrl, groupPath, groupTitle, subgroupId, subgroupTitle, pa
     allProps: props,
     params,
     statementProse,
+    targetObjects,
     modalVerb,
     actionWord,
     result,

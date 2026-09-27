@@ -58,15 +58,16 @@ Beispiele für kombinierte Filterbedingungen
 | Bereich | Bedeutung und Filterkriterien |
 | :--- | :--- |
 | **Listen** | Eigene Sammlungen: Zeigt oder schließt Anforderungen aus bestimmten Listen aus. |
-| **Modalverben** | Verbindlichkeitsgrad: MUSS, SOLLTE oder KANN. |
+| **Praktiken** | Die 20 Fachpraktiken des BSI-Grundschutzes (z. B. *DEV*, *ARCH*, *BES*, *GC*). |
 | **Schutzbedarf** | Sicherheitsniveaus: Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe. |
-| **Aufwand** | Aufwandsstufen 0 bis 5 (von geringem bis zu sehr hohem Realisierungsaufwand). |
+| **Zielobjekte** | Worauf sich die Anforderung bezieht (z. B. *IT-Systeme*, *Webbrowser*, *Nutzende*). Eine Anforderung kann mehrere Zielobjekte haben. |
+| **Modalverben** | Verbindlichkeitsgrad: MUSS, SOLLTE oder KANN. |
 | **Handlungswort** | Das primäre Verbum der Forderung (z. B. *dokumentieren*, *verankern*, *prüfen*). |
 | **Dokumentation** | Geforderte Dokumentenart (z. B. *Sicherheitskonzept*, *Freigabeplan*). |
-| **Schutzziele** | Wirkungsgrad auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität. |
-| **Praktiken** | Die 20 Fachpraktiken des BSI-Grundschutzes (z. B. *DEV*, *ARCH*, *BES*, *GC*). |
-| **Gefährdungen** | Zuordnung zu den elementaren Gefährdungen G 0.1 bis G 0.47. |
 | **Tags** | Fachliche Schlagwörter aus dem kontrollierten Vokabular des BSI. |
+| **Schutzziele** | Wirkungsgrad auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität. |
+| **Aufwand** | Aufwandsstufen 0 bis 5 (von geringem bis zu sehr hohem Realisierungsaufwand). |
+| **Gefährdungen** | Zuordnung zu den elementaren Gefährdungen G 0.1 bis G 0.47. |
 | **Änderungen** | Im Vergleichsmodus: gezieltes Filtern nach neuen, geänderten oder entfallenen Anforderungen. |
 
 ## Schutzziele gezielt filtern
@@ -92,4 +93,6 @@ Oberhalb der Anforderungsliste erscheinen alle aktiven Filter als übersichtlich
 
 ## Klickfilter aus der Detailansicht
 
-Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Handlungswort, eine Dokumentationsart, einen Tag oder eine elementare Gefährdung).
+Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Zielobjekt, ein Handlungswort, eine Dokumentationsart, einen Tag oder eine elementare Gefährdung).
+
+Im Reiter **Hilfestellung** sind im Abschnitt **Satzaufbau** alle Bestandteile des Satzes anklickbar, auch **gefordertes Ergebnis** und **Spezifikation**. Diese beiden haben keinen eigenen Bereich in der Filterleiste, weil sie fast immer nur bei einer Anforderung vorkommen. Wiederkehrende Formulierungen wie „die Verfahren und Regelungen“ oder die Spezifikation `{{regelmäßig}}` lassen sich so aber gezielt finden. Der Filter erscheint wie jeder andere als Chip über dem Explorer.

@@ -31,18 +31,19 @@ Von links nach rechts bietet die Kopfzeile folgende Funktionen:
 
 ## Filterleiste
 
-Die linke Spalte enthält alle Filter-Facetten in aufklappbaren Abschnitten:
+Die linke Spalte enthält alle Filter-Facetten in aufklappbaren Abschnitten. Nach den eigenen Listen folgen sie der Reihenfolge der Detailansicht von oben nach unten, sodass sich jede Angabe einer Anforderung links an derselben Stelle wiederfindet:
 
 1. **Listen:** Eigene Sammlungen von Anforderungen mit Notizen (z. B. Audit-Vorbereitung oder Maßnahmenkataloge).
-2. **Modalverben:** Verbindlichkeitsgrad nach BSI (MUSS, SOLLTE, KANN).
+2. **Praktiken:** Thematische Schwerpunkte wie Governance (GC), Architektur (ARCH) oder Entwicklung (DEV).
 3. **Schutzbedarf:** Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe.
-4. **Aufwand:** Geschätzte Aufwandsstufe von 0 bis 5 mit farbiger Balkenanzeige.
-5. **Handlungswort & Dokumentation:** Fachliche Vorgaben des BSI mit Definitions-Tooltips.
-6. **Schutzziele:** Gezielte Filterung nach Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au).
-7. **Praktiken:** Thematische Schwerpunkte wie Governance (GC), Architektur (ARCH) oder Entwicklung (DEV).
-8. **Elementare Gefährdungen:** BSI-Gefährdungen G 0.1 bis G 0.47.
-9. **Tags:** Offizielle Schlagwörter des BSI.
-10. **Änderungen:** Erscheint nur im Vergleichsmodus (neu, geändert, gelöscht).
+4. **Zielobjekte:** Worauf sich die Anforderung bezieht (z. B. IT-Systeme, Nutzende).
+5. **Modalverben:** Verbindlichkeitsgrad nach BSI (MUSS, SOLLTE, KANN).
+6. **Handlungswort & Dokumentation:** Fachliche Vorgaben des BSI mit Definitions-Tooltips.
+7. **Tags:** Offizielle Schlagwörter des BSI.
+8. **Schutzziele:** Gezielte Filterung nach Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au).
+9. **Aufwand:** Geschätzte Aufwandsstufe von 0 bis 5 mit farbiger Balkenanzeige.
+10. **Elementare Gefährdungen:** BSI-Gefährdungen G 0.1 bis G 0.47.
+11. **Änderungen:** Erscheint nur im Vergleichsmodus (neu, geändert, gelöscht).
 
 Oben rechts in der Filterleiste befinden sich drei Funktionsschaltflächen:
 - **Alle Filter zurücksetzen** (Kreispfeil): Setzt alle aktiven Filter zurück.
@@ -68,10 +69,10 @@ Die mittlere Spalte präsentiert die Anforderungen wahlweise als strukturierte *
 Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten Anforderung:
 
 - **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Thema und gegebenenfalls übergeordneten Anforderungen.
-- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Modalverb, Schutzbedarf und Änderungsstatus.
+- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Anzahl der Unteranforderungen und Gefährdungen (jeweils einschließlich aller Unteranforderungen), Schutzbedarf und Änderungsstatus.
 - **Reiter (Tabs):**
-  - **Übersicht:** Vollständiger Anforderungstext, Schutzziele, Handlungswort, Dokumentationsvorgabe, Ergebnis, Aufwand, Tags, Gefährdungen und Unteranforderungen.
-  - **Hilfestellung:** BSI-Hinweise zur praktischen Umsetzung.
+  - **Übersicht:** Vollständiger Anforderungstext, Zielobjekt, Modalverb, Handlungswort, Dokumentationsvorgabe, Tags, Schutzziele, Aufwand, Gefährdungen und Unteranforderungen.
+  - **Hilfestellung:** BSI-Hinweise zur praktischen Umsetzung und darunter der Satzaufbau: der Anforderungstext zerlegt in Zielobjekt, Modalverb, gefordertes Ergebnis, Spezifikation und Handlung.
   - **Notizen:** Eigenes Notizfeld für die aktive Liste, Umschaltung zwischen Listennotizen und Änderungsdatum.
   - **Änderungen:** Im Vergleichsmodus Gegenüberstellung aller veränderten Felder und Wort-für-Wort-Vergleich.
 

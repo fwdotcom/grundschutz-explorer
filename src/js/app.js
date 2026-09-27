@@ -50,6 +50,8 @@ const VALUE_FACETS = {
   effort: 'effortLevel',
   actionWord: 'actionWord',
   documentation: 'documentation',
+  result: 'result',
+  resultSpecification: 'resultSpecification',
   ...Object.fromEntries(SECURITY_TARGETS.map((t) => [t.key, t.key])),
 };
 
@@ -80,15 +82,16 @@ const FONT_SCALES = [
 // die kurzen, häufig genutzten Bereiche offen, die langen Listen zu
 const RAIL_COLLAPSED_DEFAULT = {
   lists: false,
-  modalVerbs: false,
+  practices: true,
   secLevels: false,
-  effort: false,
+  targetObjects: true,
+  modalVerbs: false,
   actionWords: true,
   documentation: true,
-  securityTargets: true,
-  practices: true,
-  threats: true,
   tags: true,
+  securityTargets: true,
+  effort: false,
+  threats: true,
   diffs: false,
 };
 
@@ -175,7 +178,7 @@ const app = createApp({
     // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
     const detailScope = ref(null);
     // Ausgeklappte Definitionen (Info-Buttons) in der Detailansicht
-    const openDefs = ref({ effort: false, actionWord: false, documentation: false, securityTargets: false, secLevel: false });
+    const openDefs = ref({ effort: false, modalVerb: false, actionWord: false, documentation: false, securityTargets: false, secLevel: false });
     // Zähler, der nach dem Laden der BSI-Namespaces erhöht wird (macht Definitionen reaktiv)
     const namespacesVersion = ref(0);
 
@@ -232,7 +235,7 @@ const app = createApp({
     const tagRailSearch = ref('');
 
     // Suchfelder der langen Werte-Facetten
-    const facetSearch = ref({ actionWord: '', documentation: '' });
+    const facetSearch = ref({ targetObject: '', actionWord: '', documentation: '' });
 
     // Eigene Listen: Anforderungen mit Notizen, z. B. für eine Besprechung
     const lists = ref([]); // [{ id, name, createdAt, updatedAt }]
@@ -275,10 +278,13 @@ const app = createApp({
       return Array.from(levels).sort((a, b) => (b.startsWith('normal') - a.startsWith('normal')) || a.localeCompare(b, 'de'));
     });
 
-    // Computed: Werte der Facetten Aufwand, Handlungswort und Dokumentation
+    // Computed: Werte der Facetten Zielobjekt, Aufwand, Handlungswort und Dokumentation
     const facetOptions = computed(() => {
-      const opts = { effort: [], actionWord: [], documentation: [] };
+      const opts = { targetObject: [], effort: [], actionWord: [], documentation: [] };
       if (!activeCatalog.value) return opts;
+      opts.targetObject = [...new Set(activeCatalog.value.allControls.flatMap((c) => c.targetObjects))].sort((a, b) =>
+        a.localeCompare(b, 'de')
+      );
       for (const [category, field] of Object.entries(VALUE_FACETS)) {
         if (!(category in opts)) continue;
         const values = new Set();
@@ -299,7 +305,7 @@ const app = createApp({
       return nums.length ? Math.max(...nums) : 0;
     });
 
-    // Optionslisten für Aufwand, Handlungswort und Dokumentation; in den langen Listen mit Suchfeld stehen gesetzte Werte oben
+    // Optionslisten für Zielobjekt, Aufwand, Handlungswort und Dokumentation; in den langen Listen mit Suchfeld stehen gesetzte Werte oben
     function facetOptionsFiltered(category) {
       const q = (facetSearch.value[category] || '').trim().toLowerCase();
       const counts = facetCounts.value[category] || {};
@@ -425,6 +431,8 @@ const app = createApp({
           return [ctrl.groupId];
         case 'modalVerb':
           return [ctrl.modalVerb];
+        case 'targetObject':
+          return ctrl.targetObjects;
         case 'threat':
           return ctrl.elementareGefaehrdungen.map((t) => splitThreat(t).code);
         case 'tags':
@@ -500,13 +508,19 @@ const app = createApp({
       return counts;
     });
 
-    // Counts für Aufwand, Handlungswort, Dokumentation (jeweils ohne eigene Facette)
+    // Counts für Zielobjekt, Aufwand, Handlungswort, Dokumentation (jeweils ohne eigene Facette)
     const facetCounts = computed(() => {
-      const result = { effort: {}, actionWord: {}, documentation: {} };
+      const result = { targetObject: {}, effort: {}, actionWord: {}, documentation: {} };
       for (const t of SECURITY_TARGETS) result[t.key] = {};
       if (!activeCatalog.value) return result;
+      // Zielobjekte: mehrere Werte je Anforderung
+      for (const ctrl of activeCatalog.value.allControls) {
+        if (!ctrl.targetObjects.length || !matchesFilterCategory(ctrl, 'targetObject')) continue;
+        for (const v of ctrl.targetObjects) result.targetObject[v] = (result.targetObject[v] || 0) + 1;
+      }
       for (const category of Object.keys(result)) {
         const field = VALUE_FACETS[category];
+        if (!field) continue;
         const counts = result[category];
         for (const ctrl of activeCatalog.value.allControls) {
           const v = ctrl[field];
@@ -945,6 +959,18 @@ const app = createApp({
         practices: cat.practices.length,
         subgroups: cat.practices.reduce((n, p) => n + p.subgroups.length, 0),
       };
+    });
+
+    // Kennzahlen der gewählten Anforderung: Unteranforderungen und Gefährdungen über alle Ebenen darunter
+    const selectedControlStats = computed(() => {
+      const ctrl = selectedControl.value;
+      if (!ctrl) return null;
+      const descendants = flattenControls(ctrl.subcontrols || []);
+      const threats = new Set();
+      for (const c of [ctrl, ...descendants]) {
+        for (const t of c.elementareGefaehrdungen || []) threats.add(t);
+      }
+      return { sub: descendants.length, threats: threats.size };
     });
 
     // Beschreibung der Übersicht: Thema, Praktik oder Katalog
@@ -2877,6 +2903,7 @@ const app = createApp({
       scopePractice,
       scopeSubgroup,
       overviewStats,
+      selectedControlStats,
       overviewDescription,
       scopeDirectControls,
       summarizeControls,

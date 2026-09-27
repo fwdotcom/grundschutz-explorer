@@ -9,7 +9,7 @@ Der Autor ist selbst Informationssicherheitsbeauftragter einer deutschen Landesb
 ## Wofür der Explorer gedacht ist
 
 - **Nachschlagen:** Anforderungen über Kennung, Titel oder Volltextsuche in Sekundenschnelle finden.
-- **Eingrenzen:** den Katalog nach Verbindlichkeit (Modalverb), Schutzbedarf, Aufwand, Handlungswort, Dokumentationsvorgabe, Schutzzielen, Praktiken, Gefährdungen, Tags und Listen filtern.
+- **Eingrenzen:** den Katalog nach Verbindlichkeit (Modalverb), Schutzbedarf, Zielobjekt, Aufwand, Handlungswort, Dokumentationsvorgabe, Schutzzielen, Praktiken, Gefährdungen, Tags und Listen filtern.
 - **Eigene Listen & Notizen:** Anforderungen mit einem Stern in thematische Listen aufnehmen (z. B. für Audits, Arbeitsgruppen oder Umsetzungsbesprechungen) und Notizen direkt an der Anforderung festhalten.
 - **Verstehen:** BSI-Begriffsdefinitionen per Info-Button direkt an der Anforderung nachschlagen, etwa was eine Aufwandsstufe bedeutet oder welche Vorgaben mit einem Handlungswort verknüpft sind.
 - **Vergleichen:** eine neue Version gegen eine ältere halten und auf Wortebene sehen, was neu hinzugekommen, präzisiert oder entfallen ist.

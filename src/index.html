@@ -188,7 +188,7 @@
       </div>
 
       <template v-else>
-        <!-- ---------- Rail: Facetten-Filter (Modalverben, Niveau, Praktiken, Gefährdungen, Diff) ---------- -->
+        <!-- ---------- Rail: Facetten-Filter in der Reihenfolge der Detailansicht (Kopf, Satzaufbau, Schutzziele/Aufwand, Gefährdungen) ---------- -->
         <!-- Unter 980px als ausklappbare Leiste (Drawer) über den Button "Filter" in der Liste -->
         <div v-if="isRailOpen" class="rail-backdrop" @click="closeRail"></div>
         <aside
@@ -229,7 +229,7 @@
           </div>
           <div class="rail-scroll">
 
-            <!-- 0. Eigene Listen (Anforderungen mit Notizen) -->
+            <!-- 1. Eigene Listen (Anforderungen mit Notizen) -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.lists = !railCollapsed.lists" title="Listen ein-/ausklappen">
                 <span class="rail-heading-title">Listen</span>
@@ -335,7 +335,235 @@
               </div>
             </div>
 
-            <!-- 1. Modalverben -->
+            <!-- 2. Praktiken -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
+                <span class="rail-heading-title">Praktiken</span>
+                <span v-if="activeTagCountFor('practice')" class="rail-active-badge">{{ activeTagCountFor('practice') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.practices" class="rail-section-body">
+                <p v-if="railSectionEmpty('practice', activeCatalog.practices.map((p) => p.id), practiceCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
+                <div
+                  v-for="p in activeCatalog.practices"
+                  :key="p.id"
+                  v-show="railRowVisible('practice', p.id, practiceCounts[p.id] || 0)"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('practice', p.id) === 'include',
+                    'is-excluded': getTagMode('practice', p.id) === 'exclude',
+                    'is-empty': !practiceCounts[p.id]
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('practice', p.id) ? removeTag('practice', p.id) : toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
+                    :title="getTagMode('practice', p.id) ? 'Klicken zum Aufheben des Filters' : p.id + ' – ' + p.title"
+                  >
+                    <span class="rail-code">{{ p.id }}</span>
+                    <span class="rail-row-label">{{ p.title }}</span>
+                    <span class="rail-row-count">{{ practiceCounts[p.id] || 0 }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <button
+                      v-if="getTagMode('practice', p.id) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('practice', p.id)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <button
+                      v-else-if="getTagMode('practice', p.id) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('practice', p.id)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
+                        title="Nur diese Praktik einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('practice', p.id, 'exclude', p.id + ' ' + p.title, 'Praktik')"
+                        title="Diese Praktik ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Schutzbedarf / Sicherheitsniveau -->
+            <div v-if="availableSecLevels.length > 0" class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.secLevels = !railCollapsed.secLevels" title="Schutzbedarf / Sicherheitsniveau ein-/ausklappen">
+                <span class="rail-heading-title">Schutzbedarf</span>
+                <span v-if="activeTagCountFor('secLevel')" class="rail-active-badge">{{ activeTagCountFor('secLevel') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.secLevels" class="rail-section-body">
+                <p v-if="railSectionEmpty('secLevel', availableSecLevels, secLevelCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
+                <div
+                  v-for="lvl in availableSecLevels"
+                  :key="lvl"
+                  v-show="railRowVisible('secLevel', lvl, secLevelCounts[lvl] || 0)"
+                  class="rail-row"
+                  :class="{
+                    'is-included': getTagMode('secLevel', lvl) === 'include',
+                    'is-excluded': getTagMode('secLevel', lvl) === 'exclude',
+                    'is-empty': !secLevelCounts[lvl]
+                  }"
+                >
+                  <div
+                    class="rail-row-main"
+                    @click="getTagMode('secLevel', lvl) ? removeTag('secLevel', lvl) : toggleTag('secLevel', lvl, 'include', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
+                    :title="getTagMode('secLevel', lvl) ? 'Klicken zum Aufheben des Filters' : ('Schutzbedarf: ' + secLevelDisplayLabel(lvl))"
+                  >
+                    <span class="rail-row-label">{{ secLevelDisplayLabel(lvl) }}</span>
+                    <span class="rail-row-count">{{ secLevelCounts[lvl] || 0 }}</span>
+                  </div>
+                  <div class="rail-row-actions">
+                    <button
+                      v-if="getTagMode('secLevel', lvl) === 'include'"
+                      class="rail-btn btn-trash"
+                      @click.stop="removeTag('secLevel', lvl)"
+                      title="Filter aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <button
+                      v-else-if="getTagMode('secLevel', lvl) === 'exclude'"
+                      class="rail-btn btn-trash is-exclude-trash"
+                      @click.stop="removeTag('secLevel', lvl)"
+                      title="Ausschluss aufheben (löschen)"
+                    >
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                      </svg>
+                    </button>
+                    <template v-else>
+                      <button
+                        class="rail-btn btn-check"
+                        @click.stop="toggleTag('secLevel', lvl, 'include', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
+                        title="Nur diesen Schutzbedarf einschließen (✓)"
+                      >
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                      <button
+                        class="rail-btn btn-cross"
+                        @click.stop="toggleTag('secLevel', lvl, 'exclude', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
+                        title="Diesen Schutzbedarf ausschließen (✕)"
+                      >
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4a. Zielobjekte -->
+            <template v-for="fs in [
+              { cat: 'targetObject', rail: 'targetObjects', ns: 'targetObjects', title: 'Zielobjekte', chip: 'Zielobjekt', search: true, placeholder: 'Zielobjekt suchen …' }
+            ]" :key="fs.cat">
+              <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
+                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                  <span class="rail-heading-title">{{ fs.title }}</span>
+                  <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
+                  <span class="spacer"></span>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+                </div>
+                <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
+                  <div v-if="fs.search" class="rail-threat-search">
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                  </div>
+                  <div :class="{ 'rail-threats-scroll': fs.search }">
+                    <div
+                      v-for="v in facetOptionsFiltered(fs.cat)"
+                      :key="v"
+                      class="rail-row"
+                      :class="{
+                        'is-included': getTagMode(fs.cat, v) === 'include',
+                        'is-excluded': getTagMode(fs.cat, v) === 'exclude',
+                        'is-empty': !facetCounts[fs.cat][v]
+                      }"
+                    >
+                      <div
+                        class="rail-row-main"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
+                      >
+                        <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
+                          <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
+                        </span>
+                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode(fs.cat, v)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
+                          @click.stop="removeTag(fs.cat, v)"
+                          :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                          </svg>
+                        </button>
+                        <template v-else>
+                          <button
+                            class="rail-btn btn-check"
+                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Nur diesen Wert einschließen (✓)"
+                          >
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button
+                            class="rail-btn btn-cross"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Diesen Wert ausschließen (✕)"
+                          >
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                    <p v-if="facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">{{ facetSearch[fs.cat] ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- 4b. Modalverben -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.modalVerbs = !railCollapsed.modalVerbs" title="Modalverben ein-/ausklappen">
                 <span class="rail-heading-title">Modalverben</span>
@@ -414,86 +642,10 @@
               </div>
             </div>
 
-            <!-- 2. Schutzbedarf / Sicherheitsniveau -->
-            <div v-if="availableSecLevels.length > 0" class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.secLevels = !railCollapsed.secLevels" title="Schutzbedarf / Sicherheitsniveau ein-/ausklappen">
-                <span class="rail-heading-title">Schutzbedarf</span>
-                <span v-if="activeTagCountFor('secLevel')" class="rail-active-badge">{{ activeTagCountFor('secLevel') }}</span>
-                <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
-              <div v-show="!railCollapsed.secLevels" class="rail-section-body">
-                <p v-if="railSectionEmpty('secLevel', availableSecLevels, secLevelCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
-                <div
-                  v-for="lvl in availableSecLevels"
-                  :key="lvl"
-                  v-show="railRowVisible('secLevel', lvl, secLevelCounts[lvl] || 0)"
-                  class="rail-row"
-                  :class="{
-                    'is-included': getTagMode('secLevel', lvl) === 'include',
-                    'is-excluded': getTagMode('secLevel', lvl) === 'exclude',
-                    'is-empty': !secLevelCounts[lvl]
-                  }"
-                >
-                  <div
-                    class="rail-row-main"
-                    @click="getTagMode('secLevel', lvl) ? removeTag('secLevel', lvl) : toggleTag('secLevel', lvl, 'include', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
-                    :title="getTagMode('secLevel', lvl) ? 'Klicken zum Aufheben des Filters' : ('Schutzbedarf: ' + secLevelDisplayLabel(lvl))"
-                  >
-                    <span class="rail-row-label">{{ secLevelDisplayLabel(lvl) }}</span>
-                    <span class="rail-row-count">{{ secLevelCounts[lvl] || 0 }}</span>
-                  </div>
-                  <div class="rail-row-actions">
-                    <button
-                      v-if="getTagMode('secLevel', lvl) === 'include'"
-                      class="rail-btn btn-trash"
-                      @click.stop="removeTag('secLevel', lvl)"
-                      title="Filter aufheben (löschen)"
-                    >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                      </svg>
-                    </button>
-                    <button
-                      v-else-if="getTagMode('secLevel', lvl) === 'exclude'"
-                      class="rail-btn btn-trash is-exclude-trash"
-                      @click.stop="removeTag('secLevel', lvl)"
-                      title="Ausschluss aufheben (löschen)"
-                    >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                      </svg>
-                    </button>
-                    <template v-else>
-                      <button
-                        class="rail-btn btn-check"
-                        @click.stop="toggleTag('secLevel', lvl, 'include', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
-                        title="Nur diesen Schutzbedarf einschließen (✓)"
-                      >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </button>
-                      <button
-                        class="rail-btn btn-cross"
-                        @click.stop="toggleTag('secLevel', lvl, 'exclude', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
-                        title="Diesen Schutzbedarf ausschließen (✕)"
-                      >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M18 6 6 18M6 6l12 12"/>
-                        </svg>
-                      </button>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 2a. Aufwand, Handlungswort, Dokumentation -->
+            <!-- 4c. Handlungswort, Dokumentation -->
             <template v-for="fs in [
-              { cat: 'effort', rail: 'effort', title: 'Aufwand', chip: 'Aufwand', search: false },
-              { cat: 'actionWord', rail: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' },
-              { cat: 'documentation', rail: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
+              { cat: 'actionWord', rail: 'actionWords', ns: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' },
+              { cat: 'documentation', rail: 'documentation', ns: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
                 <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
@@ -520,7 +672,7 @@
                       <div
                         class="rail-row-main"
                         @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
-                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.cat === 'actionWord' ? 'actionWords' : 'documentation', v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
@@ -568,205 +720,7 @@
               </div>
             </template>
 
-            <!-- 2b. Schutzziele -->
-            <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.securityTargets = !railCollapsed.securityTargets" title="Schutzziele ein-/ausklappen">
-                <span class="rail-heading-title">Schutzziele</span>
-                <span v-if="SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0)" class="rail-active-badge">{{ SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0) }}</span>
-                <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.securityTargets }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
-              <div v-show="!railCollapsed.securityTargets" class="rail-section-body">
-                <div v-for="t in SECURITY_TARGETS" :key="t.key" class="st-rail-row">
-                  <span class="st-rail-label" :title="shortDefinition('securityTargets', t.nsKey)">{{ t.label }}</span>
-                  <div class="st-chips">
-                    <button
-                      v-for="v in ['0', '1', '2']"
-                      :key="v"
-                      class="st-chip"
-                      :class="{
-                        'is-included': getTagMode(t.key, v) === 'include',
-                        'is-excluded': getTagMode(t.key, v) === 'exclude',
-                        'is-empty': !facetCounts[t.key][v]
-                      }"
-                      @click="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'include', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
-                      @contextmenu.prevent="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'exclude', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
-                      :title="t.label + ' ' + v + ' – ' + (definition('securityTargetLevels', v) || securityTargetLevelLabel(v)) + '\n\nKlick: nur diesen Wert · Rechtsklick: ausschließen'"
-                    >
-                      <span class="st-dots sm" :class="'st-level-' + v" aria-hidden="true">
-                        <span class="st-dot" :class="{ on: Number(v) >= 1 }"></span>
-                        <span class="st-dot" :class="{ on: Number(v) >= 2 }"></span>
-                      </span>
-                      <span class="sr-only">{{ v }}</span>
-                      <span class="st-chip-count">{{ facetCounts[t.key][v] || 0 }}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 3. Praktiken -->
-            <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
-                <span class="rail-heading-title">Praktiken</span>
-                <span v-if="activeTagCountFor('practice')" class="rail-active-badge">{{ activeTagCountFor('practice') }}</span>
-                <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
-              <div v-show="!railCollapsed.practices" class="rail-section-body">
-                <p v-if="railSectionEmpty('practice', activeCatalog.practices.map((p) => p.id), practiceCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
-                <div
-                  v-for="p in activeCatalog.practices"
-                  :key="p.id"
-                  v-show="railRowVisible('practice', p.id, practiceCounts[p.id] || 0)"
-                  class="rail-row"
-                  :class="{
-                    'is-included': getTagMode('practice', p.id) === 'include',
-                    'is-excluded': getTagMode('practice', p.id) === 'exclude',
-                    'is-empty': !practiceCounts[p.id]
-                  }"
-                >
-                  <div
-                    class="rail-row-main"
-                    @click="getTagMode('practice', p.id) ? removeTag('practice', p.id) : toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
-                    :title="getTagMode('practice', p.id) ? 'Klicken zum Aufheben des Filters' : p.id + ' – ' + p.title"
-                  >
-                    <span class="rail-code">{{ p.id }}</span>
-                    <span class="rail-row-label">{{ p.title }}</span>
-                    <span class="rail-row-count">{{ practiceCounts[p.id] || 0 }}</span>
-                  </div>
-                  <div class="rail-row-actions">
-                    <button
-                      v-if="getTagMode('practice', p.id) === 'include'"
-                      class="rail-btn btn-trash"
-                      @click.stop="removeTag('practice', p.id)"
-                      title="Filter aufheben (löschen)"
-                    >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                      </svg>
-                    </button>
-                    <button
-                      v-else-if="getTagMode('practice', p.id) === 'exclude'"
-                      class="rail-btn btn-trash is-exclude-trash"
-                      @click.stop="removeTag('practice', p.id)"
-                      title="Ausschluss aufheben (löschen)"
-                    >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                      </svg>
-                    </button>
-                    <template v-else>
-                      <button
-                        class="rail-btn btn-check"
-                        @click.stop="toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
-                        title="Nur diese Praktik einschließen (✓)"
-                      >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </button>
-                      <button
-                        class="rail-btn btn-cross"
-                        @click.stop="toggleTag('practice', p.id, 'exclude', p.id + ' ' + p.title, 'Praktik')"
-                        title="Diese Praktik ausschließen (✕)"
-                      >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M18 6 6 18M6 6l12 12"/>
-                        </svg>
-                      </button>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 4. Elementare Gefährdungen -->
-            <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.threats = !railCollapsed.threats" title="Elementare Gefährdungen ein-/ausklappen">
-                <span class="rail-heading-title">Gefährdungen</span>
-                <span v-if="activeTagCountFor('threat')" class="rail-active-badge">{{ activeTagCountFor('threat') }}</span>
-                <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.threats }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
-              <div v-show="!railCollapsed.threats" class="rail-section-body">
-                <div class="rail-threat-search">
-                  <input
-                    type="search"
-                    class="rail-search-input"
-                    v-model="threatRailSearch"
-                    placeholder="Gefährdung suchen (z.B. G 0.14)..."
-                  />
-                </div>
-                <p v-if="displayedThreatOptions.length === 0" class="rail-empty-note">{{ threatRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
-                <div class="rail-threats-scroll">
-                  <div
-                    v-for="t in displayedThreatOptions"
-                    :key="t.code"
-                    class="rail-row"
-                    :class="{
-                      'is-included': getTagMode('threat', t.code) === 'include',
-                      'is-excluded': getTagMode('threat', t.code) === 'exclude',
-                      'is-empty': !threatCounts[t.code]
-                    }"
-                  >
-                    <div
-                      class="rail-row-main"
-                      @click="getTagMode('threat', t.code) ? removeTag('threat', t.code) : toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
-                      :title="getTagMode('threat', t.code) ? 'Klicken zum Aufheben des Filters' : (t.definition ? t.label + '\n\n' + t.definition : t.label)"
-                    >
-                      <span class="threat-pill-code">{{ t.code }}</span>
-                      <span class="rail-row-label">{{ t.title }}</span>
-                      <span class="rail-row-count">{{ threatCounts[t.code] || 0 }}</span>
-                    </div>
-                    <div class="rail-row-actions">
-                      <button
-                        v-if="getTagMode('threat', t.code) === 'include'"
-                        class="rail-btn btn-trash"
-                        @click.stop="removeTag('threat', t.code)"
-                        title="Filter aufheben (löschen)"
-                      >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                        </svg>
-                      </button>
-                      <button
-                        v-else-if="getTagMode('threat', t.code) === 'exclude'"
-                        class="rail-btn btn-trash is-exclude-trash"
-                        @click.stop="removeTag('threat', t.code)"
-                        title="Ausschluss aufheben (löschen)"
-                      >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                        </svg>
-                      </button>
-                      <template v-else>
-                        <button
-                          class="rail-btn btn-check"
-                          @click.stop="toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
-                          title="Nur diese Gefährdung einschließen (✓)"
-                        >
-                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </button>
-                        <button
-                          class="rail-btn btn-cross"
-                          @click.stop="toggleTag('threat', t.code, 'exclude', t.code + ' ' + t.title, 'Gefährdung')"
-                          title="Diese Gefährdung ausschließen (✕)"
-                        >
-                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18M6 6l12 12"/>
-                          </svg>
-                        </button>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 4b. Tags (kontrolliertes Vokabular aus tags.csv) -->
+            <!-- 4d. Tags (kontrolliertes Vokabular aus tags.csv) -->
             <div v-if="allCatalogTags.length > 0" class="rail-section">
               <div class="rail-heading" @click="railCollapsed.tags = !railCollapsed.tags" title="Tags ein-/ausklappen">
                 <span class="rail-heading-title">Tags</span>
@@ -854,7 +808,206 @@
               </div>
             </div>
 
-            <!-- 5. Änderungen (Diff) -->
+            <!-- 5a. Schutzziele -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.securityTargets = !railCollapsed.securityTargets" title="Schutzziele ein-/ausklappen">
+                <span class="rail-heading-title">Schutzziele</span>
+                <span v-if="SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0)" class="rail-active-badge">{{ SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0) }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.securityTargets }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.securityTargets" class="rail-section-body">
+                <div v-for="t in SECURITY_TARGETS" :key="t.key" class="st-rail-row">
+                  <span class="st-rail-label" :title="shortDefinition('securityTargets', t.nsKey)">{{ t.label }}</span>
+                  <div class="st-chips">
+                    <button
+                      v-for="v in ['0', '1', '2']"
+                      :key="v"
+                      class="st-chip"
+                      :class="{
+                        'is-included': getTagMode(t.key, v) === 'include',
+                        'is-excluded': getTagMode(t.key, v) === 'exclude',
+                        'is-empty': !facetCounts[t.key][v]
+                      }"
+                      @click="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'include', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
+                      @contextmenu.prevent="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'exclude', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
+                      :title="t.label + ' ' + v + ' – ' + (definition('securityTargetLevels', v) || securityTargetLevelLabel(v)) + '\n\nKlick: nur diesen Wert · Rechtsklick: ausschließen'"
+                    >
+                      <span class="st-dots sm" :class="'st-level-' + v" aria-hidden="true">
+                        <span class="st-dot" :class="{ on: Number(v) >= 1 }"></span>
+                        <span class="st-dot" :class="{ on: Number(v) >= 2 }"></span>
+                      </span>
+                      <span class="sr-only">{{ v }}</span>
+                      <span class="st-chip-count">{{ facetCounts[t.key][v] || 0 }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5b. Aufwand -->
+            <template v-for="fs in [
+              { cat: 'effort', rail: 'effort', title: 'Aufwand', chip: 'Aufwand', search: false }
+            ]" :key="fs.cat">
+              <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
+                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                  <span class="rail-heading-title">{{ fs.title }}</span>
+                  <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
+                  <span class="spacer"></span>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+                </div>
+                <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
+                  <div v-if="fs.search" class="rail-threat-search">
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                  </div>
+                  <div :class="{ 'rail-threats-scroll': fs.search }">
+                    <div
+                      v-for="v in facetOptionsFiltered(fs.cat)"
+                      :key="v"
+                      class="rail-row"
+                      :class="{
+                        'is-included': getTagMode(fs.cat, v) === 'include',
+                        'is-excluded': getTagMode(fs.cat, v) === 'exclude',
+                        'is-empty': !facetCounts[fs.cat][v]
+                      }"
+                    >
+                      <div
+                        class="rail-row-main"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
+                      >
+                        <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
+                          <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
+                        </span>
+                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode(fs.cat, v)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
+                          @click.stop="removeTag(fs.cat, v)"
+                          :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                          </svg>
+                        </button>
+                        <template v-else>
+                          <button
+                            class="rail-btn btn-check"
+                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Nur diesen Wert einschließen (✓)"
+                          >
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button
+                            class="rail-btn btn-cross"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Diesen Wert ausschließen (✕)"
+                          >
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                    <p v-if="facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">{{ facetSearch[fs.cat] ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- 6. Elementare Gefährdungen -->
+            <div class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.threats = !railCollapsed.threats" title="Elementare Gefährdungen ein-/ausklappen">
+                <span class="rail-heading-title">Gefährdungen</span>
+                <span v-if="activeTagCountFor('threat')" class="rail-active-badge">{{ activeTagCountFor('threat') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.threats }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div v-show="!railCollapsed.threats" class="rail-section-body">
+                <div class="rail-threat-search">
+                  <input
+                    type="search"
+                    class="rail-search-input"
+                    v-model="threatRailSearch"
+                    placeholder="Gefährdung suchen (z.B. G 0.14)..."
+                  />
+                </div>
+                <p v-if="displayedThreatOptions.length === 0" class="rail-empty-note">{{ threatRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
+                <div class="rail-threats-scroll">
+                  <div
+                    v-for="t in displayedThreatOptions"
+                    :key="t.code"
+                    class="rail-row"
+                    :class="{
+                      'is-included': getTagMode('threat', t.code) === 'include',
+                      'is-excluded': getTagMode('threat', t.code) === 'exclude',
+                      'is-empty': !threatCounts[t.code]
+                    }"
+                  >
+                    <div
+                      class="rail-row-main"
+                      @click="getTagMode('threat', t.code) ? removeTag('threat', t.code) : toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
+                      :title="getTagMode('threat', t.code) ? 'Klicken zum Aufheben des Filters' : (t.definition ? t.label + '\n\n' + t.definition : t.label)"
+                    >
+                      <span class="threat-pill-code">{{ t.code }}</span>
+                      <span class="rail-row-label">{{ t.title }}</span>
+                      <span class="rail-row-count">{{ threatCounts[t.code] || 0 }}</span>
+                    </div>
+                    <div class="rail-row-actions">
+                      <button
+                        v-if="getTagMode('threat', t.code) === 'include'"
+                        class="rail-btn btn-trash"
+                        @click.stop="removeTag('threat', t.code)"
+                        title="Filter aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <button
+                        v-else-if="getTagMode('threat', t.code) === 'exclude'"
+                        class="rail-btn btn-trash is-exclude-trash"
+                        @click.stop="removeTag('threat', t.code)"
+                        title="Ausschluss aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <template v-else>
+                        <button
+                          class="rail-btn btn-check"
+                          @click.stop="toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
+                          title="Nur diese Gefährdung einschließen (✓)"
+                        >
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </button>
+                        <button
+                          class="rail-btn btn-cross"
+                          @click.stop="toggleTag('threat', t.code, 'exclude', t.code + ' ' + t.title, 'Gefährdung')"
+                          title="Diese Gefährdung ausschließen (✕)"
+                        >
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. Änderungen (Diff) -->
             <div v-if="diffSummary?.hasDiff" class="rail-section">
               <div class="rail-heading" @click="railCollapsed.diffs = !railCollapsed.diffs" title="Änderungen ein-/ausklappen">
                 <span class="rail-heading-title">Änderungen</span>
@@ -932,7 +1085,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </aside>
 
@@ -1432,9 +1584,12 @@
 
                 <div class="detail-tags">
                   <span class="tag tag-lg tag-accent">{{ selectedControl.isSubcontrol ? 'Unteranforderung' : 'Anforderung' }}</span>
-                  <span v-if="verbKey(selectedControl.modalVerb)" class="tag tag-lg" :class="'verb-' + verbKey(selectedControl.modalVerb)" :title="shortDefinition('modalVerbs', selectedControl.modalVerb)">
-                    {{ selectedControl.modalVerb }}
-                  </span>
+                  <span v-if="selectedControlStats.sub" class="tag tag-lg tag-outline">{{ selectedControlStats.sub }} {{ selectedControlStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
+                  <span
+                    v-if="selectedControlStats.threats"
+                    class="tag tag-lg tag-outline"
+                    :title="selectedControlStats.sub ? 'Elementare Gefährdungen inkl. Unteranforderungen' : 'Elementare Gefährdungen'"
+                  >{{ selectedControlStats.threats }} {{ selectedControlStats.threats === 1 ? 'Gefährdung' : 'Gefährdungen' }}</span>
                   <span
                     v-if="selectedControl.secLevel"
                     class="tag tag-lg"
@@ -1473,50 +1628,58 @@
                   </div>
 
                   <div class="card">
-                    <dl class="st-box" style="margin:0">
-                      <div class="kv full">
-                        <dt class="st-head">
-                          Schutzziele
-                          <button
-                            v-if="hasSecurityTargets(selectedControl)"
-                            class="info-btn"
-                            :class="{ on: openDefs.securityTargets }"
-                            @click="openDefs.securityTargets = !openDefs.securityTargets"
-                            :aria-expanded="openDefs.securityTargets"
-                            :title="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                            :aria-label="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                          >
-                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                          </button>
-                        </dt>
-                        <dd v-if="hasSecurityTargets(selectedControl)">
-                          <div class="st-grid">
-                            <button
-                              v-for="t in SECURITY_TARGETS"
-                              :key="t.key"
-                              class="st-row"
-                              :class="'st-level-' + (selectedControl[t.key] ?? 'none')"
-                              @click="selectedControl[t.key] != null && toggleTag(t.key, String(selectedControl[t.key]), 'include', selectedControl[t.key] + ' (' + securityTargetLevelLabel(selectedControl[t.key]) + ')', t.label)"
-                              :title="t.label + ': ' + (definition('securityTargetLevels', selectedControl[t.key]) || 'keine Angabe') + ' – klicken zum Filtern'"
-                            >
-                              <span class="st-label"><span>{{ t.label }}</span></span>
-                              <span class="st-dots" aria-hidden="true">
-                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 1 }"></span>
-                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 2 }"></span>
-                              </span>
-                              <span class="st-level">{{ selectedControl[t.key] != null ? securityTargetLevelLabel(selectedControl[t.key]) : '–' }}</span>
-                            </button>
+                    <dl class="kv-grid" style="margin:0">
+                      <div class="kv">
+                        <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjekte' : 'Zielobjekt' }}</dt>
+                        <dd v-if="selectedControl.targetObjects.length">
+                          <div class="kv-value-list">
+                            <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
+                              <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjekt')" title="Nach diesem Zielobjekt filtern">{{ t }}</button>
+                              <button
+                                v-if="definition('targetObjects', t)"
+                                class="info-btn"
+                                :class="{ on: openDefs['to_' + t] }"
+                                @click="openDefs['to_' + t] = !openDefs['to_' + t]"
+                                :aria-expanded="openDefs['to_' + t]"
+                                :title="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
                           </div>
-                          <div v-if="openDefs.securityTargets" class="def-text st-defs">
-                            <p class="def-meta">Wirkung der Anforderung auf das Schutzziel:</p>
-                            <p v-for="v in ['0', '1', '2']" :key="v"><strong>{{ v }} – {{ securityTargetLevelLabel(v) }}:</strong> {{ definition('securityTargetLevels', v) }}</p>
-                            <p v-for="t in SECURITY_TARGETS" :key="t.key"><strong>{{ t.label }}:</strong> {{ shortDefinition('securityTargets', t.nsKey) }}</p>
+                          <template v-for="t in selectedControl.targetObjects" :key="'def_' + t">
+                            <div v-if="openDefs['to_' + t] && definition('targetObjects', t)" class="def-text">
+                              <p><strong v-if="selectedControl.targetObjects.length > 1">{{ t }}: </strong>{{ definition('targetObjects', t) }}</p>
+                              <p v-if="namespaceEntry('targetObjects', t)?.Kategorie" class="def-meta">Kategorie: {{ namespaceEntry('targetObjects', t).Kategorie }}</p>
+                            </div>
+                          </template>
+                        </dd>
+                        <dd v-else class="muted">–</dd>
+                      </div>
+                      <div class="kv">
+                        <dt>Modalverb</dt>
+                        <dd v-if="verbKey(selectedControl.modalVerb)">
+                          <span class="kv-value">
+                            <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
+                            <button
+                              v-if="definition('modalVerbs', selectedControl.modalVerb)"
+                              class="info-btn"
+                              :class="{ on: openDefs.modalVerb }"
+                              @click="openDefs.modalVerb = !openDefs.modalVerb"
+                              :aria-expanded="openDefs.modalVerb"
+                              :title="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
+                          <div v-if="openDefs.modalVerb && definition('modalVerbs', selectedControl.modalVerb)" class="def-text">
+                            <p>{{ definition('modalVerbs', selectedControl.modalVerb) }}</p>
                           </div>
                         </dd>
-                        <dd v-else class="muted">Keine Zuordnung im Katalog</dd>
+                        <dd v-else class="muted">–</dd>
                       </div>
-                    </dl>
-                    <dl class="kv-grid st-follow" style="margin:0">
                       <div class="kv">
                         <dt>Handlung</dt>
                         <dd v-if="selectedControl.actionWord">
@@ -1569,41 +1732,6 @@
                         </dd>
                         <dd v-else class="muted">Nicht vorgegeben</dd>
                       </div>
-                      <div class="kv full">
-                        <dt>Gefordertes Ergebnis</dt>
-                        <dd :class="{ muted: !selectedControl.result }">{{ selectedControl.result || '–' }}</dd>
-                      </div>
-                      <div v-if="selectedControl.resultSpecification" class="kv full">
-                        <dt>Spezifikation</dt>
-                        <dd>{{ selectedControl.resultSpecification }}</dd>
-                      </div>
-                      <div v-if="hasEffort(selectedControl.effortLevel)" class="kv full">
-                        <dt>Aufwand</dt>
-                        <dd>
-                          <button
-                            class="effort-row"
-                            @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
-                            title="Nach dieser Aufwandsstufe filtern"
-                          >
-                            <span class="effort-meter" :aria-label="'Aufwand ' + selectedControl.effortLevel + ' von ' + maxEffort">
-                              <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(selectedControl.effortLevel) ? { background: effortColor(selectedControl.effortLevel) } : null"></span>
-                            </span>
-                            <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
-                          </button>
-                          <button
-                            v-if="effortDefinition(selectedControl.effortLevel)"
-                            class="info-btn"
-                            :class="{ on: openDefs.effort }"
-                            @click="openDefs.effort = !openDefs.effort"
-                            :aria-expanded="openDefs.effort"
-                            :title="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
-                            :aria-label="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
-                          >
-                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                          </button>
-                          <p v-if="openDefs.effort && effortDefinition(selectedControl.effortLevel)" class="def-text">{{ effortDefinition(selectedControl.effortLevel) }}</p>
-                        </dd>
-                      </div>
                       <div v-if="selectedControl.tags?.length" class="kv full">
                         <dt>Tags</dt>
                         <dd>
@@ -1641,6 +1769,81 @@
                               <p><strong>{{ tag }}:</strong> {{ tagDefinition(tag) }}</p>
                             </div>
                           </template>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div class="card">
+                    <dl class="st-box" style="margin:0">
+                      <div class="kv full">
+                        <dt class="st-head">
+                          Schutzziele
+                          <button
+                            v-if="hasSecurityTargets(selectedControl)"
+                            class="info-btn"
+                            :class="{ on: openDefs.securityTargets }"
+                            @click="openDefs.securityTargets = !openDefs.securityTargets"
+                            :aria-expanded="openDefs.securityTargets"
+                            :title="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                            :aria-label="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                          >
+                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                          </button>
+                        </dt>
+                        <dd v-if="hasSecurityTargets(selectedControl)">
+                          <div class="st-grid">
+                            <button
+                              v-for="t in SECURITY_TARGETS"
+                              :key="t.key"
+                              class="st-row"
+                              :class="'st-level-' + (selectedControl[t.key] ?? 'none')"
+                              @click="selectedControl[t.key] != null && toggleTag(t.key, String(selectedControl[t.key]), 'include', selectedControl[t.key] + ' (' + securityTargetLevelLabel(selectedControl[t.key]) + ')', t.label)"
+                              :title="t.label + ': ' + (definition('securityTargetLevels', selectedControl[t.key]) || 'keine Angabe') + ' – klicken zum Filtern'"
+                            >
+                              <span class="st-label"><span>{{ t.label }}</span></span>
+                              <span class="st-dots" aria-hidden="true">
+                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 1 }"></span>
+                                <span class="st-dot" :class="{ on: Number(selectedControl[t.key]) >= 2 }"></span>
+                              </span>
+                              <span class="st-level">{{ selectedControl[t.key] != null ? securityTargetLevelLabel(selectedControl[t.key]) : '–' }}</span>
+                            </button>
+                          </div>
+                          <div v-if="openDefs.securityTargets" class="def-text st-defs">
+                            <p class="def-meta">Wirkung der Anforderung auf das Schutzziel:</p>
+                            <p v-for="v in ['0', '1', '2']" :key="v"><strong>{{ v }} – {{ securityTargetLevelLabel(v) }}:</strong> {{ definition('securityTargetLevels', v) }}</p>
+                            <p v-for="t in SECURITY_TARGETS" :key="t.key"><strong>{{ t.label }}:</strong> {{ shortDefinition('securityTargets', t.nsKey) }}</p>
+                          </div>
+                        </dd>
+                        <dd v-else class="muted">Keine Zuordnung im Katalog</dd>
+                      </div>
+                    </dl>
+                    <dl v-if="hasEffort(selectedControl.effortLevel)" class="kv-grid st-follow" style="margin:0">
+                      <div v-if="hasEffort(selectedControl.effortLevel)" class="kv full">
+                        <dt>Aufwand</dt>
+                        <dd>
+                          <button
+                            class="effort-row"
+                            @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
+                            title="Nach dieser Aufwandsstufe filtern"
+                          >
+                            <span class="effort-meter" :aria-label="'Aufwand ' + selectedControl.effortLevel + ' von ' + maxEffort">
+                              <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(selectedControl.effortLevel) ? { background: effortColor(selectedControl.effortLevel) } : null"></span>
+                            </span>
+                            <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
+                          </button>
+                          <button
+                            v-if="effortDefinition(selectedControl.effortLevel)"
+                            class="info-btn"
+                            :class="{ on: openDefs.effort }"
+                            @click="openDefs.effort = !openDefs.effort"
+                            :aria-expanded="openDefs.effort"
+                            :title="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                            :aria-label="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                          >
+                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                          </button>
+                          <p v-if="openDefs.effort && effortDefinition(selectedControl.effortLevel)" class="def-text">{{ effortDefinition(selectedControl.effortLevel) }}</p>
                         </dd>
                       </div>
                     </dl>
@@ -1722,9 +1925,53 @@
                   </div>
                 </div>
 
-                <div v-else-if="detailActiveTab === 'guidance'" class="card card-pad">
-                  <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
-                  <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
+                <!-- Hilfestellung des BSI, darunter die Bestandteile des Anforderungstexts nach der BSI-Satzschablone -->
+                <div v-else-if="detailActiveTab === 'guidance'" class="stack">
+                  <div class="card card-pad">
+                    <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
+                    <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
+                  </div>
+                  <div>
+                    <div class="section-label">Satzaufbau</div>
+                    <div class="card">
+                      <dl class="kv-grid" style="margin:0">
+                        <div class="kv">
+                          <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjekte' : 'Zielobjekt' }}</dt>
+                          <dd v-if="selectedControl.targetObjects.length" class="kv-value-list">
+                            <button v-for="t in selectedControl.targetObjects" :key="t" class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjekt')" title="Nach diesem Zielobjekt filtern">{{ t }}</button>
+                          </dd>
+                          <dd v-else class="muted">–</dd>
+                        </div>
+                        <div class="kv">
+                          <dt>Modalverb</dt>
+                          <dd v-if="verbKey(selectedControl.modalVerb)">
+                            <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
+                          </dd>
+                          <dd v-else class="muted">–</dd>
+                        </div>
+                        <div class="kv full">
+                          <dt>Gefordertes Ergebnis</dt>
+                          <dd v-if="selectedControl.result">
+                            <button class="kv-link" @click="toggleTag('result', selectedControl.result, 'include', selectedControl.result, 'Ergebnis')" title="Nach diesem Ergebnis filtern">{{ selectedControl.result }}</button>
+                          </dd>
+                          <dd v-else class="muted">–</dd>
+                        </div>
+                        <div v-if="selectedControl.resultSpecification" class="kv full">
+                          <dt>Spezifikation</dt>
+                          <dd>
+                            <button class="kv-link" @click="toggleTag('resultSpecification', selectedControl.resultSpecification, 'include', selectedControl.resultSpecification, 'Spezifikation')" title="Nach dieser Spezifikation filtern">{{ selectedControl.resultSpecification }}</button>
+                          </dd>
+                        </div>
+                        <div class="kv full">
+                          <dt>Handlung</dt>
+                          <dd v-if="selectedControl.actionWord">
+                            <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
+                          </dd>
+                          <dd v-else class="muted">–</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Änderungen -->

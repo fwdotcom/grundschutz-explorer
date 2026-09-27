@@ -834,6 +834,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .kv-value { display: inline-flex; align-items: flex-start; gap: 5px; max-width: 100%; }
 .kv-value .info-btn { margin: 4px 0 0; flex-shrink: 0; }
+.kv-value-list { display: flex; flex-wrap: wrap; gap: 2px 16px; }
 /* Dezentes Blau mit mind. 3:1 Kontrast; Hover in Akzentfarbe, geöffnet in Akzent-Textfarbe */
 .info-btn:hover { color: var(--accent); }
 /* Info-Symbol: gefüllter Kreis mit ausgestanztem „i“ (mit Serifen), wächst mit der Schriftgröße */
@@ -885,6 +886,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .def-text .def-meta { margin-top: 6px; color: var(--text-3); }
 .kv-link { padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; border-bottom: 1px dashed var(--border-strong); overflow-wrap: anywhere; word-break: break-word; }
 .kv-link:hover { color: var(--accent-text); border-bottom-color: var(--accent); }
+.kv-verb { font-weight: 700; letter-spacing: 0.03em; }
+.kv-verb.muss { color: var(--muss); }
+.kv-verb.sollte { color: var(--sollte); }
+.kv-verb.kann { color: var(--kann); }
 .rail-empty-note { font-size: calc(12px * var(--font-scale)); color: var(--text-3); padding: 4px 8px; margin: 0; }
 .meta-num { display: inline-flex; align-items: center; gap: 3px; font-size: calc(11.5px * var(--font-scale)); color: var(--text-3); font-variant-numeric: tabular-nums; }
 .meta-num.threat { color: var(--threat); }
