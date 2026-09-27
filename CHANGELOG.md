@@ -6,16 +6,16 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
 ### Neu
 
-- Die Detailansicht zeigt das Zielobjekt einer Anforderung (aus `target_object_categories`) mit BSI-Definition; Änderungen daran erscheinen im Versionsvergleich.
-- Neuer Abschnitt „Satzaufbau“ im Reiter „Hilfestellung“ unter dem Hinweistext: zerlegt den Anforderungstext in die Bestandteile der BSI-Satzschablone (Zielobjekt, Modalverb, gefordertes Ergebnis, Spezifikation, Handlung). Jeder Bestandteil ist per Klick filterbar.
-- Neuer Filterbereich „Zielobjekte“ in der Filterleiste.
+- Reiter „Hilfestellung“: Abschnitt „Satzaufbau“ zerlegt den Anforderungstext nach der BSI-Satzschablone, jeder Bestandteil ist filterbar.
+- Zielobjektkategorie und Quellkatalog einer Anforderung, jeweils mit Definition und eigenem Filterbereich.
+- Erläuterungen erscheinen in einer Infobox am unteren Rand der Detailansicht statt ausgeklappt im Text.
 
 ### Geändert
 
-- Die Übersicht einer Anforderung ist kompakter: Zielobjekt, Modalverb, Handlung und Dokumentation stehen in einem Viererblock, darunter die Tags. Schutzziele und Aufwand teilen sich einen Kasten vor den Gefährdungen. Gefordertes Ergebnis und Spezifikation stehen jetzt im Satzaufbau.
-- Die Filterleiste folgt der Reihenfolge der Detailansicht: Listen, Praktiken, Schutzbedarf, Zielobjekte, Modalverben, Handlungswort, Dokumentation, Tags, Schutzziele, Aufwand, Gefährdungen, Änderungen.
-- Beim Laden wird die Katalogstruktur geprüft: Kataloge mit Gruppen unterhalb der Themen werden mit einer Fehlermeldung abgewiesen, statt dass Anforderungen stillschweigend fehlen. Handbuch und Ladedialog sprechen nun von Katalogen im Schema des BSI-Grundschutz++ statt allgemein von OSCAL-Katalogen.
-- Im Kopf der Detailansicht entfällt das Modalverb-Badge; stattdessen stehen dort die Zahl der Unteranforderungen und der elementaren Gefährdungen (jeweils einschließlich aller Unteranforderungen).
+- Übersicht einer Anforderung neu gegliedert: Kenngrößen, Unteranforderungen, Gefährdungen, verknüpfte Anforderungen, Einordnung (Quellkatalog, Tags).
+- Kopf der Detailansicht: Zahl der Unteranforderungen und Gefährdungen statt Modalverb-Badge.
+- Neue Reihenfolge der Filterleiste.
+- Kataloge mit Gruppen unterhalb der Themen werden beim Laden mit Fehlermeldung abgewiesen, statt dass Anforderungen fehlen.
 
 ## [1.1.3] – 2026-09-26
 

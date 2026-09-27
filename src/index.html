@@ -188,7 +188,7 @@
       </div>
 
       <template v-else>
-        <!-- ---------- Rail: Facetten-Filter in der Reihenfolge der Detailansicht (Kopf, Satzaufbau, Schutzziele/Aufwand, Gefährdungen) ---------- -->
+        <!-- ---------- Rail: Facetten-Filter (Listen, Praktiken, Schutzbedarf, Satzaufbau, Kenngrößen, Gefährdungen, Quellkataloge, Tags, Änderungen) ---------- -->
         <!-- Unter 980px als ausklappbare Leiste (Drawer) über den Button "Filter" in der Liste -->
         <div v-if="isRailOpen" class="rail-backdrop" @click="closeRail"></div>
         <aside
@@ -642,10 +642,9 @@
               </div>
             </div>
 
-            <!-- 4c. Handlungswort, Dokumentation -->
+            <!-- 4c. Handlungswort -->
             <template v-for="fs in [
-              { cat: 'actionWord', rail: 'actionWords', ns: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' },
-              { cat: 'documentation', rail: 'documentation', ns: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
+              { cat: 'actionWord', rail: 'actionWords', ns: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
                 <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
@@ -720,94 +719,6 @@
               </div>
             </template>
 
-            <!-- 4d. Tags (kontrolliertes Vokabular aus tags.csv) -->
-            <div v-if="allCatalogTags.length > 0" class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.tags = !railCollapsed.tags" title="Tags ein-/ausklappen">
-                <span class="rail-heading-title">Tags</span>
-                <span v-if="activeTagCountFor('tags')" class="rail-active-badge">{{ activeTagCountFor('tags') }}</span>
-                <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.tags }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
-
-              <div v-show="!railCollapsed.tags" class="rail-section-body">
-                <div class="rail-threat-search">
-                  <input
-                    type="search"
-                    class="rail-search-input"
-                    v-model="tagRailSearch"
-                    placeholder="Tag suchen …"
-                    @keydown.esc="tagRailSearch = ''"
-                  />
-                </div>
-
-                <p v-if="displayedTagOptions.length === 0" class="rail-empty-note">{{ tagRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
-                <div class="rail-threat-scroll">
-                  <div
-                    v-for="item in displayedTagOptions"
-                    :key="item.tag"
-                    class="rail-row"
-                    :class="{
-                      'is-included': item.isIncluded,
-                      'is-excluded': item.isExcluded,
-                      'is-empty': !item.count
-                    }"
-                  >
-                    <div
-                      class="rail-row-main"
-                      @click="getTagMode('tags', item.tag) ? removeTag('tags', item.tag) : toggleTag('tags', item.tag, 'include', item.tag, 'Tag')"
-                      :title="getTagMode('tags', item.tag) ? 'Klicken zum Aufheben des Filters' : (tagDefinition(item.tag) ? item.tag + '\n\n' + tagDefinition(item.tag) : item.tag)"
-                    >
-                      <span class="rail-row-label">{{ item.tag }}</span>
-                      <span class="rail-row-count">{{ item.count }}</span>
-                    </div>
-
-                    <div class="rail-row-actions">
-                      <button
-                        v-if="item.isIncluded"
-                        class="rail-btn btn-trash"
-                        @click.stop="removeTag('tags', item.tag)"
-                        title="Filter aufheben (löschen)"
-                      >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                        </svg>
-                      </button>
-                      <button
-                        v-else-if="item.isExcluded"
-                        class="rail-btn btn-trash is-exclude-trash"
-                        @click.stop="removeTag('tags', item.tag)"
-                        title="Ausschluss aufheben (löschen)"
-                      >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
-                        </svg>
-                      </button>
-                      <template v-else>
-                        <button
-                          class="rail-btn btn-check"
-                          @click.stop="toggleTag('tags', item.tag, 'include', item.tag, 'Tag')"
-                          title="Nur dieses Tag einschließen (✓)"
-                        >
-                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </button>
-                        <button
-                          class="rail-btn btn-cross"
-                          @click.stop="toggleTag('tags', item.tag, 'exclude', item.tag, 'Tag')"
-                          title="Dieses Tag ausschließen (✕)"
-                        >
-                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18M6 6l12 12"/>
-                          </svg>
-                        </button>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- 5a. Schutzziele -->
             <div class="rail-section">
               <div class="rail-heading" @click="railCollapsed.securityTargets = !railCollapsed.securityTargets" title="Schutzziele ein-/ausklappen">
@@ -848,6 +759,83 @@
             <!-- 5b. Aufwand -->
             <template v-for="fs in [
               { cat: 'effort', rail: 'effort', title: 'Aufwand', chip: 'Aufwand', search: false }
+            ]" :key="fs.cat">
+              <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
+                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                  <span class="rail-heading-title">{{ fs.title }}</span>
+                  <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
+                  <span class="spacer"></span>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+                </div>
+                <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
+                  <div v-if="fs.search" class="rail-threat-search">
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                  </div>
+                  <div :class="{ 'rail-threats-scroll': fs.search }">
+                    <div
+                      v-for="v in facetOptionsFiltered(fs.cat)"
+                      :key="v"
+                      class="rail-row"
+                      :class="{
+                        'is-included': getTagMode(fs.cat, v) === 'include',
+                        'is-excluded': getTagMode(fs.cat, v) === 'exclude',
+                        'is-empty': !facetCounts[fs.cat][v]
+                      }"
+                    >
+                      <div
+                        class="rail-row-main"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
+                      >
+                        <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
+                          <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
+                        </span>
+                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
+                      </div>
+                      <div class="rail-row-actions">
+                        <button
+                          v-if="getTagMode(fs.cat, v)"
+                          class="rail-btn btn-trash"
+                          :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
+                          @click.stop="removeTag(fs.cat, v)"
+                          :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        >
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                          </svg>
+                        </button>
+                        <template v-else>
+                          <button
+                            class="rail-btn btn-check"
+                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Nur diesen Wert einschließen (✓)"
+                          >
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button
+                            class="rail-btn btn-cross"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            title="Diesen Wert ausschließen (✕)"
+                          >
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                          </button>
+                        </template>
+                      </div>
+                    </div>
+                    <p v-if="facetOptionsFiltered(fs.cat).length === 0" class="rail-empty-note">{{ facetSearch[fs.cat] ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- 5c. Dokumentation -->
+            <template v-for="fs in [
+              { cat: 'documentation', rail: 'documentation', ns: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
                 <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
@@ -1077,6 +1065,94 @@
                 </div>
               </div>
             </template>
+
+            <!-- 6b. Tags (kontrolliertes Vokabular aus tags.csv) -->
+            <div v-if="allCatalogTags.length > 0" class="rail-section">
+              <div class="rail-heading" @click="railCollapsed.tags = !railCollapsed.tags" title="Tags ein-/ausklappen">
+                <span class="rail-heading-title">Tags</span>
+                <span v-if="activeTagCountFor('tags')" class="rail-active-badge">{{ activeTagCountFor('tags') }}</span>
+                <span class="spacer"></span>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.tags }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+
+              <div v-show="!railCollapsed.tags" class="rail-section-body">
+                <div class="rail-threat-search">
+                  <input
+                    type="search"
+                    class="rail-search-input"
+                    v-model="tagRailSearch"
+                    placeholder="Tag suchen …"
+                    @keydown.esc="tagRailSearch = ''"
+                  />
+                </div>
+
+                <p v-if="displayedTagOptions.length === 0" class="rail-empty-note">{{ tagRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
+                <div class="rail-threat-scroll">
+                  <div
+                    v-for="item in displayedTagOptions"
+                    :key="item.tag"
+                    class="rail-row"
+                    :class="{
+                      'is-included': item.isIncluded,
+                      'is-excluded': item.isExcluded,
+                      'is-empty': !item.count
+                    }"
+                  >
+                    <div
+                      class="rail-row-main"
+                      @click="getTagMode('tags', item.tag) ? removeTag('tags', item.tag) : toggleTag('tags', item.tag, 'include', item.tag, 'Tag')"
+                      :title="getTagMode('tags', item.tag) ? 'Klicken zum Aufheben des Filters' : (tagDefinition(item.tag) ? item.tag + '\n\n' + tagDefinition(item.tag) : item.tag)"
+                    >
+                      <span class="rail-row-label">{{ item.tag }}</span>
+                      <span class="rail-row-count">{{ item.count }}</span>
+                    </div>
+
+                    <div class="rail-row-actions">
+                      <button
+                        v-if="item.isIncluded"
+                        class="rail-btn btn-trash"
+                        @click.stop="removeTag('tags', item.tag)"
+                        title="Filter aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <button
+                        v-else-if="item.isExcluded"
+                        class="rail-btn btn-trash is-exclude-trash"
+                        @click.stop="removeTag('tags', item.tag)"
+                        title="Ausschluss aufheben (löschen)"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
+                        </svg>
+                      </button>
+                      <template v-else>
+                        <button
+                          class="rail-btn btn-check"
+                          @click.stop="toggleTag('tags', item.tag, 'include', item.tag, 'Tag')"
+                          title="Nur dieses Tag einschließen (✓)"
+                        >
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </button>
+                        <button
+                          class="rail-btn btn-cross"
+                          @click.stop="toggleTag('tags', item.tag, 'exclude', item.tag, 'Tag')"
+                          title="Dieses Tag ausschließen (✕)"
+                        >
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- 7. Änderungen (Diff) -->
             <div v-if="diffSummary?.hasDiff" class="rail-section">
@@ -1683,13 +1759,6 @@
                     :class="selectedControl.secLevel === 'erhöht' ? 'tag-sec-erhoeht' : 'tag-outline'"
                     :title="'Schutzbedarf: ' + secLevelDisplayLabel(selectedControl.secLevel)"
                   >{{ secLevelDisplayLabel(selectedControl.secLevel) }}</span>
-                  <button
-                    v-if="selectedControl.class"
-                    class="tag tag-lg tag-outline tag-interactive"
-                    :class="{ 'is-active': getTagMode('sourceCatalog', selectedControl.class) === 'include' }"
-                    @click="toggleTag('sourceCatalog', selectedControl.class, 'include', sourceCatalogTitle(selectedControl.class), 'Quellkatalog')"
-                    :title="'Quellkatalog: ' + sourceCatalogTitle(selectedControl.class) + (definition('sourceCatalogs', selectedControl.class) ? ' – ' + definition('sourceCatalogs', selectedControl.class) : '') + (getTagMode('sourceCatalog', selectedControl.class) ? ' (Filter aktiv – klicken zum Aufheben)' : ' (Klicken zum Filtern)')"
-                  >{{ sourceCatalogTitle(selectedControl.class) }}</button>
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 
@@ -1718,25 +1787,30 @@
                 <div v-if="detailActiveTab === 'overview'" class="stack">
                   <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
 
+                  <!-- Kenngrößen: Schutzziele, Aufwand & Dokumentation (ohne Header) -->
                   <div class="card">
-                    <dl class="st-box" style="margin:0">
+                    <dl class="kv-grid" style="margin:0">
+                      <!-- Feld 1: Schutzziele -->
                       <div class="kv full">
-                        <dt class="st-head">
-                          Schutzziele
-                          <button
-                            v-if="hasSecurityTargets(selectedControl)"
-                            class="info-btn"
-                            :class="{ on: openDefs.securityTargets }"
-                            @click="openDefs.securityTargets = !openDefs.securityTargets"
-                            :aria-expanded="openDefs.securityTargets"
-                            :title="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                            :aria-label="openDefs.securityTargets ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                          >
-                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                          </button>
+                        <dt>
+                          <span class="st-head">
+                            <span>Schutzziele</span>
+                            <button
+                              v-if="hasSecurityTargets(selectedControl)"
+                              class="info-btn"
+                              :class="{ on: activeHelpKey === 'securityTargets' }"
+                              @click="toggleHelp('securityTargets')"
+                              aria-controls="detail-help"
+                              :aria-expanded="activeHelpKey === 'securityTargets'"
+                              :title="activeHelpKey === 'securityTargets' ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                              :aria-label="activeHelpKey === 'securityTargets' ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
                         </dt>
-                        <dd v-if="hasSecurityTargets(selectedControl)">
-                          <div class="st-grid">
+                        <dd>
+                          <div v-if="hasSecurityTargets(selectedControl)" class="st-grid">
                             <button
                               v-for="t in SECURITY_TARGETS"
                               :key="t.key"
@@ -1753,53 +1827,98 @@
                               <span class="st-level">{{ selectedControl[t.key] != null ? securityTargetLevelLabel(selectedControl[t.key]) : '–' }}</span>
                             </button>
                           </div>
-                          <div v-if="openDefs.securityTargets" class="def-text st-defs">
-                            <p class="def-meta">Wirkung der Anforderung auf das Schutzziel:</p>
-                            <p v-for="v in ['0', '1', '2']" :key="v"><strong>{{ v }} – {{ securityTargetLevelLabel(v) }}:</strong> {{ definition('securityTargetLevels', v) }}</p>
-                            <p v-for="t in SECURITY_TARGETS" :key="t.key"><strong>{{ t.label }}:</strong> {{ shortDefinition('securityTargets', t.nsKey) }}</p>
+                          <p v-else class="muted-note">Keine Zuordnung im Katalog</p>
+                        </dd>
+                      </div>
+
+                      <!-- Feld 2: Aufwand -->
+                      <div class="kv">
+                        <dt>Aufwand</dt>
+                        <dd v-if="hasEffort(selectedControl.effortLevel)">
+                          <div class="effort-group">
+                            <button
+                              class="effort-meter-btn"
+                              @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
+                              title="Nach dieser Aufwandsstufe filtern"
+                              :aria-label="'Aufwand ' + selectedControl.effortLevel + ' von ' + maxEffort"
+                            >
+                              <span class="effort-meter">
+                                <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(selectedControl.effortLevel) ? { background: effortColor(selectedControl.effortLevel) } : null"></span>
+                              </span>
+                            </button>
+                            <span class="effort-label-group">
+                              <button
+                                class="effort-text-btn"
+                                @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
+                                title="Nach dieser Aufwandsstufe filtern"
+                              >
+                                <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
+                              </button>
+                              <button
+                                v-if="effortDefinition(selectedControl.effortLevel)"
+                                class="info-btn"
+                                :class="{ on: activeHelpKey === 'effort' }"
+                                @click="toggleHelp('effort')"
+                                aria-controls="detail-help"
+                                :aria-expanded="activeHelpKey === 'effort'"
+                                :title="activeHelpKey === 'effort' ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                                :aria-label="activeHelpKey === 'effort' ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                            </span>
                           </div>
                         </dd>
-                        <dd v-else class="muted">Keine Zuordnung im Katalog</dd>
+                        <dd v-else class="muted">–</dd>
                       </div>
-                    </dl>
-                    <dl v-if="hasEffort(selectedControl.effortLevel)" class="kv-grid st-follow" style="margin:0">
-                      <div v-if="hasEffort(selectedControl.effortLevel)" class="kv full">
-                        <dt>Aufwand</dt>
-                        <dd>
-                          <button
-                            class="effort-row"
-                            @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
-                            title="Nach dieser Aufwandsstufe filtern"
-                          >
-                            <span class="effort-meter" :aria-label="'Aufwand ' + selectedControl.effortLevel + ' von ' + maxEffort">
-                              <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(selectedControl.effortLevel) ? { background: effortColor(selectedControl.effortLevel) } : null"></span>
-                            </span>
-                            <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
-                          </button>
-                          <button
-                            v-if="effortDefinition(selectedControl.effortLevel)"
-                            class="info-btn"
-                            :class="{ on: openDefs.effort }"
-                            @click="openDefs.effort = !openDefs.effort"
-                            :aria-expanded="openDefs.effort"
-                            :title="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
-                            :aria-label="openDefs.effort ? 'Beschreibung der Stufe ausblenden' : 'Beschreibung der Stufe anzeigen'"
-                          >
-                            <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                          </button>
-                          <p v-if="openDefs.effort && effortDefinition(selectedControl.effortLevel)" class="def-text">{{ effortDefinition(selectedControl.effortLevel) }}</p>
+
+                      <!-- Feld 3: Dokumentation -->
+                      <div class="kv">
+                        <dt>Dokumentation</dt>
+                        <dd v-if="selectedControl.documentation">
+                          <span class="kv-value">
+                            <button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button>
+                            <button
+                              v-if="definition('documentation', selectedControl.documentation)"
+                              class="info-btn"
+                              :class="{ on: activeHelpKey === 'documentation' }"
+                              @click="toggleHelp('documentation')"
+                              aria-controls="detail-help"
+                              :aria-expanded="activeHelpKey === 'documentation'"
+                              :title="activeHelpKey === 'documentation' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="activeHelpKey === 'documentation' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
                         </dd>
+                        <dd v-else class="muted">Nicht vorgegeben</dd>
                       </div>
                     </dl>
                   </div>
 
-                  <div class="card">
+                  <!-- 2. Kategorieblock: Unteranforderungen (falls vorhanden) -->
+                  <div v-if="selectedControl.subcontrols?.length" class="card">
                     <div class="card-head">
-                      <svg class="icon-sm" style="color:var(--threat)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-                      <h4>Elementare Gefährdungen</h4>
-                      <span class="hint">{{ selectedControl.elementareGefaehrdungen.length || 'keine zugeordnet' }}</span>
+                      <h4>Unteranforderungen</h4>
                     </div>
-                    <ul v-if="selectedControl.elementareGefaehrdungen.length" class="threat-list">
+                    <ul class="sub-list">
+                      <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
+                        <button class="sub-item" @click="selectControl(subc)">
+                          <span class="mono">{{ subc.id }}</span>
+                          <span class="grow">{{ subc.title }}</span>
+                          <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- 3. Kategorieblock: Elementare Gefährdungen -->
+                  <div v-if="selectedControl.elementareGefaehrdungen?.length" class="card">
+                    <div class="card-head">
+                      <h4>Elementare Gefährdungen</h4>
+                    </div>
+                    <ul class="threat-list">
                       <li v-for="threat in selectedControl.elementareGefaehrdungen" :key="threat">
                         <button
                           class="threat-item"
@@ -1817,34 +1936,16 @@
                     </ul>
                   </div>
 
-                  <div v-if="selectedControl.subcontrols?.length" class="card">
-                    <div class="card-head">
-                      <h4>Unteranforderungen</h4>
-                      <span class="hint">{{ selectedControl.subcontrols.length }}</span>
-                    </div>
-                    <ul class="sub-list">
-                      <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
-                        <button class="sub-item" @click="selectControl(subc)">
-                          <span class="mono">{{ subc.id }}</span>
-                          <span class="grow">{{ subc.title }}</span>
-                          <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <!-- Verknüpfte Anforderungen -->
+                  <!-- 4. Kategorieblock: Verknüpfte Anforderungen -->
                   <div v-if="linkedControls.total > 0" class="card">
                     <div class="card-head">
-                      <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                       <h4>Verknüpfte Anforderungen</h4>
-                      <span class="hint">{{ linkedControls.total }}</span>
                     </div>
 
-                    <!-- 1. Setzt voraus (Vorausgesetzte Anforderungen / required) -->
-                    <div v-if="linkedControls.requires.length" class="link-group">
-                      <div class="link-group-head">
-                        <span class="link-group-title">Setzt voraus</span>
+                    <!-- Sub-Block 1: Setzt voraus -->
+                    <div v-if="linkedControls.requires.length" class="sub-block">
+                      <div class="sub-head">
+                        <span>Setzt voraus</span>
                       </div>
                       <ul class="sub-list">
                         <li v-for="c in linkedControls.requires" :key="'req_' + c.id">
@@ -1857,10 +1958,10 @@
                       </ul>
                     </div>
 
-                    <!-- 2. Voraussetzung für (Wird vorausgesetzt von / requiredBy) -->
-                    <div v-if="linkedControls.requiredBy.length" class="link-group">
-                      <div class="link-group-head">
-                        <span class="link-group-title">Voraussetzung für</span>
+                    <!-- Sub-Block 2: Voraussetzung für -->
+                    <div v-if="linkedControls.requiredBy.length" class="sub-block">
+                      <div class="sub-head">
+                        <span>Voraussetzung für</span>
                       </div>
                       <ul class="sub-list">
                         <li v-for="c in linkedControls.requiredBy" :key="'reqby_' + c.id">
@@ -1873,10 +1974,10 @@
                       </ul>
                     </div>
 
-                    <!-- 3. Verwandte Anforderungen (related) -->
-                    <div v-if="linkedControls.related.length" class="link-group">
-                      <div class="link-group-head">
-                        <span class="link-group-title">Verwandte Anforderungen</span>
+                    <!-- Sub-Block 3: Verwandte Anforderungen -->
+                    <div v-if="linkedControls.related.length" class="sub-block">
+                      <div class="sub-head">
+                        <span>Verwandte Anforderungen</span>
                       </div>
                       <ul class="sub-list">
                         <li v-for="c in linkedControls.related" :key="'rel_' + c.id">
@@ -1890,9 +1991,39 @@
                     </div>
                   </div>
 
-                  <div v-if="selectedControl.tags?.length" class="card">
+                  <!-- 5. Kategorieblock: Einordnung -->
+                  <div class="card">
+                    <div class="card-head">
+                      <h4>Einordnung</h4>
+                    </div>
                     <dl class="kv-grid" style="margin:0">
                       <div class="kv full">
+                        <dt>Quellkatalog</dt>
+                        <dd v-if="selectedControl.class">
+                          <span class="kv-value">
+                            <button
+                              class="kv-link"
+                              @click="toggleTag('sourceCatalog', selectedControl.class, 'include', sourceCatalogTitle(selectedControl.class), 'Quellkatalog')"
+                              title="Nach diesem Quellkatalog filtern"
+                            >{{ sourceCatalogTitle(selectedControl.class) }}</button>
+                            <button
+                              v-if="definition('sourceCatalogs', selectedControl.class)"
+                              class="info-btn"
+                              :class="{ on: activeHelpKey === 'sourceCatalog' }"
+                              @click="toggleHelp('sourceCatalog')"
+                              aria-controls="detail-help"
+                              :aria-expanded="activeHelpKey === 'sourceCatalog'"
+                              :title="activeHelpKey === 'sourceCatalog' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="activeHelpKey === 'sourceCatalog' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
+                        </dd>
+                        <dd v-else class="muted">–</dd>
+                      </div>
+
+                      <div v-if="selectedControl.tags?.length" class="kv full">
                         <dt>Tags</dt>
                         <dd>
                           <div class="tag-chip-group">
@@ -1913,22 +2044,17 @@
                               <button
                                 v-if="tagDefinition(tag)"
                                 class="info-btn"
-                                :class="{ on: openDefs['tag_' + tag] }"
-                                @click.stop="openDefs['tag_' + tag] = !openDefs['tag_' + tag]"
-                                :aria-expanded="openDefs['tag_' + tag]"
-                                :title="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
-                                :aria-label="openDefs['tag_' + tag] ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                                :class="{ on: activeHelpKey === 'tag:' + tag }"
+                                @click.stop="toggleHelp('tag:' + tag)"
+                                aria-controls="detail-help"
+                                :aria-expanded="activeHelpKey === 'tag:' + tag"
+                                :title="activeHelpKey === 'tag:' + tag ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
+                                :aria-label="activeHelpKey === 'tag:' + tag ? 'Erläuterung ausblenden' : 'Erläuterung anzeigen'"
                               >
                                 <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                               </button>
                             </span>
                           </div>
-                          <!-- Ausgeklappte Erläuterungen für aktive Info-Buttons -->
-                          <template v-for="tag in selectedControl.tags" :key="'def_' + tag">
-                            <div v-if="openDefs['tag_' + tag] && tagDefinition(tag)" class="def-text" style="margin-top: 8px;">
-                              <p><strong>{{ tag }}:</strong> {{ tagDefinition(tag) }}</p>
-                            </div>
-                          </template>
                         </dd>
                       </div>
                     </dl>
@@ -1937,7 +2063,6 @@
                   <p v-if="selectedControl.altIdentifier" class="detail-uuid">UUID <span class="mono">{{ selectedControl.altIdentifier }}</span></p>
                 </div>
 
-                <!-- Hilfestellung -->
                 <!-- Notizen: nur die aktive Liste ist beschreibbar, andere Listen nur lesbar -->
                 <div v-else-if="detailActiveTab === 'notes'" class="stack">
                   <div v-if="notesViewList" class="notes-panel">
@@ -1972,14 +2097,23 @@
 
                 <!-- Hilfestellung des BSI, darunter die Bestandteile des Anforderungstexts nach der BSI-Satzschablone -->
                 <div v-else-if="detailActiveTab === 'guidance'" class="stack">
-                  <div class="card card-pad">
-                    <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
-                    <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
+                  <!-- 1. Kategorieblock: Hilfestellung des BSI -->
+                  <div class="card">
+                    <div class="card-head">
+                      <h4>Hilfestellung des BSI</h4>
+                    </div>
+                    <div class="card-pad">
+                      <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
+                      <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
+                    </div>
                   </div>
-                  <div>
-                    <div class="section-label">Satzaufbau</div>
-                    <div class="card">
-                      <dl class="kv-grid" style="margin:0">
+
+                  <!-- 2. Kategorieblock: Satzaufbau (BSI-Satzschablone) -->
+                  <div class="card">
+                    <div class="card-head">
+                      <h4>Satzaufbau (BSI-Satzschablone)</h4>
+                    </div>
+                    <dl class="kv-grid" style="margin:0">
                         <div class="kv">
                           <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjektkategorien' : 'Zielobjektkategorie' }}</dt>
                           <dd v-if="selectedControl.targetObjects.length">
@@ -1989,22 +2123,17 @@
                                 <button
                                   v-if="definition('targetObjects', t)"
                                   class="info-btn"
-                                  :class="{ on: openDefs['to_' + t] }"
-                                  @click="openDefs['to_' + t] = !openDefs['to_' + t]"
-                                  :aria-expanded="openDefs['to_' + t]"
-                                  :title="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                  :aria-label="openDefs['to_' + t] ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                  :class="{ on: activeHelpKey === 'to:' + t }"
+                                  @click="toggleHelp('to:' + t)"
+                                  aria-controls="detail-help"
+                                  :aria-expanded="activeHelpKey === 'to:' + t"
+                                  :title="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                  :aria-label="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
                                 >
                                   <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                                 </button>
                               </span>
                             </div>
-                            <template v-for="t in selectedControl.targetObjects" :key="'def_' + t">
-                              <div v-if="openDefs['to_' + t] && definition('targetObjects', t)" class="def-text">
-                                <p><strong v-if="selectedControl.targetObjects.length > 1">{{ t }}: </strong>{{ definition('targetObjects', t) }}</p>
-                                <p v-if="namespaceEntry('targetObjects', t)?.Kategorie" class="def-meta">Kategorie: {{ namespaceEntry('targetObjects', t).Kategorie }}</p>
-                              </div>
-                            </template>
                           </dd>
                           <dd v-else class="muted">–</dd>
                         </div>
@@ -2016,18 +2145,16 @@
                               <button
                                 v-if="definition('modalVerbs', selectedControl.modalVerb)"
                                 class="info-btn"
-                                :class="{ on: openDefs.modalVerb }"
-                                @click="openDefs.modalVerb = !openDefs.modalVerb"
-                                :aria-expanded="openDefs.modalVerb"
-                                :title="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="openDefs.modalVerb ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :class="{ on: activeHelpKey === 'modalVerb' }"
+                                @click="toggleHelp('modalVerb')"
+                                aria-controls="detail-help"
+                                :aria-expanded="activeHelpKey === 'modalVerb'"
+                                :title="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
                               >
                                 <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                               </button>
                             </span>
-                            <div v-if="openDefs.modalVerb && definition('modalVerbs', selectedControl.modalVerb)" class="def-text">
-                              <p>{{ definition('modalVerbs', selectedControl.modalVerb) }}</p>
-                            </div>
                           </dd>
                           <dd v-else class="muted">–</dd>
                         </div>
@@ -2052,93 +2179,110 @@
                               <button
                                 v-if="definition('actionWords', selectedControl.actionWord)"
                                 class="info-btn"
-                                :class="{ on: openDefs.actionWord }"
-                                @click="openDefs.actionWord = !openDefs.actionWord"
-                                :aria-expanded="openDefs.actionWord"
-                                :title="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="openDefs.actionWord ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :class="{ on: activeHelpKey === 'actionWord' }"
+                                @click="toggleHelp('actionWord')"
+                                aria-controls="detail-help"
+                                :aria-expanded="activeHelpKey === 'actionWord'"
+                                :title="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
                               >
                                 <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
                               </button>
                             </span>
-                            <div v-if="openDefs.actionWord && definition('actionWords', selectedControl.actionWord)" class="def-text">
-                              <p>{{ definition('actionWords', selectedControl.actionWord) }}</p>
-                              <p v-if="namespaceEntry('actionWords', selectedControl.actionWord)?.Synonyme" class="def-meta">Synonyme: {{ namespaceEntry('actionWords', selectedControl.actionWord).Synonyme }}</p>
-                            </div>
                           </dd>
                           <dd v-else class="muted">–</dd>
-                        </div>
-                        <div class="kv full">
-                          <dt>Dokumentation</dt>
-                          <dd v-if="selectedControl.documentation">
-                            <span class="kv-value">
-                              <button class="kv-link" @click="toggleTag('documentation', selectedControl.documentation, 'include', selectedControl.documentation, 'Dokumentation')" title="Nach dieser Dokumentationsvorgabe filtern">{{ selectedControl.documentation }}</button>
-                              <button
-                                v-if="definition('documentation', selectedControl.documentation)"
-                                class="info-btn"
-                                :class="{ on: openDefs.documentation }"
-                                @click="openDefs.documentation = !openDefs.documentation"
-                                :aria-expanded="openDefs.documentation"
-                                :title="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="openDefs.documentation ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                            </span>
-                            <div v-if="openDefs.documentation && definition('documentation', selectedControl.documentation)" class="def-text">
-                              <p>{{ definition('documentation', selectedControl.documentation) }}</p>
-                              <p v-if="namespaceEntry('documentation', selectedControl.documentation)?.Kategorie || namespaceEntry('documentation', selectedControl.documentation)?.Zielgruppe" class="def-meta">
-                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie">Kategorie: {{ namespaceEntry('documentation', selectedControl.documentation).Kategorie }}</template>
-                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Kategorie && namespaceEntry('documentation', selectedControl.documentation).Zielgruppe"> · </template>
-                                <template v-if="namespaceEntry('documentation', selectedControl.documentation).Zielgruppe">Zielgruppe: {{ namespaceEntry('documentation', selectedControl.documentation).Zielgruppe }}</template>
-                              </p>
-                            </div>
-                          </dd>
-                          <dd v-else class="muted">Nicht vorgegeben</dd>
                         </div>
                       </dl>
                     </div>
                   </div>
-                </div>
 
                 <!-- Änderungen -->
                 <div v-else-if="detailActiveTab === 'diff'" class="stack">
-                  <div v-if="selectedControl.diff" class="card card-pad">
-                    <div class="diff-status">
-                      <span class="tag tag-lg" :class="selectedControl.diff.status === 'unchanged' ? '' : 'diff-' + selectedControl.diff.status">
-                        {{ selectedControl.diff.status === 'unchanged' ? 'Unverändert' : diffLabel(selectedControl.diff.status, true) }}
-                      </span>
+                  <!-- 1. Kategorieblock: Änderungsübersicht -->
+                  <div v-if="selectedControl.diff" class="card">
+                    <div class="card-head">
+                      <h4>Änderungsübersicht</h4>
                     </div>
-                    <p v-if="selectedControl.diff.status === 'added'" class="diff-note">Im Vergleichsstand noch nicht enthalten.</p>
-                    <p v-else-if="selectedControl.diff.status === 'deleted'" class="diff-note">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</p>
-                    <ul v-if="selectedControl.diff.changes.length" class="change-list">
-                      <li v-for="ch in selectedControl.diff.changes" :key="ch.field">
-                        <strong>{{ ch.label }}</strong>
-                        <span v-if="ch.kind === 'prose'" class="muted">geändert, siehe unten</span>
-                        <span v-else-if="ch.kind === 'list'">
-                          <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
-                          <span v-if="ch.removed.length && ch.added.length"> · </span>
-                          <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                    <div class="card-pad">
+                      <div class="diff-status">
+                        <span class="tag tag-lg" :class="selectedControl.diff.status === 'unchanged' ? '' : 'diff-' + selectedControl.diff.status">
+                          {{ selectedControl.diff.status === 'unchanged' ? 'Unverändert' : diffLabel(selectedControl.diff.status, true) }}
                         </span>
-                        <span v-else>
-                          <span class="old">{{ formatChangeValue(ch.field, ch.oldValue) }}</span>
-                          <span> → </span>
-                          <span class="new">{{ formatChangeValue(ch.field, ch.newValue) }}</span>
-                        </span>
-                      </li>
-                    </ul>
+                      </div>
+                      <p v-if="selectedControl.diff.status === 'added'" class="diff-note">Im Vergleichsstand noch nicht enthalten.</p>
+                      <p v-else-if="selectedControl.diff.status === 'deleted'" class="diff-note">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</p>
+                      <ul v-if="selectedControl.diff.changes.length" class="change-list">
+                        <li v-for="ch in selectedControl.diff.changes" :key="ch.field">
+                          <strong>{{ ch.label }}</strong>
+                          <span v-if="ch.kind === 'prose'" class="muted">geändert, siehe unten</span>
+                          <span v-else-if="ch.kind === 'list'">
+                            <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                            <span v-if="ch.removed.length && ch.added.length"> · </span>
+                            <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                          </span>
+                          <span v-else>
+                            <span class="old">{{ formatChangeValue(ch.field, ch.oldValue) }}</span>
+                            <span> → </span>
+                            <span class="new">{{ formatChangeValue(ch.field, ch.newValue) }}</span>
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
 
-                  <div v-if="statementDiffTokens.length">
-                    <div class="section-label">Anforderungstext</div>
-                    <div class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                  <!-- 2. Kategorieblock: Textvergleich Anforderungstext -->
+                  <div v-if="statementDiffTokens.length" class="card">
+                    <div class="card-head">
+                      <h4>Textvergleich: Anforderungstext</h4>
+                    </div>
+                    <div class="card-pad">
+                      <div class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                    </div>
                   </div>
 
-                  <div v-if="guidanceDiffTokens.length">
-                    <div class="section-label">Hilfestellung</div>
-                    <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                  <!-- 3. Kategorieblock: Textvergleich Hilfestellung -->
+                  <div v-if="guidanceDiffTokens.length" class="card">
+                    <div class="card-head">
+                      <h4>Textvergleich: Hilfestellung</h4>
+                    </div>
+                    <div class="card-pad">
+                      <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Docked Info Callout (GitHub Callout Style) am unteren Rand des Detailbereichs -->
+              <!-- Stets vorhandene Live-Region, damit Screenreader das Erscheinen der Erläuterung ansagen -->
+              <div id="detail-help" class="detail-callout-slot" aria-live="polite">
+                <aside v-if="activeHelpInfo" class="detail-callout" role="complementary" aria-label="Erläuterung">
+                  <div class="detail-callout-icon" aria-hidden="true">
+                    <svg class="info-glyph" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                  </div>
+                  <div class="detail-callout-main">
+                    <div class="detail-callout-head">
+                      <h5 class="detail-callout-title">{{ activeHelpInfo.title }}</h5>
+                      <button class="detail-callout-close" @click="closeHelp()" title="Erläuterung schließen (Esc)" aria-label="Erläuterung schließen">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div class="detail-callout-body">
+                      <template v-if="activeHelpInfo.type === 'securityTargets'">
+                        <p class="callout-lead">Wirkung der Anforderung auf das Schutzziel:</p>
+                        <ul class="callout-st-list">
+                          <li v-for="v in ['0', '1', '2']" :key="v"><strong>{{ v }} – {{ securityTargetLevelLabel(v) }}:</strong> {{ definition('securityTargetLevels', v) }}</li>
+                        </ul>
+                        <ul class="callout-st-list">
+                          <li v-for="t in SECURITY_TARGETS" :key="t.key"><strong>{{ t.label }}:</strong> {{ shortDefinition('securityTargets', t.nsKey) }}</li>
+                        </ul>
+                      </template>
+                      <template v-else>
+                        <p v-if="activeHelpInfo.text">{{ activeHelpInfo.text }}</p>
+                        <p v-if="activeHelpInfo.meta" class="callout-meta">{{ activeHelpInfo.meta }}</p>
+                      </template>
+                    </div>
+                  </div>
+                </aside>
               </div>
             </template>
           </section>

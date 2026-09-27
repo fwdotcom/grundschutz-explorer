@@ -180,8 +180,8 @@ const app = createApp({
     const detailActiveTab = ref('overview');
     // Aktive Ebene der Detailansicht: null = Anforderung, sonst { level: 'practice' | 'subgroup', id }
     const detailScope = ref(null);
-    // Ausgeklappte Definitionen (Info-Buttons) in der Detailansicht
-    const openDefs = ref({ effort: false, modalVerb: false, actionWord: false, documentation: false, securityTargets: false, secLevel: false });
+    // Aktive Erläuterung (GitHub-Callout am unteren Rand des Detailbereichs)
+    const activeHelpKey = ref(null);
     // Zähler, der nach dem Laden der BSI-Namespaces erhöht wird (macht Definitionen reaktiv)
     const namespacesVersion = ref(0);
 
@@ -1466,6 +1466,12 @@ const app = createApp({
         return;
       }
       if (e.key === 'Escape') {
+        if (activeHelpKey.value) {
+          // Esc aus Suche, Liste o. Ä. schließt nur, ohne den Fokus dorthin zu ziehen
+          const t = e.target;
+          closeHelp(!t || t === document.body || !!t.closest?.('.detail-callout, .detail-body .info-btn'));
+          return;
+        }
         // Modale Dialoge (<dialog>) schließen sich über ihr cancel-Ereignis selbst
         if (listMenuId.value) listMenuId.value = '';
         else if (isRailOpen.value) closeRail();
@@ -2823,6 +2829,107 @@ const app = createApp({
       return { code: threatStr.trim(), title: '' };
     }
 
+    function toggleHelp(key) {
+      activeHelpKey.value = activeHelpKey.value === key ? null : key;
+    }
+
+    // Fokus zurück auf den auslösenden Info-Button, damit er nach dem Schließen nicht verloren geht
+    function closeHelp(restoreFocus = true) {
+      const trigger = document.querySelector('.detail-body .info-btn.on');
+      activeHelpKey.value = null;
+      if (trigger && restoreFocus) nextTick(() => trigger.focus());
+    }
+
+    const activeHelpInfo = computed(() => {
+      namespacesVersion.value;
+      const key = activeHelpKey.value;
+      const c = selectedControl.value;
+      if (!key || !c) return null;
+
+      if (key === 'securityTargets') {
+        return {
+          key,
+          type: 'securityTargets',
+          title: 'Schutzziele · Wirkungsstufen & Definitionen',
+        };
+      }
+      if (key === 'effort') {
+        return {
+          key,
+          type: 'text',
+          title: `Aufwand · Stufe ${c.effortLevel} von ${maxEffort.value}`,
+          text: effortDefinition(c.effortLevel),
+        };
+      }
+      if (key === 'documentation') {
+        const entry = namespaceEntry('documentation', c.documentation);
+        const metaParts = [];
+        if (entry?.Kategorie) metaParts.push(`Kategorie: ${entry.Kategorie}`);
+        if (entry?.Zielgruppe) metaParts.push(`Zielgruppe: ${entry.Zielgruppe}`);
+        return {
+          key,
+          type: 'text',
+          title: `Dokumentation · ${c.documentation}`,
+          text: definition('documentation', c.documentation),
+          meta: metaParts.join(' · '),
+        };
+      }
+      if (key === 'sourceCatalog') {
+        return {
+          key,
+          type: 'text',
+          title: `Quellkatalog · ${sourceCatalogTitleReactive(c.class)}`,
+          text: definition('sourceCatalogs', c.class),
+        };
+      }
+      if (key.startsWith('tag:')) {
+        const tag = key.slice(4);
+        return {
+          key,
+          type: 'text',
+          title: `Tag · ${tag}`,
+          text: tagDefinition(tag),
+        };
+      }
+      if (key.startsWith('to:')) {
+        const t = key.slice(3);
+        const entry = namespaceEntry('targetObjects', t);
+        return {
+          key,
+          type: 'text',
+          title: `Zielobjektkategorie · ${t}`,
+          text: definition('targetObjects', t),
+          meta: entry?.Kategorie ? `Kategorie: ${entry.Kategorie}` : '',
+        };
+      }
+      if (key === 'modalVerb') {
+        return {
+          key,
+          type: 'text',
+          title: `Modalverb · ${c.modalVerb}`,
+          text: definition('modalVerbs', c.modalVerb),
+        };
+      }
+      if (key === 'actionWord') {
+        const entry = namespaceEntry('actionWords', c.actionWord);
+        return {
+          key,
+          type: 'text',
+          title: `Handlungswort · ${c.actionWord}`,
+          text: definition('actionWords', c.actionWord),
+          meta: entry?.Synonyme ? `Synonyme: ${entry.Synonyme}` : '',
+        };
+      }
+      return null;
+    });
+
+    watch(selectedControlId, () => {
+      activeHelpKey.value = null;
+    });
+    watch(detailActiveTab, () => {
+      activeHelpKey.value = null;
+    });
+
     return {
       footerLeft,
       lists,
@@ -2938,7 +3045,10 @@ const app = createApp({
       hasEffort,
       effortColor,
       effortDefinition,
-      openDefs,
+      activeHelpKey,
+      activeHelpInfo,
+      toggleHelp,
+      closeHelp,
       selectionFilteredOut,
       SECURITY_TARGETS,
       hasSecurityTargets,
