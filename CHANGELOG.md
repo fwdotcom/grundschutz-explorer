@@ -2,7 +2,7 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [1.1.4] – 2026-09-27
+## [1.1.5] – 2026-09-28
 
 ### Neu
 
@@ -16,6 +16,21 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 - Aufteilung der Ansicht: Die manuell eingestellte Breite wird nun im Browser gespeichert und bleibt beim Neuladen erhalten; ein Doppelklick auf die Trennlinie (oder Enter bei Tastaturfokus) setzt sie auf den Standard zurück.
 - Detailanzeige von ausgefilterten Praktiken, Themen und Anforderungen vereinheitlicht: Die Anzeige bleibt erhalten, ein Hinweis wird eingeblendet
 
+
+## [1.1.4] – 2026-09-27
+
+### Neu
+
+- Reiter „Hilfestellung“: Abschnitt „Satzaufbau“ zerlegt den Anforderungstext nach der BSI-Satzschablone, jeder Bestandteil ist filterbar.
+- Zielobjektkategorie und Quellkatalog einer Anforderung, jeweils mit Definition und eigenem Filterbereich.
+- Erläuterungen erscheinen in einer Infobox am unteren Rand der Detailansicht statt ausgeklappt im Text.
+
+### Geändert
+
+- Übersicht einer Anforderung neu gegliedert: Kenngrößen, Unteranforderungen, Gefährdungen, verknüpfte Anforderungen, Einordnung (Quellkatalog, Tags).
+- Kopf der Detailansicht: Zahl der Unteranforderungen und Gefährdungen statt Modalverb-Badge.
+- Neue Reihenfolge der Filterleiste.
+- Kataloge mit Gruppen unterhalb der Themen werden beim Laden mit Fehlermeldung abgewiesen, statt dass Anforderungen fehlen.
 
 
 ## [1.1.3] – 2026-09-26
