@@ -1,50 +1,44 @@
-# Kataloge laden und vergleichen
+# Kataloge laden und vergleichen {#kap-kataloge}
 
-Grundschutz++ Explorer kann beliebig viele Stände des Grundschutz++-Katalogs lokal im Browser speichern und jeweils zwei davon direkt miteinander vergleichen.
+Grundschutz++ Explorer speichert beliebig viele Stände des Grundschutz++-Katalogs in Ihrem Browser und vergleicht jeweils zwei davon miteinander.
 
 ## Kataloge laden
 
-Über **Kataloge → Katalog laden** in der Kopfzeile (oder über **Katalog laden** auf der Startseite) öffnen Sie [den schon in Abschnitt 1.2 vorgestellten Ladedialog](#fig-start-katalog-laden):
-
-Der Dialog bietet drei flexible Wege:
+Über **Kataloge → Katalog laden** in der Kopfzeile oder **Katalog laden** auf der Startseite öffnen Sie den [Ladedialog](#fig-start-katalog-laden). Er bietet drei Wege:
 
 | Weg | Funktionsweise |
 | :--- | :--- |
-| **Offiziellen BSI Grundschutz++ Anwenderkatalog laden** | Ruft direkt den neuesten offiziellen Katalog aus der Stand-der-Technik-Bibliothek des BSI auf GitHub ab. |
-| **URL zur JSON-Datei** | Lädt einen Katalog im Schema des BSI-Grundschutz++ von einer frei wählbaren Webadresse (https). |
-| **JSON-Datei** | Lädt einen Katalog im Schema des BSI-Grundschutz++ von Ihrem Rechner – wahlweise per Dateidialog oder bequem per Drag & Drop. |
+| **Offiziellen BSI Grundschutz++ Anwenderkatalog laden** | Ruft den aktuellen Katalog direkt aus der Stand-der-Technik-Bibliothek des BSI auf GitHub ab. Die Quelladresse steht darunter. |
+| **URL zur JSON-Datei** | Lädt einen Katalog im Schema des Grundschutz++ von einer Webadresse. Erlaubt sind nur Adressen mit `https`. |
+| **JSON-Datei** | Lädt einen Katalog im Schema des Grundschutz++ von Ihrem Rechner, per Dateiauswahl oder durch Ablegen der Datei auf dem Feld. |
 
-- **Automatische Duplikaterkennung:** Ist ein inhaltlich identischer Katalog bereits gespeichert, erkennt der Explorer dies sofort und vermeidet doppelte Datenhaltung.
-- **Sichere Formatprüfung:** Der Explorer verarbeitet ausschließlich Kataloge im Schema des BSI-Grundschutz++ (JSON nach NIST OSCAL 1.1.3, gegliedert in Praktiken und Themen). Andere OSCAL-Kataloge, etwa mit tiefer verschachtelten Gruppen, werden mit einer Fehlermeldung abgewiesen.
+/// table-caption
+    attrs: {id: tbl-katalog-laden}
+Wege, einen Katalog zu laden
+///
 
-> [!NOTE]
-> Das Laden großer Katalogdateien geschieht dank des optimierten Zero-Build-Parsers in der Regel in weniger als einer Sekunde.
+- **Doppelte Kataloge:** Ist ein inhaltlich identischer Katalog bereits gespeichert, meldet der Dialog das und lädt ihn nicht ein zweites Mal.
+- **Formatprüfung:** Der Explorer verarbeitet nur Kataloge im Schema des Grundschutz++ (JSON nach NIST OSCAL, gegliedert in Praktiken und Themen). Andere OSCAL-Kataloge, etwa mit weiteren Gruppen unterhalb der Themen, weist er mit einer Fehlermeldung ab, statt sie unvollständig anzuzeigen.
 
----
+## Katalogstände verwalten
 
-## Versionen verwalten
+Der Dialog **Kataloge** in der Kopfzeile listet alle gespeicherten Stände mit Titel, Version und Importzeitpunkt:
 
-Der Dialog **Kataloge** in der Kopfzeile listet alle in Ihrem Browser hinterlegten Stände mit Titel, Version und Importdatum auf:
-
-![Dialog „Kataloge“ mit gespeicherten Ständen und Auswahlknöpfen](bilder/kataloge-versionen.png){width=58%}
+![Dialog „Kataloge“ mit gespeicherten Ständen](bilder/kataloge-versionen.png){width=65%}
 
 /// figure-caption
     attrs: {id: fig-kataloge-versionen}
-Dialog „Kataloge“: getrennte Auswahlknöpfe für „Anzeigen“ und „Vergleich“
+Dialog „Kataloge“ mit getrennten Auswahlknöpfen für „Anzeigen“ und „Vergleich“
 ///
 
-In der Tabelle steuern Sie die Stände über zwei intuitive Auswahlschalter:
+- **Anzeigen:** bestimmt, welcher Katalog angezeigt wird. Der gewählte Stand ist blau hinterlegt.
+- **Vergleich:** bestimmt einen zweiten Stand, gegen den verglichen wird. Ein erneuter Klick auf den Vergleichsstand beendet den Vergleich. Der gewählte Vergleich bleibt beim nächsten Aufruf erhalten.
+- **Rollentausch:** Wählen Sie den bisherigen Vergleichsstand zum Anzeigen, tauschen beide Stände die Rollen.
+- **Papierkorb:** löscht einen Stand nach einer Rückfrage aus Ihrem Browser. Den offiziellen Katalog können Sie jederzeit neu laden.
 
-- **Anzeigen (Blauer Punkt):** Bestimmt, welcher Katalog die Basis der aktuellen Ansicht bildet.
-- **Vergleich (Grauer Punkt):** Bestimmt den zweiten Katalogstand, gegen den verglichen wird. Ein erneuter Klick auf den Vergleichsstand beendet den Vergleich.
-- **Rollentausch:** Wählen Sie den bisherigen Vergleichsstand als *Anzeigen*, tauschen beide Stände automatisch die Rollen.
-- **Papierkorb:** Löscht einen Katalogstand nach einer Sicherheitsabfrage aus Ihrem Browser.
+## Zwei Stände vergleichen
 
----
-
-## Zwei Stände im Vergleichsmodus analysieren
-
-Wählen Sie im Dialog **Kataloge** den neueren Stand zum **Anzeigen** und den älteren Stand als **Vergleich**.
+Wählen Sie im Dialog **Kataloge** den neueren Stand zum **Anzeigen** und den älteren als **Vergleich**. Der Explorer vergleicht alle Angaben jeder Anforderung: Titel, Anforderungstext und Hilfestellung, Modalverb, Schutzbedarf, Zielobjektkategorien, Schutzziele, Handlungswort, Dokumentation, gefordertes Ergebnis und Spezifikation, Aufwand, Tags, Gefährdungen, verknüpfte Anforderungen, Quellkatalog, die Einordnung im Katalog und die UUID.
 
 ![Kopfzeile mit Hinweisbalken im Vergleichsmodus](bilder/vergleich.png){width=100%}
 
@@ -53,35 +47,31 @@ Wählen Sie im Dialog **Kataloge** den neueren Stand zum **Anzeigen** und den ä
 Hinweisbalken unter der Kopfzeile mit den verglichenen Ständen und der Zahl der Änderungen
 ///
 
-Im Vergleichsmodus schaltet der Explorer spezielle Analysehilfen frei:
+Im Vergleichsmodus stehen zusätzliche Hilfen bereit:
 
-1. **Hinweisbalken oben:** Nennt beide verglichenen Stände und summiert die Änderungen:
-   - **+ [Zahl] neu** (grün): Anforderungen, die im neueren Stand hinzugekommen sind.
-   - **[Zahl] geändert** (gelb): Anforderungen mit inhaltlichen oder strukturellen Änderungen.
-   - **− [Zahl] gelöscht** (rot): Anforderungen, die im neueren Stand entfallen sind.
-2. **Kennzeichnung im Baum:** Betroffene Anforderungen sind in der Liste mit farbigen Badges (*Neu*, *Geändert*, *Gelöscht*) gekennzeichnet.
-3. **Filterbereich „Änderungen“:** In der Filterleiste erscheint der Abschnitt *Änderungen*. Damit isolieren Sie z. B. mit einem Klick nur die veränderten Anforderungen.
-4. **Reiter „Änderungen“ in der Detailansicht:** Zeigt, was sich an der gewählten Anforderung geändert hat (siehe unten).
-5. **Vergleich beenden:** Ein Klick auf das Kreuz im Hinweisbalken (oder ein erneuter Klick auf den Vergleichsstand im Kataloge-Dialog) beendet den Vergleichsmodus.
+1. **Hinweisbalken:** nennt beide Stände und die Zahl der Änderungen: **neu** (grün) sind Anforderungen, die im angezeigten Stand hinzugekommen sind, **geändert** (gelb) solche mit geänderten Angaben, **gelöscht** (rot) solche, die im angezeigten Stand entfallen sind. Der Balken erscheint auch, wenn es keine Unterschiede gibt. **Kataloge …** öffnet den Dialog, um den Vergleich zu ändern oder zu beenden.
+2. **Kennzeichnung in der Liste:** Betroffene Anforderungen tragen die Hinweise *Neu*, *Geändert* oder *Gelöscht*. Gelöschte Anforderungen bleiben sichtbar, damit Sie nachvollziehen können, was entfallen ist.
+3. **Filterbereich „Änderungen“:** Mit ihm grenzen Sie die Liste z. B. auf die geänderten Anforderungen ein.
+4. **Übersichten:** Katalog-, Praktik- und Themenübersicht nennen die Zahl der neuen, geänderten und gelöschten Anforderungen.
+5. **Reiter „Änderungen“** in der Detailansicht (siehe unten).
 
 ### Reiter „Änderungen“
 
-Unterscheiden sich die beiden Stände, blendet die Detailansicht den Reiter **Änderungen** ein. Er nennt den Status der gewählten Anforderung (*Neu*, *Geändert*, *Gelöscht* oder *Unverändert*):
+Unterscheiden sich die beiden Stände, zeigt die Detailansicht den Reiter **Änderungen**. Er nennt den Status der gewählten Anforderung (*Neu*, *Geändert*, *Gelöscht* oder *Unverändert*) und darunter die Unterschiede:
 
-![Registerkarte Änderungen mit Feld-Gegenüberstellung und Wort-Diff](bilder/detail-aenderungen.png){width=36%}
+![Reiter Änderungen mit Änderungsübersicht und Wortvergleich](bilder/detail-aenderungen.png){width=48%}
 
 /// figure-caption
     attrs: {id: fig-detail-aenderungen}
-Registerkarte „Änderungen“ mit direkter Feld-Gegenüberstellung und Wortvergleich
+Reiter „Änderungen“ mit Änderungsübersicht und Wortvergleich
 ///
 
-Dieser Reiter bietet zwei wesentliche Analysewerkzeuge:
+1. **Änderungsübersicht:** alle geänderten Angaben mit den Bezeichnungen der Detailansicht, bei einzelnen Werten als *alt → neu*, z. B. ein Modalverb von `MUSS` auf `SOLLTE`. Bei Listen wie Tags oder Gefährdungen stehen entfallene Werte rot, hinzugekommene grün.
+2. **Textvergleich:** Für Anforderungstext und Hilfestellung zeigt ein Wortvergleich gestrichene Stellen rot durchgestrichen und neue Stellen grün hervorgehoben.
 
-1. **Gegenüberstellung veränderter Eigenschaften:** Zeigt übersichtlich alle modifizierten Attribute (z. B. ein geändertes Modalverb von `SOLLTE` auf `MUSS`, angepasste Schutzziele oder geänderte Gefährdungen).
-2. **Wortvergleich (Word-Diff):** Im Anforderungstext und in der Hilfestellung werden gestrichene Textstellen rot durchgestrichen und neu hinzugekommene Formulierungen grün hervorgehoben.
+## Gespeicherte Daten löschen
 
----
+Um alle gespeicherten Kataloge, Listen, Notizen und Einstellungen zu löschen, öffnen Sie in der Fußzeile **Datenschutz** und klicken auf **Alle lokal gespeicherten Daten löschen**. Nach einer Rückfrage entfernt der Explorer alle Daten, die er in Ihrem Browser abgelegt hat, und zeigt wieder die Startseite wie beim ersten Aufruf. Andere Daten Ihres Browsers bleiben unberührt.
 
-## Gespeicherte Daten bereinigen
-
-Möchten Sie alle im Browser gespeicherten Kataloge, Listen, Notizen und Einstellungen löschen, öffnen Sie in der Fußzeile die **Datenschutzerklärung** und klicken auf **Alle lokal gespeicherten Daten löschen**. Nach einer Sicherheitsabfrage entfernt der Explorer alle Daten, die er in Ihrem Browser abgelegt hat, und zeigt wieder die Startseite wie beim ersten Aufruf. Andere Daten Ihres Browsers bleiben unberührt. Der Schritt lässt sich nicht rückgängig machen; sichern Sie Ihre Listen bei Bedarf vorher über den Export.
+> [!WARNING]
+> Dieser Schritt lässt sich nicht rückgängig machen. Sichern Sie Ihre Listen vorher über **Alle Listen sichern** (siehe [Kapitel „Listen und Notizen“](#kap-listen-notizen)).

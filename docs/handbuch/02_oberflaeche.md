@@ -1,12 +1,12 @@
-# Die Oberfläche im Überblick
+# Die Oberfläche im Überblick {#kap-oberflaeche}
 
-Der Arbeitsbereich des Grundschutz++ Explorers gliedert sich in vier Hauptbereiche: die **Kopfzeile** oben, die **Filterleiste** links, die **Liste der Anforderungen** in der Mitte und die **Detailansicht** auf der rechten Seite.
+Der Arbeitsbereich des Grundschutz++ Explorers besteht aus vier Bereichen: der **Kopfzeile** oben, der **Filterleiste** links, der **Liste der Anforderungen** in der Mitte und der **Detailansicht** rechts. Die Fußzeile verweist auf Handbuch, Lizenz, Impressum und Datenschutz.
 
 ![Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht](bilder/oberflaeche.png){width=100%}
 
 /// figure-caption
     attrs: {id: fig-oberflaeche}
-Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht
+Gesamtansicht: Filterleiste, Baumansicht mit der gewählten Anforderung DEV.3.4 und ihre Detailansicht
 ///
 
 ## Kopfzeile
@@ -15,74 +15,98 @@ Gesamtansicht mit Filterleiste, Baumansicht und Detailansicht
 
 /// figure-caption
     attrs: {id: fig-kopfzeile}
-Kopfzeile mit Logo, Suche, Katalogen und Darstellungsschaltern
+Kopfzeile mit Katalogname, Suche, Katalogen und Darstellungsschaltern
 ///
 
-Von links nach rechts bietet die Kopfzeile folgende Funktionen:
+Von links nach rechts bietet die Kopfzeile:
 
 | Element | Funktion |
 | :--- | :--- |
-| **Logo und Titel** | Zeigt das Schutzschild-Logo, den Namen des geladenen Katalogs und dessen Stand. |
-| **Suchfeld** | Durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, Gefährdungsbezeichnungen und Tags in Echtzeit (Tastaturkürzel: `Strg + K` oder `/`). |
-| **Kataloge** | Öffnet den Dialog zur Verwaltung gespeicherter Versionen, zum Starten/Beenden des Vergleichs und zum Laden neuer Kataloge. |
-| **A A A** | Dreistufige Skalierung der Schriftgröße: normal (100 %), groß (112,5 %) oder sehr groß (125 %). |
-| **Sonne / Mond** | Wechselt zwischen hellem und dunklem Oberflächendesign. |
-| **Halbkreis** | Schaltet den hohen Kontrastmodus ein oder aus (garantiert WCAG-Kontrastverhältnis ≥ 7:1 für alle Texte). |
+| **Logo und Titel** | Name der Anwendung, darunter Titel und Stand des angezeigten Katalogs. |
+| **Suchfeld** | Durchsucht Kennungen, Titel, Anforderungstexte, Hilfestellungen, Gefährdungen und Tags, während Sie tippen (Tastenkürzel: `Strg + K` oder `/`). |
+| **Kataloge** | Öffnet den Dialog mit den gespeicherten Katalogständen: anzeigen, vergleichen, löschen und neue Kataloge laden. |
+| **A A A** | Schriftgröße in drei Stufen: normal, groß (112,5 %) und sehr groß (125 %). |
+| **Mond / Sonne** | Wechselt zwischen hellem und dunklem Design. |
+| **Halbkreis** | Schaltet den hohen Kontrast ein oder aus. |
 
 ## Filterleiste
 
-Die linke Spalte enthält alle Filter-Facetten in aufklappbaren Abschnitten. Nach den eigenen Listen folgen sie der Reihenfolge der Detailansicht von oben nach unten, sodass sich jede Angabe einer Anforderung links an derselben Stelle wiederfindet:
+Die linke Spalte enthält alle Filter in auf- und zuklappbaren Bereichen. Nach den eigenen Listen folgen sie weitgehend der Reihenfolge der Detailansicht, sodass Sie eine Angabe der Anforderung links an vergleichbarer Stelle wiederfinden.
 
-1. **Listen:** Eigene Sammlungen von Anforderungen mit Notizen (z. B. Audit-Vorbereitung oder Maßnahmenkataloge).
-2. **Praktiken:** Thematische Schwerpunkte wie Governance (GC), Architektur (ARCH) oder Entwicklung (DEV).
+![Filterleiste mit gesetzten Filtern](bilder/filterleiste.png){width=32%}
+
+/// figure-caption
+    attrs: {id: fig-filterleiste}
+Ausschnitt der Filterleiste: Schaltflächen oben, auf- und zugeklappte Bereiche, eingeschlossenes Modalverb MUSS und ausgeschlossene Erhöhte Sicherheitsstufe
+///
+
+Die Bereiche in ihrer Reihenfolge:
+
+1. **Listen:** eigene Sammlungen von Anforderungen mit Notizen.
+2. **Praktiken:** die oberste Gliederungsebene des Katalogs, etwa GC Governance und Compliance oder DEV Entwicklung.
 3. **Schutzbedarf:** Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe.
-4. **Zielobjekte:** Worauf sich die Anforderung bezieht (z. B. IT-Systeme, Nutzende).
-5. **Modalverben:** Verbindlichkeitsgrad nach BSI (MUSS, SOLLTE, KANN).
-6. **Handlungswort & Dokumentation:** Fachliche Vorgaben des BSI mit Definitions-Tooltips.
-7. **Tags:** Offizielle Schlagwörter des BSI.
-8. **Schutzziele:** Gezielte Filterung nach Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au).
-9. **Aufwand:** Geschätzte Aufwandsstufe von 0 bis 5 mit farbiger Balkenanzeige.
-10. **Elementare Gefährdungen:** BSI-Gefährdungen G 0.1 bis G 0.47.
-11. **Änderungen:** Erscheint nur im Vergleichsmodus (neu, geändert, gelöscht).
+4. **Zielobjektkategorien:** worauf sich eine Anforderung bezieht, etwa Anwendungen oder Nutzende; auf Wunsch einschließlich der übergeordneten Kategorien.
+5. **Modalverben:** MUSS, SOLLTE oder KANN.
+6. **Handlungswort:** das Verb der geforderten Handlung, etwa *dokumentieren* oder *prüfen*.
+7. **Schutzziele:** Wirkung auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität.
+8. **Aufwand:** Aufwandsstufen 0 bis 5 mit farbigem Balken.
+9. **Dokumentation:** die geforderte Dokumentationsvorgabe, etwa *Sicherheitskonzept*.
+10. **Gefährdungen:** die elementaren Gefährdungen G 0.1 bis G 0.47.
+11. **Quellkataloge:** aus welchem Teilkatalog des BSI eine Anforderung stammt.
+12. **Tags:** Schlagwörter des BSI.
+13. **Änderungen:** nur im Vergleichsmodus, neu, geändert oder gelöscht.
 
-Oben rechts in der Filterleiste befinden sich drei Funktionsschaltflächen:
-- **Alle Filter zurücksetzen** (Kreispfeil): Setzt alle aktiven Filter zurück.
-- **Werte ohne Treffer ausblenden** (Trichter): Komprimiert die Filterleiste auf Werte, die zu den übrigen Kriterien passen.
-- **Alle Abschnitte auf-/zuklappen**: Klappt alle Facettengruppen gleichzeitig auf oder zu.
+Die Bereiche mit vielen Werten (Zielobjektkategorien, Handlungswort, Dokumentation, Gefährdungen und Tags) haben ein eigenes Suchfeld. Gesetzte Werte stehen dort immer oben.
+
+Oben in der Filterleiste stehen vier Schaltflächen:
+
+- **Alle Filter zurücksetzen** (Kreispfeil): hebt alle gesetzten Filter und die Suche auf.
+- **Werte ohne Treffer ausblenden** (Trichter): zeigt nur noch Werte, die zu den übrigen Filtern passen. Ein zweiter Klick zeigt wieder alle.
+- **Alle Filterbereiche aufklappen** und **Alle Filterbereiche zuklappen**.
 
 ## Liste der Anforderungen
 
-Die mittlere Spalte präsentiert die Anforderungen wahlweise als strukturierte **Baumansicht** oder als **flache Trefferliste**:
+Die mittlere Spalte zeigt die Anforderungen als **Baumansicht** oder als **flache Trefferliste**.
 
-- Über der Liste fassen **Filter-Chips** alle aktuell gesetzten Filterkriterien zusammen.
-- Die Trefferzahl nennt die Anzahl der angezeigten Anforderungen.
-- Jede Zeile zeigt Kennung, Titel, das Modalverb sowie informative Statusmarkierungen:
-  - Ein **Stern**: Gelb = Anforderung ist in der aktiven Liste; Grau = in einer anderen Liste; Umriss = in keiner Liste.
-  - Ein **Notizsymbol**: Grün = Notiz in der aktiven Liste vorhanden; Grau = Notiz in anderer Liste vorhanden.
-  - Pfeil mit Zahl: Anzahl untergeordneter Anforderungen.
-  - Warndreieck mit Zahl: Anzahl zugeordneter elementarer Gefährdungen.
-  - Kürzel **C**, **I**, **A**, **Au**: Schutzziele, die für diese Anforderung im Zentrum stehen.
-  - Im Vergleichsmodus: Farbige Kennzeichnung für **Neu** (grün), **Geändert** (gelb) oder **Gelöscht** (rot).
+![Markierungen in der Liste der Anforderungen](bilder/listen-markierungen.png){width=70%}
+
+/// figure-caption
+    attrs: {id: fig-listen-markierungen}
+Zeilen der Baumansicht mit Stern, Notizsymbol, Gefährdungen, Schutzziel im Zentrum und Modalverb
+///
+
+Darüber stehen die Trefferzahl, im Baum die Schaltflächen **Alle aufklappen** und **Alle zuklappen** sowie die beiden Umschalter für Baum und flache Liste. Sind Filter gesetzt, fassen **Filter-Chips** über der Liste sie zusammen (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)). Jede Zeile zeigt Kennung, Titel und rechts das Modalverb. Dazwischen stehen, wenn zutreffend, diese Markierungen:
+
+| Markierung | Bedeutung |
+| :--- | :--- |
+| **Stern** | Gelb: in der aktiven Liste. Grau: nur in einer anderen Liste. Ohne Stern: in keiner Liste. |
+| **Notizsymbol** | Grün: Notiz in der aktiven Liste. Grau: Notiz nur in einer anderen Liste. |
+| **Pfeil mit Zahl** | Anzahl der direkten Unteranforderungen. |
+| **Warndreieck mit Zahl** | Anzahl der zugeordneten elementaren Gefährdungen. |
+| **C, I, A, Au** | Schutzziele, die im Zentrum der Anforderung stehen (Vertraulichkeit, Integrität, Verfügbarkeit, Authentizität). |
+| **Neu, Geändert, Gelöscht** | Nur im Vergleichsmodus: Änderungsstatus gegenüber dem Vergleichsstand. |
+
+/// table-caption
+    attrs: {id: tbl-listen-markierungen}
+Markierungen in den Zeilen der Anforderungsliste
+///
 
 ## Detailansicht
 
-Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten Anforderung:
+Die rechte Spalte zeigt alle Angaben zur ausgewählten Anforderung. Ist keine Anforderung gewählt, zeigt sie eine Übersicht über den Katalog, bei gewählter Praktik oder gewähltem Thema eine Übersicht über diese Ebene.
 
-- **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Thema und gegebenenfalls übergeordneten Anforderungen.
-- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Modalverb (Verbindlichkeit MUSS/SOLLTE), Schutzbedarf (normal/erhöht), Anzahl der Unteranforderungen und Gefährdungen (jeweils einschließlich aller Unteranforderungen) und Änderungsstatus.
-- **Reiter (Tabs):**
-  - **Übersicht:** Vollständiger Anforderungstext, Zielobjekt, Schutzziele, Aufwand, Dokumentationsvorgabe, Gefährdungen, Unteranforderungen, verknüpfte Anforderungen und Einordnung.
-  - **Hilfestellung:** BSI-Hinweise und Erläuterungen zur praktischen Umsetzung der Anforderung.
-  - **Notizen:** Eigenes Notizfeld für die aktive Liste, Umschaltung zwischen Listennotizen und Änderungsdatum.
-  - **Änderungen:** Im Vergleichsmodus Gegenüberstellung aller veränderten Felder und Wort-für-Wort-Vergleich.
+![Kopfbereich der Detailansicht einer Unteranforderung](bilder/detail-kopf.png){width=48%}
+
+/// figure-caption
+    attrs: {id: fig-detail-kopf}
+Kopfbereich der Detailansicht am Beispiel der Unteranforderung GC.9.1.1.1: Pfadleiste mit übergeordneten Anforderungen, Kennung, Titel, Stern, Hinweise und Reiter
+///
+
+- **Pfadleiste:** beginnt mit einem Buch-Symbol, das zur Katalogübersicht führt, gefolgt von Praktik, Thema und gegebenenfalls übergeordneten Anforderungen.
+- **Kopfbereich:** Kennung, Titel und Stern für die Aufnahme in die aktive Liste. Darunter Hinweise auf Art (*Anforderung* oder *Unteranforderung*), Modalverb, Schutzbedarf, die Zahl der Unteranforderungen und Gefährdungen (jeweils einschließlich aller Unteranforderungen) und im Vergleichsmodus den Änderungsstatus.
+- **Reiter:** *Übersicht*, *Hilfestellung*, *Notizen* und im Vergleichsmodus *Änderungen*.
+
+Das [Kapitel „Die Detailansicht“](#kap-detailansicht) beschreibt die Reiter im Einzelnen.
 
 > [!TIP]
-> Die Breite der Detailansicht lässt sich mit der Maus an der Trennlinie zwischen Liste und Detailbereich stufenlos anpassen (Standard: 30 %, Doppelklick auf die Trennlinie setzt sie zurück). Die gewählte Breite wird automatisch im Browser gespeichert.
-
-## Darstellung anpassen
-
-Der Explorer speichert Ihre Anzeigeeinstellungen dauerhaft im Browser:
-
-- **Schriftgröße:** Über den dreiteiligen Knopf **A A A** schalten Sie zwischen drei Schriftgrößen um. Bei größeren Schriften wächst die Filterleiste proportional mit, damit alle Bezeichnungen vollständig lesbar bleiben.
-- **Dunkel- und Hell-Modus:** Beim Erstaufruf übernimmt der Explorer die Systemeinstellung Ihres Betriebssystems.
-- **Hoher Kontrast:** Hebt Rahmen, Texte und Signalfarben hervor, um maximale Lesbarkeit bei eingeschränktem Sehvermögen oder ungünstigen Lichtverhältnissen zu gewährleisten.
+> Die Breite der Detailansicht ändern Sie, indem Sie die Trennlinie zwischen Liste und Detailansicht mit der Maus ziehen. Ein Doppelklick auf die Trennlinie stellt die Standardbreite wieder her. Haben Sie die Trennlinie angeklickt oder mit der Tabulatortaste erreicht, verschieben die Pfeiltasten sie in Schritten von 1 %, mit gedrückter Umschalttaste in Schritten von 5 %. Die Breite wird im Browser gespeichert.

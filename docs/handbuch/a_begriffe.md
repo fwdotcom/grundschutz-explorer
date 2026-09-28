@@ -1,6 +1,6 @@
 # Begriffe
 
-Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt Grundschutz++ Explorer direkt an der jeweiligen Stelle per Tooltip oder Info-Button.
+Die folgenden Begriffe stammen aus dem Grundschutz++-Katalog und den Begriffsdefinitionen des BSI. Die vollständigen Definitionen zeigt Grundschutz++ Explorer direkt an der jeweiligen Stelle per Tooltip oder Info-Symbol.
 
 ## Aufbau des Katalogs
 
@@ -14,12 +14,12 @@ Anforderung
 : Ein verbindlich zu erreichender Zielzustand, etwa „DEV.4.3“. Eine Anforderung kann ihrerseits konkretere Unteranforderungen enthalten.
 
 Unteranforderung
-: Spezifizierung einer übergeordneten Anforderung, etwa „DEV.1.1.1“. Im Grundschutz++-Katalog reicht die Hierarchie bis zu vier Ebenen tief.
+: Spezifizierung einer übergeordneten Anforderung, etwa „DEV.1.1.1“. Unteranforderungen können ihrerseits Unteranforderungen haben, im Grundschutz++-Katalog über mehrere Ebenen (etwa bis GC.9.1.1.1.1).
 
 ## Angaben an einer Anforderung
 
-Zielobjekt
-: Worauf sich eine Anforderung bezieht, etwa *IT-Systeme*, *Anwendungen* oder *Nutzende*. Eine Anforderung kann mehrere Zielobjekte haben. Grundlage ist das BSI-Vokabular der Zielobjektkategorien.
+Zielobjektkategorie
+: Worauf sich eine Anforderung bezieht, etwa *IT-Systeme*, *Anwendungen* oder *Nutzende*. Eine Anforderung kann mehrere Zielobjektkategorien haben. Die Kategorien des BSI sind hierarchisch geordnet: *Führungskräfte* gehören zu den *Mitarbeitenden*, diese zu den *Nutzenden*. Anforderungen an eine übergeordnete Kategorie gelten damit auch für die untergeordneten.
 
 Modalverb
 : Grad der Verbindlichkeit:
@@ -44,6 +44,9 @@ Schutzziele
 
 Elementare Gefährdung
 : Eine der 47 elementaren Gefährdungen G 0.1 bis G 0.47 des IT-Grundschutzes (z. B. „G 0.18 Fehlplanung oder fehlende Anpassung“).
+
+Quellkatalog
+: Teilkatalog der Stand-der-Technik-Bibliothek des BSI, aus dem eine Anforderung stammt, etwa der *Stand-der-Technik Kernel G0* oder die *Methodik Grundschutz++*.
 
 Tag
 : Schlagwort aus dem kontrollierten BSI-Vokabular zur thematischen Querschnittsklassifikation (z. B. „Zero Trust“, „Lieferketten“ oder „Kryptografie“).

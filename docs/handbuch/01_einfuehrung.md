@@ -1,22 +1,22 @@
 # Einführung
 
-Grundschutz++ Explorer ist ein Werkzeug zum Lesen, Auswerten und Verwalten des **Anwenderkatalogs Grundschutz++**, den das Bundesamt für Sicherheit in der Informationstechnik (BSI) maschinenlesbar im Format NIST OSCAL veröffentlicht. Der Katalog umfasst rund tausend Anforderungen. Im Explorer finden Sie die für Sie relevanten Anforderungen schnell, erfassen eigene Notizen in flexiblen Listen, schlagen Definitionen nach und vergleichen zwei Katalogstände Wort für Wort miteinander.
+Grundschutz++ Explorer ist ein Werkzeug zum Lesen, Auswerten und Bearbeiten des **Anwenderkatalogs Grundschutz++**, den das Bundesamt für Sicherheit in der Informationstechnik (BSI) maschinenlesbar im Format NIST OSCAL veröffentlicht. Der Katalog umfasst rund tausend Anforderungen und Unteranforderungen. Mit dem Explorer finden Sie die für Sie relevanten Anforderungen schnell, halten eigene Notizen in Listen fest, schlagen Begriffsdefinitionen des BSI nach und vergleichen zwei Katalogstände Wort für Wort.
 
-Der Autor ist selbst Informationssicherheitsbeauftragter einer deutschen Landesbehörde und hat das Projekt nebenberuflich als freies Open-Source-Vorhaben unter MIT-Lizenz konzipiert und entwickelt. Ziel ist es, Sicherheitsverantwortlichen, Auditoren und IT-Teams ein schnelles, datensparsames und intuitives Werkzeug für den Arbeitsalltag an die Hand zu geben.
+Der Autor ist Informationssicherheitsbeauftragter einer deutschen Landesbehörde und hat das Projekt nebenberuflich als freies Open-Source-Vorhaben unter MIT-Lizenz entwickelt. Ziel ist ein schnelles, datensparsames und leicht verständliches Werkzeug für Sicherheitsverantwortliche, Auditorinnen und Auditoren sowie IT-Teams.
 
 > Grundschutz++ Explorer ist ein unabhängiges Projekt und steht in keiner Verbindung zum Bundesamt für Sicherheit in der Informationstechnik (BSI). Der offizielle Grundschutz++-Anwenderkatalog und die Begriffsdefinitionen stammen aus der öffentlich zugänglichen Stand-der-Technik-Bibliothek des BSI und stehen unter der Lizenz CC BY-SA 4.0. Sie werden unverändert angezeigt. Die Rechte an diesen Inhalten liegen beim BSI.
 
 ## Wofür der Explorer gedacht ist
 
-- **Nachschlagen:** Anforderungen über Kennung, Titel oder Volltextsuche in Sekundenschnelle finden.
-- **Eingrenzen:** den Katalog nach Verbindlichkeit (Modalverb), Schutzbedarf, Zielobjekt, Aufwand, Handlungswort, Dokumentationsvorgabe, Schutzzielen, Praktiken, Gefährdungen, Tags und Listen filtern.
-- **Eigene Listen & Notizen:** Anforderungen mit einem Stern in thematische Listen aufnehmen (z. B. für Audits, Arbeitsgruppen oder Umsetzungsbesprechungen) und Notizen direkt an der Anforderung festhalten.
-- **Verstehen:** BSI-Begriffsdefinitionen per Info-Button direkt an der Anforderung nachschlagen, etwa was eine Aufwandsstufe bedeutet oder welche Vorgaben mit einem Handlungswort verknüpft sind.
-- **Vergleichen:** eine neue Version gegen eine ältere halten und auf Wortebene sehen, was neu hinzugekommen, präzisiert oder entfallen ist.
+- **Nachschlagen:** Anforderungen über Kennung, Titel oder Volltext in Sekunden finden.
+- **Eingrenzen:** den Katalog flexibel nach zahlreichen Inhalten filtern.
+- **Listen und Notizen:** Anforderungen in eigene Listen aufnehmen, etwa für ein Audit, eine Arbeitsgruppe oder eine Umsetzungsbesprechung, und Notizen direkt an der Anforderung festhalten.
+- **Verstehen:** die Definitionen des BSI per Info-Symbol direkt an der Anforderung nachschlagen, etwa was eine Aufwandsstufe bedeutet oder was eine Zielobjektkategorie umfasst.
+- **Vergleichen:** einen neuen Katalogstand gegen einen älteren halten und sehen, welche Anforderungen neu hinzugekommen, geändert oder entfallen sind.
 
 ## Voraussetzungen
 
-Sie benötigen lediglich einen aktuellen Webbrowser (z. B. Chrome, Edge, Firefox oder Safari). Eine Installation, Registrierung oder Anmeldung ist nicht erforderlich. Rufen Sie die Anwendung einfach auf:
+Sie benötigen nur einen aktuellen Webbrowser, etwa Chrome, Edge, Firefox oder Safari. Installation, Registrierung oder Anmeldung sind nicht nötig. Rufen Sie die Anwendung auf:
 
 ```text
 https://www.grundschutz-explorer.de
@@ -29,24 +29,24 @@ https://www.grundschutz-explorer.de
 Startseite beim ersten Aufruf
 ///
 
-Beim ersten Aufruf erscheint die Startseite. Über **Katalog laden** öffnen Sie den Ladedialog und beziehen den aktuellen Grundschutz++-Katalog direkt vom BSI oder laden einen anderen Katalog im Schema des BSI-Grundschutz++ per Datei oder URL. Darunter fasst die Startseite kurz zusammen, woher die Daten stammen und wie der Explorer mit Ihren Daten verfährt. Ein geladener Katalog bleibt in Ihrem Browser gespeichert und steht beim nächsten Besuch sofort bereit.
+Beim ersten Aufruf erscheint die Startseite. Über **Katalog laden** öffnen Sie den Ladedialog. Dort laden Sie den aktuellen Grundschutz++-Katalog direkt vom BSI oder einen anderen Katalog im Schema des Grundschutz++ per URL oder Datei. Darunter fasst die Startseite zusammen, woher die Daten stammen, dass der Explorer nur im Browser läuft und wie er mit Ihren Daten umgeht. Ein geladener Katalog bleibt in Ihrem Browser gespeichert und steht beim nächsten Besuch sofort bereit.
 
-![Dialog „Katalog laden“](bilder/kataloge-laden.png){width=48%}
+![Dialog „Katalog laden“](bilder/kataloge-laden.png){width=55%}
 
 /// figure-caption
     attrs: {id: fig-start-katalog-laden}
-Dialog „Katalog laden“ mit offizieller BSI-Quelle, URL-Eingabe und Dateiupload
+Dialog „Katalog laden“ mit offizieller BSI-Quelle, URL-Eingabe und Dateiauswahl
 ///
 
 > [!NOTE]
-> Die Schaltfläche **Offiziellen BSI Grundschutz++ Anwenderkatalog laden** ruft die Datei direkt aus der Stand-der-Technik-Bibliothek des BSI auf GitHub ab. Vorher stellt der Explorer keinerlei externe Verbindungen her.
+> Die Schaltfläche **Offiziellen BSI Grundschutz++ Anwenderkatalog laden** ruft die Datei direkt aus der Stand-der-Technik-Bibliothek des BSI auf GitHub ab. Vorher stellt der Explorer keine Verbindung zu fremden Servern her.
 
 ## Datenschutz und lokale Speicherung
 
-Grundschutz++ Explorer arbeitet zu 100 % lokal in Ihrem Browser (Zero-Server-Architektur). Kataloge, Listen, Notizen, Filter und Einstellungen werden ausschließlich in der internen Datenbank Ihres Browsers (IndexedDB) abgelegt. Es gibt kein Tracking, keine Cookies von Drittanbietern und keine Datenübertragung an Server.
+Grundschutz++ Explorer arbeitet vollständig in Ihrem Browser. Kataloge, Listen, Notizen, Filter und Einstellungen werden ausschließlich in der Datenbank Ihres Browsers (IndexedDB) abgelegt. Es gibt kein Tracking, keine Cookies und keine Übertragung Ihrer Daten an einen Server.
 
 > [!TIP]
-> Einzelne Kataloge löschen Sie unter **Kataloge** über das Papierkorb-Symbol. Alle lokal gespeicherten Daten (Kataloge, Listen, Notizen und Einstellungen) entfernen Sie in der **Datenschutzerklärung** mit einem Klick auf **Alle lokal gespeicherten Daten löschen**.
+> Einzelne Kataloge löschen Sie im Dialog **Kataloge** über das Papierkorb-Symbol. Alle gespeicherten Daten (Kataloge, Listen, Notizen und Einstellungen) entfernen Sie über **Datenschutz** in der Fußzeile mit **Alle lokal gespeicherten Daten löschen**.
 
 ## Nutzung von KI bei der Softwareentwicklung
 
@@ -58,6 +58,6 @@ Grundschutz++ Explorer selbst enthält keine KI-Funktionen. Alle Daten bleiben a
 
 ## Aufbau dieses Handbuchs
 
-- **Grundlagen:** Stellt die Bildschirmoberfläche und ihre Bedienelemente vor.
-- **Arbeiten mit dem Katalog:** Führt Schritt für Schritt durch Navigation, Suche und Filter, das Lesen von Anforderungen, die Listen- und Notizverwaltung sowie den Versionsvergleich.
-- **Anhang:** Enthält Begriffsdefinitionen, Tastaturkürzel und Hinweise zu Datenquellen.
+- **Grundlagen:** stellt die Oberfläche und ihre Bedienelemente vor.
+- **Arbeiten mit dem Katalog:** führt durch Navigation, Suche und Filter, die Detailansicht, Listen und Notizen sowie den Versionsvergleich.
+- **Anhang:** enthält Begriffe, Tastenkürzel sowie Datenquellen und Lizenzen.

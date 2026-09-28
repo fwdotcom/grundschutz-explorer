@@ -2802,6 +2802,8 @@ const app = createApp({
 
       e.preventDefault();
       const handle = e.currentTarget;
+      // preventDefault verhindert auch das Fokussieren; danach sollen die Pfeiltasten die Trennlinie verschieben
+      handle.focus({ preventScroll: true });
       const pointerId = e.pointerId;
       try {
         handle.setPointerCapture(pointerId);

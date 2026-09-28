@@ -1,21 +1,30 @@
-# Tastenkürzel
+# Tastenkürzel {#anh-tastatur}
 
-Grundschutz++ Explorer lässt sich vollständig ohne Maus mit der Tastatur bedienen:
+Grundschutz++ Explorer lässt sich vollständig mit der Tastatur bedienen:
 
 | Taste | Wirkung |
 | :--- | :--- |
-| **Strg + K** (macOS: **⌘ + K**) | Suchfeld fokussieren und bestehenden Text markieren |
-| **/** | Cursor direkt ins Suchfeld setzen |
-| **Esc** (im Suchfeld) | Suchfeld leeren und Filter zurücksetzen |
-| **Esc** (im Dialog/Menü) | Geöffneten Dialog oder offenes Kontextmenü schließen |
-| **↓** oder **j** | Nächste sichtbare Anforderung in der Liste auswählen |
-| **↑** oder **k** | Vorherige sichtbare Anforderung auswählen |
-| **→ (Rechtspfeil)** | Unteranforderungen der ausgewählten Anforderung im Baum aufklappen |
-| **← (Linkspfeil)** | Unteranforderungen zuklappen bzw. zur übergeordneten Anforderung zurückspringen |
-| **Tabulator / Umschalt + Tab** | Vorwärts bzw. rückwärts durch alle Steuerelemente navigieren |
-| **Leertaste / Eingabe** | Fokussierte Schaltfläche oder Checkbox auslösen |
+| **Strg + K** (macOS: **⌘ + K**) | Suchfeld fokussieren und vorhandenen Text markieren |
+| **/** | Cursor ins Suchfeld setzen |
+| **Esc** (im Suchfeld) | Suche leeren und Suchfeld verlassen |
+| **Esc** (sonst) | Offene Erläuterung, Dialog, Menü oder Filterleiste (in schmalen Fenstern) schließen |
+| **↓** oder **j** | Nächste Anforderung in der Liste auswählen |
+| **↑** oder **k** | Vorherige Anforderung auswählen |
+| **→** | Unteranforderungen der gewählten Anforderung im Baum aufklappen |
+| **←** | Unteranforderungen zuklappen bzw. zur übergeordneten Anforderung springen |
+| **← / →, Pos1 / Ende** (Reiterleiste) | Zwischen den Reitern der Detailansicht wechseln |
+| **← / →** (Trennlinie) | Breite der Detailansicht um 1 % ändern, mit **Umschalt** um 5 %; **Pos1** / **Ende** auf größte bzw. kleinste Breite, **Eingabe** auf Standardbreite |
+| **Tab / Umschalt + Tab** | Vorwärts bzw. rückwärts durch alle Bedienelemente |
+| **Leertaste / Eingabe** | Fokussierte Schaltfläche, Praktik oder Thema auslösen |
+
+/// table-caption
+    attrs: {id: tbl-tastenkuerzel}
+Tastenkürzel
+///
 
 > [!NOTE]
-> Die Pfeiltasten **↑**, **↓**, **←** und **→** zur Listennavigation sind inaktiv, solange sich der Cursor in einem Eingabefeld (Suche, Notizfeld, Filtereingabe) befindet.
+> Die Pfeiltasten und **j** / **k** zur Listennavigation wirken nicht, solange der Cursor in einem Eingabefeld steht (Suche, Notizfeld, Suchfeld der Filterleiste).
 
-Im **hohen Kontrastmodus** wird das jeweils fokussierte Element mit einem kontraststarken, zweifarbigen Fokusrahmen hervorgehoben (WCAG 2.4.7 Fokus sichtbar). Screenreader erfassen die Baumansicht als Baumstruktur (`tree`) mit Ansage der Ebene und des Auf- oder Zugeklappt-Zustands, die flache Trefferliste als Auswahlliste (`listbox`).
+Der erste Druck auf **Tab** nach dem Laden zeigt zwei Sprunglinks: **Direkt zur Anforderungsliste** und **Direkt zum Detailbereich**. Sie führen ohne Umweg über Kopfzeile und Filterleiste in den jeweiligen Bereich.
+
+Screenreader erfassen die Baumansicht als Baum mit Ebene und Auf- oder Zugeklappt-Zustand, die flache Trefferliste als Auswahlliste. Die Trefferzahl wird nach einer kurzen Pause angesagt, damit sie beim Tippen nicht stört. Im hohen Kontrastmodus hebt ein kräftiger, zweifarbiger Rahmen das fokussierte Element hervor.

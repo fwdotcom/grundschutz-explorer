@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
 const TESTDATEN = path.join(ROOT, 'testdaten');
-const BILDER_DIR = path.join(ROOT, 'docs', 'handbuch', 'bilder');
+// Zielordner; mit BILDER_DIR=<Ordner> lassen sich die Bilder zum Vergleich woanders ablegen
+const BILDER_DIR = process.env.BILDER_DIR || path.join(ROOT, 'docs', 'handbuch', 'bilder');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -81,7 +82,7 @@ async function main() {
     '--no-first-run',
     '--disable-extensions',
     '--no-default-browser-check',
-    '--window-size=1280,850',
+    '--window-size=1440,900',
     '--hide-scrollbars',
   ]);
 
@@ -144,12 +145,6 @@ async function main() {
     await send('Page.enable');
     await send('DOM.enable');
     await send('Runtime.enable');
-    await send('Emulation.setDeviceMetricsOverride', {
-      width: 1200,
-      height: 760,
-      deviceScaleFactor: 2,
-      mobile: false,
-    });
     await send('Emulation.setEmulatedMedia', {
       media: 'screen',
       features: [
@@ -195,35 +190,73 @@ async function main() {
       })()`);
     };
 
+    // Die App über ihre eigenen Funktionen steuern (Wurzelkomponente am Element #app), statt sich durch
+    // den Baum zu klicken: robuster gegenüber Änderungen am Markup
+    const act = async (code) => {
+      const err = await evalJs(`(async () => {
+        try { const vm = document.getElementById('app')._vnode.component.proxy; ${code}; } catch (e) { return String(e); }
+      })()`);
+      if (err) throw new Error(`App-Aufruf fehlgeschlagen: ${err}`);
+    };
+    const setViewport = (width, height) =>
+      send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 2, mobile: false });
+    const VIEW_W = 1440;
+    const VIEW_H = 900;
+
+    // Anforderung auswählen und Reiter öffnen
+    const showControl = async (id, tab = 'overview') => {
+      await act(`vm.selectControl(vm.activeCatalog.controlMap.get(${JSON.stringify(id)})); vm.detailActiveTab = ${JSON.stringify(tab)}`);
+      await waitFor(`document.querySelector('.detail-id')?.textContent.trim() === ${JSON.stringify(id)} && document.querySelector('#tab-${tab}.on')`);
+      await wait(350);
+    };
+
+    // Unterkante eines Elements (CSS-Pixel); das Element liefert ein JS-Ausdruck
+    const bottomOf = (expr) => evalJs(`(() => { const el = ${expr}; return el ? el.getBoundingClientRect().bottom : null; })()`);
+
+    // Detailbereich von oben bis zu einer Unterkante (höchstens bis zum Fensterrand bzw. maxHeight)
+    const captureDetail = async (filename, bottom, maxHeight = Infinity) => {
+      const pane = await getRect('.detail-pane');
+      if (!(bottom > pane.y)) throw new Error(`${filename}: Unterkante des Ausschnitts nicht gefunden`);
+      const height = Math.min(bottom - pane.y, pane.height, maxHeight);
+      await capture(filename, { x: pane.x, y: pane.y, width: pane.width, height });
+    };
+
+    // Liste so scrollen, dass ein Element direkt unter der mitlaufenden Kopfzeile steht
+    const scrollListTo = (selector, stickySelector) =>
+      evalJs(`(() => {
+        const list = document.querySelector('.list-scroll');
+        const el = document.querySelector(${JSON.stringify(selector)});
+        if (!list || !el) return;
+        const stickyEl = ${stickySelector ? `document.querySelector(${JSON.stringify(stickySelector)})` : 'null'};
+        const sticky = stickyEl ? stickyEl.getBoundingClientRect().height : 0;
+        list.scrollTop += el.getBoundingClientRect().top - list.getBoundingClientRect().top - sticky;
+      })()`);
+
+    await setViewport(VIEW_W, VIEW_H);
+
     // 1. STARTSEITE (noch kein Katalog geladen)
-    console.log('\n--- 1. Startseite aufnehmen (gesamte Bildschirmseite) ---');
+    console.log('\n--- 1. Startseite ---');
     await send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` });
     await waitFor('document.querySelector(".welcome")');
     await wait(400);
-
-    // Gesamte Bildschirmseite aufnehmen (analog oberflaeche.png)
     await capture('startseite.png');
 
     // 2. DIALOG KATALOG LADEN
-    console.log('\n--- 2. Dialog Katalog laden aufnehmen ---');
+    console.log('\n--- 2. Dialog Katalog laden ---');
     await evalJs(`document.querySelector('.welcome-cta')?.click()`);
-    await waitFor('document.querySelector("dialog[aria-labelledby=\'load-title\'][open]")');
+    await waitFor(`document.querySelector('dialog[aria-labelledby="load-title"][open]')`);
     await wait(300);
-
     const loadDialogRect = await getRect('dialog[aria-labelledby="load-title"]');
-    if (loadDialogRect) {
-      await capture('kataloge-laden.png', {
-        x: loadDialogRect.x - 10,
-        y: loadDialogRect.y - 10,
-        width: loadDialogRect.width + 20,
-        height: loadDialogRect.height + 20,
-      });
-    }
-    // Dialog schließen
+    await capture('kataloge-laden.png', {
+      x: loadDialogRect.x - 10,
+      y: loadDialogRect.y - 10,
+      width: loadDialogRect.width + 20,
+      height: loadDialogRect.height + 20,
+    });
     await evalJs(`document.querySelector('dialog[aria-labelledby="load-title"] .icon-btn')?.click()`);
     await wait(300);
 
-    // 3. DATENBANK INITIALISIEREN: Basiskatalog, Vergleichskatalog, Listen & Notizen
+    // 3. DATENBANK: Basiskatalog, Vergleichskatalog, Listen und Notizen
     console.log('\n--- 3. Datenbank initialisieren ---');
     const baseRaw = await readFile(path.join(TESTDATEN, 'Grundschutz++-resolved_catalog.json'), 'utf8');
     const testRaw = await readFile(path.join(TESTDATEN, 'Grundschutz++-vergleich_catalog.json'), 'utf8');
@@ -278,17 +311,11 @@ async function main() {
       tx.objectStore('settings').put({ key: 'dark_mode', value: false });
       tx.objectStore('settings').put({ key: 'high_contrast', value: false });
       tx.objectStore('settings').put({ key: 'font_scale', value: 1 });
+      // Breitere Detailansicht, damit Pfadleiste und Reiter in den Ausschnitten nicht umbrechen
+      tx.objectStore('settings').put({ key: 'detail_pane_width', value: 40 });
 
-      tx.objectStore('lists').put({
-        id: 'list-audit',
-        name: 'Audit 2026',
-        createdAt: '2026-09-25T12:00:00.000Z'
-      });
-      tx.objectStore('lists').put({
-        id: 'list-team',
-        name: 'Entwicklungsteam',
-        createdAt: '2026-09-25T14:00:00.000Z'
-      });
+      tx.objectStore('lists').put({ id: 'list-audit', name: 'Audit 2026', createdAt: '2026-09-25T12:00:00.000Z' });
+      tx.objectStore('lists').put({ id: 'list-team', name: 'Entwicklungsteam', createdAt: '2026-09-25T14:00:00.000Z' });
 
       tx.objectStore('listEntries').put({
         key: 'list-audit|DEV.3.4',
@@ -311,164 +338,106 @@ async function main() {
       db.close();
     })()`);
 
-    console.log('Datenbank erfolgreich befüllt. Lade Seite neu...');
+    console.log('Datenbank befüllt, Seite wird neu geladen ...');
     await send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` });
-    await waitFor('document.querySelector(".topbar") && document.querySelector(".detail-pane")');
+    await waitFor(`document.querySelector('.topbar') && document.querySelector('.detail-pane') && document.getElementById('app')._vnode?.component`);
     await wait(600);
 
     // 4. KOPFZEILE
-    console.log('\n--- 4. Kopfzeile aufnehmen ---');
-    const headerRect = await getRect('.topbar');
-    if (headerRect) {
-      await capture('kopfzeile.png', headerRect);
-    }
+    console.log('\n--- 4. Kopfzeile ---');
+    await capture('kopfzeile.png', await getRect('.topbar'));
 
-    // 5. OBERFLÄCHE (GESAMTANSICHT)
-    console.log('\n--- 5. Gesamtansicht aufnehmen ---');
+    // 5. GESAMTANSICHT mit gewählter Anforderung
+    console.log('\n--- 5. Gesamtansicht ---');
+    await showControl('DEV.3.4');
+    await scrollListTo('.subgroup-head[data-sub-id="DEV.3"]', '.practice-head[data-practice-id="DEV"]');
+    await wait(300);
     await capture('oberflaeche.png');
 
-    // 6. UNTERANFORDERUNGEN IM BAUM (Mehrstufige Verästelung in GC.9.1)
-    console.log('\n--- 6. Mehrstufige Unteranforderungen im Baum aufnehmen ---');
-    await evalJs(`(() => {
-      // GC aufklappen falls noch zu
-      const gcHead = document.querySelector('.practice-head[data-practice-id="GC"]');
-      if (gcHead && !gcHead.closest('.practice-group')?.classList.contains('open')) {
-        gcHead.querySelector('.head-toggle')?.click();
-      }
-    })()`);
+    // 6. UNTERANFORDERUNGEN IM BAUM (GC.9.1 über drei Ebenen)
+    console.log('\n--- 6. Unteranforderungen im Baum ---');
+    await act(`vm.collapseAll()`);
+    await wait(200);
+    await act(`vm.selectControl(vm.activeCatalog.controlMap.get('GC.9.1.1.1'))`);
     await wait(300);
-    await evalJs(`(() => {
-      // GC.9 aufklappen
-      const gc9Head = document.querySelector('.subgroup-head[data-sub-id="GC.9"]');
-      if (gc9Head && !gc9Head.closest('.subgroup')?.classList.contains('open')) {
-        gc9Head.querySelector('.head-toggle')?.click();
-      }
-    })()`);
+    // Auswahl aufheben, damit keine Zeile hervorgehoben ist; der Baum bleibt aufgeklappt
+    await act(`vm.showCatalogOverview()`);
     await wait(300);
-    await evalJs(`(() => {
-      // GC.9.1 aufklappen (Ebene 1)
-      const gc91Row = document.querySelector('.ctrl-row[data-ctrl-id="GC.9.1"]');
-      gc91Row?.querySelector('.ctrl-toggle')?.click();
-    })()`);
+    await scrollListTo('.subgroup-head[data-sub-id="GC.9"]', '.practice-head[data-practice-id="GC"]');
     await wait(300);
-    await evalJs(`(() => {
-      // GC.9.1.1 aufklappen (Ebene 2)
-      const gc911Row = document.querySelector('.ctrl-row[data-ctrl-id="GC.9.1.1"]');
-      gc911Row?.querySelector('.ctrl-toggle')?.click();
-    })()`);
-    await wait(300);
-    await evalJs(`(() => {
-      // GC.9.1.1.1 aufklappen (Ebene 3)
-      const gc9111Row = document.querySelector('.ctrl-row[data-ctrl-id="GC.9.1.1.1"]');
-      gc9111Row?.querySelector('.ctrl-toggle')?.click();
-
-      // Zu GC.9.1 scrollen
-      const target = document.querySelector('.ctrl-row[data-ctrl-id="GC.9.1"]');
-      target?.scrollIntoView({ block: 'start' });
-    })()`);
-    await wait(400);
-
-    const listPaneRect = await getRect('.list-pane');
-    if (listPaneRect) {
-      await capture('unteranforderungen.png', {
-        x: listPaneRect.x,
-        y: listPaneRect.y,
-        width: Math.min(listPaneRect.width, 540),
-        height: Math.min(listPaneRect.height, 460),
-      });
+    {
+      const pane = await getRect('.list-pane');
+      const bottom = await bottomOf(`document.querySelector('.ctrl-row[data-ctrl-id="GC.9.1.1.4"]')`);
+      await capture('unteranforderungen.png', { x: pane.x, y: pane.y, width: pane.width, height: bottom - pane.y + 1 });
     }
 
-    // 7. DETAILANSICHT: REITER ÜBERSICHT (DEV.3.1 mit kurzem Text)
-    console.log('\n--- 7. Detailansicht: Reiter Übersicht aufnehmen (DEV.3.1) ---');
-    await evalJs(`(() => {
-      const devHead = document.querySelector('.practice-head[data-practice-id="DEV"]');
-      if (devHead && !devHead.closest('.practice-group')?.classList.contains('open')) {
-        devHead.querySelector('.head-toggle')?.click();
-      }
-    })()`);
+    // 7. DETAILANSICHT, REITER ÜBERSICHT (SENS.11.3: kurzer Text, Zielobjekt mit übergeordneten Kategorien)
+    console.log('\n--- 7. Detailansicht: Übersicht (SENS.11.3) ---');
+    await setViewport(VIEW_W, 1600);
+    await showControl('SENS.11.3');
+    // bis einschließlich der Karte mit den Kenngrößen
+    await captureDetail('detailansicht.png', (await bottomOf(`document.querySelectorAll('.detail-body > .stack > .card')[1]`)) + 16);
+
+    // 7b. KOPFBEREICH EINER UNTERANFORDERUNG (GC.9.1.1.1): Pfadleiste mit übergeordneten Anforderungen bis zu den Reitern
+    console.log('\n--- 7b. Detailansicht: Kopfbereich (GC.9.1.1.1) ---');
+    await showControl('GC.9.1.1.1');
+    await captureDetail('detail-kopf.png', (await bottomOf(`document.querySelector('.detail-head .tabs')`)) + 1);
+
+    // 8. REITER HILFESTELLUNG (DEV.3.4): Hinweistext des BSI
+    console.log('\n--- 8. Detailansicht: Hilfestellung (DEV.3.4) ---');
+    await showControl('DEV.3.4', 'guidance');
+    await captureDetail('detail-hilfestellung.png', (await bottomOf(`document.querySelector('.detail-body > .stack > .card')`)) + 16, 760);
+
+    // 9. REITER NOTIZEN: eigene Notiz (DEV.3.4) und Notiz einer anderen Liste (DEV.4.3)
+    console.log('\n--- 9. Detailansicht: Notizen ---');
+    await showControl('DEV.3.4', 'notes');
+    // knapp unter der letzten Textzeile, ohne die leere Fläche des hohen Notizfelds
+    await captureDetail('detail-notizen.png', (await evalJs(`(() => {
+      const range = document.createRange();
+      range.selectNodeContents(document.querySelector('.notes-text'));
+      return range.getBoundingClientRect().bottom;
+    })()`)) + 20);
+    await showControl('DEV.4.3', 'notes');
+    // Notiz der nicht aktiven Liste „Entwicklungsteam“ (nur lesbar) anzeigen
+    await act(`vm.notesViewListId = 'list-team'`);
+    await waitFor(`document.querySelector('.notes-readonly')`);
     await wait(300);
-    await evalJs(`(() => {
-      const dev3Head = document.querySelector('.subgroup-head[data-sub-id="DEV.3"]');
-      if (dev3Head && !dev3Head.closest('.subgroup')?.classList.contains('open')) {
-        dev3Head.querySelector('.head-toggle')?.click();
-      }
-    })()`);
-    await wait(300);
-    await evalJs(`(() => {
-      const dev31Row = document.querySelector('.ctrl-row[data-ctrl-id="DEV.3.1"]');
-      dev31Row?.click();
-    })()`);
-    await waitFor('document.querySelector("#tab-overview.on")');
-    // Höheres Fenster, damit die Übersicht bis einschließlich Schutzziele und Aufwand Platz hat
-    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 1400, deviceScaleFactor: 2, mobile: false });
-    await wait(400);
-    const dev31DetailRect = await getRect('.detail-pane');
-    const dev31Bottom = await evalJs(`(() => {
-      const card = document.querySelector('.detail-body .st-box')?.closest('.card');
-      return card ? card.getBoundingClientRect().bottom + 12 : null;
-    })()`);
-    if (dev31DetailRect) {
-      await capture('detailansicht.png', {
-        x: dev31DetailRect.x,
-        y: dev31DetailRect.y,
-        width: dev31DetailRect.width,
-        height: dev31Bottom ? Math.min(dev31Bottom - dev31DetailRect.y, dev31DetailRect.height) : 528,
-      });
-    }
-    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 760, deviceScaleFactor: 2, mobile: false });
+    await captureDetail('detail-notizen-andere.png', (await bottomOf(`document.querySelector('.notes-readonly')`)) + 16);
+    await setViewport(VIEW_W, VIEW_H);
     await wait(300);
 
-    // Zurück zu DEV.3.4 für Hilfestellung und Notizen
-    await evalJs(`(() => {
-      const dev34Row = document.querySelector('.ctrl-row[data-ctrl-id="DEV.3.4"]');
-      dev34Row?.click();
-    })()`);
-    await wait(300);
-
-    // 8. DETAILANSICHT: REITER HILFESTELLUNG
-    console.log('\n--- 8. Detailansicht: Reiter Hilfestellung aufnehmen ---');
-    await evalJs(`document.querySelector('#tab-guidance')?.click()`);
-    await waitFor('document.querySelector("#tab-guidance.on")');
-    // Höheres Fenster, damit unter dem Hinweistext der Anfang des Satzaufbaus (bis „Gefordertes Ergebnis“) Platz hat
-    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 1100, deviceScaleFactor: 2, mobile: false });
-    await wait(400);
-    const gdnDetailRect = await getRect('.detail-pane');
-    const gdnBottom = await evalJs(`(() => {
-      const rows = document.querySelectorAll('.detail-body .kv');
-      return rows[2] ? rows[2].getBoundingClientRect().bottom : null;
-    })()`);
-    if (gdnDetailRect) {
-      await capture('detail-hilfestellung.png', {
-        x: gdnDetailRect.x,
-        y: gdnDetailRect.y,
-        width: gdnDetailRect.width,
-        height: gdnBottom ? Math.min(gdnBottom - gdnDetailRect.y, gdnDetailRect.height) : 405,
-      });
-    }
-    await send('Emulation.setDeviceMetricsOverride', { width: 1200, height: 760, deviceScaleFactor: 2, mobile: false });
-    await wait(300);
-
-    // 9. DETAILANSICHT: REITER NOTIZEN
-    console.log('\n--- 9. Detailansicht: Reiter Notizen aufnehmen ---');
-    await evalJs(`document.querySelector('#tab-notes')?.click()`);
-    await waitFor('document.querySelector("#tab-notes.on")');
-    await wait(300);
-    const noteDetailRect = await getRect('.detail-pane');
-    if (noteDetailRect) {
-      await capture('detail-notizen.png', {
-        x: noteDetailRect.x,
-        y: noteDetailRect.y,
-        width: noteDetailRect.width,
-        height: 508,
-      });
+    // 10. STERN: die drei Zustände als kleine quadratische Bilder
+    console.log('\n--- 10. Stern: drei Zustände ---');
+    for (const [id, filename] of [
+      ['DEV.3.4', 'stern-aktiv.png'],
+      ['DEV.4.3', 'stern-andere.png'],
+      ['DEV.3.1', 'stern-keine.png'],
+    ]) {
+      await showControl(id);
+      const r = await getRect('.detail-titlebar .star-btn');
+      const size = Math.max(r.width, r.height) + 8;
+      await capture(filename, { x: r.x + r.width / 2 - size / 2, y: r.y + r.height / 2 - size / 2, width: size, height: size });
     }
 
-    // 10. LISTEN IN FILTERLEISTE
-    console.log('\n--- 10. Listen in Filterleiste aufnehmen ---');
-    await evalJs(`(() => {
-      const firstMenuBtn = document.querySelector('.list-row .list-menu-btn');
-      firstMenuBtn?.click();
-    })()`);
+    // 11. LISTEN-MARKIERUNGEN IN DER BAUMANSICHT: sieben Zeilen von DEV.3.3 bis DEV.4.4
+    //     (Stern und Notiz der aktiven Liste bei DEV.3.4, einer anderen Liste bei DEV.4.3)
+    console.log('\n--- 11. Listen-Markierungen in der Liste ---');
+    await act(`vm.collapseAll()`);
+    await wait(200);
+    await showControl('DEV.4.3');
+    await showControl('DEV.3.4');
+    await scrollListTo('.ctrl-row[data-ctrl-id="DEV.3.3"]', '.practice-head[data-practice-id="DEV"]');
+    await wait(300);
+    {
+      const list = await getRect('.list-scroll');
+      const top = await evalJs(`document.querySelector('.ctrl-row[data-ctrl-id="DEV.3.3"]').getBoundingClientRect().top`);
+      const bottom = await bottomOf(`document.querySelector('.ctrl-row[data-ctrl-id="DEV.4.4"]')`);
+      await capture('listen-markierungen.png', { x: list.x, y: top, width: list.width, height: bottom - top });
+    }
+
+    // 12. LISTEN IN DER FILTERLEISTE (mit geöffnetem Menü)
+    console.log('\n--- 12. Listen in der Filterleiste ---');
+    await evalJs(`document.querySelector('.list-row .list-menu-btn')?.click()`);
     await wait(300);
     const listenBounds = await evalJs(`(() => {
       const rail = document.querySelector('.rail');
@@ -479,109 +448,113 @@ async function main() {
       const secR = listSec.getBoundingClientRect();
       const menuR = listMenu?.getBoundingClientRect();
       const bottom = Math.max(secR.bottom, menuR ? menuR.bottom + 3 : 0);
-      return {
-        x: railR.x,
-        y: railR.y,
-        width: railR.width,
-        height: Math.ceil(bottom - railR.y)
-      };
+      return { x: railR.x, y: railR.y, width: railR.width, height: Math.ceil(bottom - railR.y) };
     })()`);
-    if (listenBounds) {
-      await capture('listen.png', listenBounds);
-    }
-    await evalJs(`(() => {
-      const firstMenuBtn = document.querySelector('.list-row .list-menu-btn');
-      if (document.querySelector('.list-menu')) firstMenuBtn?.click();
-    })()`);
+    await capture('listen.png', listenBounds);
+    await evalJs(`document.querySelector('.list-menu') && document.querySelector('.list-row .list-menu-btn')?.click()`);
     await wait(200);
 
-    // 11. FILTER UND FLACHE TREFFERLISTE (NUR und NICHT)
-    console.log('\n--- 11. Filter und flache Trefferliste aufnehmen (NUR & NICHT) ---');
+    // 13. FILTER UND FLACHE TREFFERLISTE (NUR MUSS, NICHT Aufwand Stufe 5)
+    console.log('\n--- 13. Filter und flache Trefferliste ---');
     await evalJs(`(() => {
-      // 1. NUR Modalverb: MUSS
-      const mussRow = [...document.querySelectorAll('.rail-row')].find(el => el.textContent.includes('MUSS'));
+      const mussRow = [...document.querySelectorAll('.rail-row')].find((el) => el.textContent.includes('MUSS'));
       mussRow?.querySelector('.rail-row-main')?.click();
-
-      // 2. NICHT Aufwand: Stufe 5 (Ausschluss)
-      const stufe5Row = [...document.querySelectorAll('.rail-row')].find(el => el.textContent.includes('Stufe 5'));
+      const stufe5Row = [...document.querySelectorAll('.rail-row')].find((el) => el.textContent.includes('Stufe 5'));
       stufe5Row?.querySelector('.rail-btn.btn-cross')?.click();
     })()`);
-    await waitFor('document.querySelectorAll(".tag-chip").length >= 2');
+    await waitFor(`document.querySelectorAll('.tag-chip').length >= 2`);
+    await evalJs(`document.querySelector('.list-scroll').scrollTop = 0`);
     await wait(400);
-    const listPaneFilterRect = await getRect('.list-pane');
-    if (listPaneFilterRect) {
-      await capture('filter.png', {
-        x: listPaneFilterRect.x,
-        y: listPaneFilterRect.y,
-        width: listPaneFilterRect.width,
-        height: Math.min(listPaneFilterRect.height, 520),
-      });
+    {
+      const pane = await getRect('.list-pane');
+      await capture('filter.png', { x: pane.x, y: pane.y, width: pane.width, height: Math.min(pane.height, 520) });
     }
-    // Filter zurücksetzen
-    await evalJs(`document.querySelector('.rail-header button[title="Alle Filter zurücksetzen"]')?.click()`);
+    await act(`vm.resetFilters()`);
     await wait(300);
 
-    // 14. DIALOG KATALOGE (VERSIONEN)
-    console.log('\n--- 14. Dialog Kataloge (Versionen) aufnehmen ---');
-    await evalJs(`document.querySelector('.topbar-actions button.btn-secondary')?.click()`);
-    await waitFor('document.querySelector("dialog[aria-labelledby=\'catalog-title\'][open]")');
+    // 13b. FILTERLEISTE ALS AUSSCHNITT bis einschließlich „Modalverben“ (NUR MUSS, NICHT Erhöhte Sicherheitsstufe)
+    console.log('\n--- 13b. Filterleiste (Ausschnitt) ---');
+    await evalJs(`(() => {
+      const mussRow = [...document.querySelectorAll('.rail-row')].find((el) => el.textContent.includes('MUSS'));
+      mussRow?.querySelector('.rail-row-main')?.click();
+      const erhoehtRow = [...document.querySelectorAll('.rail-row')].find((el) => el.textContent.includes('Erhöhte Sicherheitsstufe'));
+      erhoehtRow?.querySelector('.rail-btn.btn-cross')?.click();
+    })()`);
+    await waitFor(`document.querySelectorAll('.tag-chip').length >= 2`);
     await wait(400);
-    const catVersionsRect = await getRect('dialog[aria-labelledby="catalog-title"]');
-    if (catVersionsRect) {
-      await capture('kataloge-versionen.png', {
-        x: catVersionsRect.x - 10,
-        y: catVersionsRect.y - 10,
-        width: catVersionsRect.width + 20,
-        height: catVersionsRect.height + 20,
+    {
+      const rail = await getRect('.rail');
+      const verbBottom = await bottomOf(
+        `[...document.querySelectorAll('.rail-section')].find((s) => s.querySelector('.rail-heading-title')?.textContent.trim() === 'Modalverben')`
+      );
+      await capture('filterleiste.png', { x: rail.x, y: rail.y, width: rail.width, height: verbBottom - rail.y + 4 });
+    }
+    await act(`vm.resetFilters()`);
+    await wait(300);
+
+    // 14. ZIELOBJEKTKATEGORIEN MIT ÜBERGEORDNETEN KATEGORIEN (Filterbereich, Chip und Treffer)
+    console.log('\n--- 14. Zielobjektkategorien mit übergeordneten Kategorien ---');
+    await act(`
+      for (const key of Object.keys(vm.railCollapsed)) vm.railCollapsed[key] = key !== 'targetObjects';
+      vm.targetObjectInheritance = true;
+      vm.toggleTag('targetObject', 'Führungskräfte', 'include', 'Führungskräfte', 'Zielobjektkategorie');
+    `);
+    await waitFor(`document.querySelector('.rail-row.is-implied')`);
+    await evalJs(`document.querySelector('.list-scroll').scrollTop = 0`);
+    await wait(400);
+    {
+      const rail = await getRect('.rail');
+      const pane = await getRect('.list-pane');
+      const bottom = await bottomOf(`document.querySelectorAll('.rail-threats-scroll .rail-row')[7]`);
+      await capture('filter-zielobjekte.png', {
+        x: rail.x,
+        y: rail.y,
+        width: pane.x + pane.width - rail.x,
+        height: bottom - rail.y + 8,
       });
     }
+    await act(`
+      vm.targetObjectInheritance = false;
+      vm.resetFilters();
+      Object.assign(vm.railCollapsed, { lists: false, secLevels: false, modalVerbs: false, effort: false, sourceCatalogs: false, diffs: false });
+    `);
+    await wait(300);
 
-    // 15. VERGLEICHSMODUS AKTIVIEREN
-    console.log('\n--- 15. Vergleichsmodus aktivieren & aufnehmen ---');
+    // 15. DIALOG KATALOGE (VERSIONEN)
+    console.log('\n--- 15. Dialog Kataloge ---');
+    await evalJs(`document.querySelector('.topbar-actions button.btn-secondary')?.click()`);
+    await waitFor(`document.querySelector('dialog[aria-labelledby="catalog-title"][open]')`);
+    await wait(400);
+    const catVersionsRect = await getRect('dialog[aria-labelledby="catalog-title"]');
+    await capture('kataloge-versionen.png', {
+      x: catVersionsRect.x - 10,
+      y: catVersionsRect.y - 10,
+      width: catVersionsRect.width + 20,
+      height: catVersionsRect.height + 20,
+    });
+
+    // 16. VERGLEICHSMODUS: Kopfzeile mit Hinweisbalken
+    console.log('\n--- 16. Vergleichsmodus ---');
     await evalJs(`(() => {
       const items = [...document.querySelectorAll('.version-item')];
-      const testItem = items.find(it => it.textContent.includes('Vergleichsversion'));
+      const testItem = items.find((it) => it.textContent.includes('Vergleichsversion'));
       testItem?.querySelector('.cat-radio.is-comp')?.click();
     })()`);
     await wait(400);
-    // Dialog schließen
     await evalJs(`document.querySelector('dialog[aria-labelledby="catalog-title"] .icon-btn')?.click()`);
-    await waitFor('document.querySelector(".diff-banner")');
+    await waitFor(`document.querySelector('.diff-banner')`);
     await wait(500);
-
-    // Screenshot Vergleichsmodus: Kopfzeile mit Hinweisbalken in voller Breite
-    // (die geänderte Detailansicht zeigt detail-aenderungen.png)
-    const diffBannerRect = await getRect('.diff-banner');
-    await capture('vergleich.png', {
-      x: 0,
-      y: 0,
-      width: 1200,
-      height: Math.ceil(diffBannerRect.y + diffBannerRect.height),
-    });
-
-    // 16. DETAILANSICHT: REITER ÄNDERUNGEN (DEV.4.3)
-    console.log('\n--- 16. Detailansicht: Reiter Änderungen aufnehmen ---');
-    await evalJs(`(() => {
-      const dev4Head = document.querySelector('.subgroup-head[data-sub-id="DEV.4"]');
-      if (dev4Head && !dev4Head.closest('.subgroup')?.classList.contains('open')) {
-        dev4Head.querySelector('.head-toggle')?.click();
-      }
-      const dev43Row = document.querySelector('.ctrl-row[data-ctrl-id="DEV.4.3"]');
-      if (dev43Row) dev43Row.click();
-    })()`);
-    await wait(300);
-    await evalJs(`document.querySelector('#tab-diff')?.click()`);
-    await waitFor('document.querySelector("#tab-diff.on")');
-    await wait(400);
-    const diffDetailRect = await getRect('.detail-pane');
-    if (diffDetailRect) {
-      await capture('detail-aenderungen.png', {
-        x: diffDetailRect.x,
-        y: diffDetailRect.y,
-        width: diffDetailRect.width,
-        height: 520,
-      });
+    {
+      const banner = await getRect('.diff-banner');
+      await capture('vergleich.png', { x: 0, y: 0, width: VIEW_W, height: Math.ceil(banner.y + banner.height) });
     }
+
+    // 17. REITER ÄNDERUNGEN (DEV.4.3): Änderungsübersicht und Wortvergleich des Anforderungstexts
+    console.log('\n--- 17. Detailansicht: Änderungen (DEV.4.3) ---');
+    await setViewport(VIEW_W, 1600);
+    await showControl('DEV.4.3', 'diff');
+    await captureDetail('detail-aenderungen.png', (await bottomOf(`document.querySelectorAll('.detail-body > .stack > .card')[1]`)) + 16);
+    await setViewport(VIEW_W, VIEW_H);
 
     console.log('\nAlle Screenshots erfolgreich aufgenommen!');
     ws.close();

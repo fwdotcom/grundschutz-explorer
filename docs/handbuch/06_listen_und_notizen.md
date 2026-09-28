@@ -1,65 +1,83 @@
-# Listen und Notizen
+# Listen und Notizen {#kap-listen-notizen}
 
-Mit eigenen Listen stellen Sie Anforderungen flexibel für konkrete Arbeitsschritte zusammen – etwa für anstehende Sicherheitsaudits, Entwicklungs-Sprints, Dienstleisterüberprüfungen oder Besprechungen. Jede Anforderung in einer Liste kann mit individuellen Notizen versehen werden.
+Mit eigenen Listen stellen Sie Anforderungen für einen bestimmten Zweck zusammen, etwa für ein Audit, einen Entwicklungs-Sprint, die Prüfung eines Dienstleisters oder eine Besprechung. Zu jeder Anforderung in einer Liste können Sie eine Notiz festhalten.
 
-![Listenbereich in der Filterleiste mit aktiver Liste und Kontextmenü](bilder/listen.png){width=23%}
+![Listenbereich in der Filterleiste mit geöffnetem Menü](bilder/listen.png){width=30%}
 
 /// figure-caption
     attrs: {id: fig-listen}
-Listenbereich in der Filterleiste mit aktiver Liste, Trefferzahlen und Aktionen
+Listenbereich in der Filterleiste: aktive Liste, Trefferzahlen, Filterschaltflächen und Menü einer Liste
 ///
 
 ## Listen anlegen und aktivieren
 
-Der Abschnitt **Listen** steht ganz oben in der Filterleiste:
+Der Bereich **Listen** steht ganz oben in der Filterleiste:
 
-- **Neue Liste anlegen:** Klicken Sie auf **„+ Neue Liste“**, tragen Sie einen aussagekräftigen Namen ein (z. B. *Audit 2026* oder *Entwicklungsteam*) und bestätigen Sie mit der Eingabetaste.
-- **Aktive Liste festlegen:** Klicken Sie auf den runden Auswahlknopf oder auf den Listennamen. Ein **grün leuchtender Punkt** signalisiert, dass diese Liste aktiv ist. Stern-Klicks und geschriebene Notizen beziehen sich stets auf die aktive Liste. Sobald Listen bestehen, ist immer genau eine davon aktiv; Sie wechseln sie, indem Sie eine andere Liste wählen.
-- **Listenmenü (Drei Punkte):** Über das Symbol **···** rechts neben dem Listennamen können Sie eine Liste umbenennen, einzeln als JSON exportieren oder löschen.
+- **Neue Liste:** Klicken Sie auf **„+ Neue Liste“**, geben Sie einen Namen ein (z. B. *Audit 2026*) und bestätigen Sie mit der Eingabetaste. **Esc** bricht ab.
+- **Aktive Liste:** Klicken Sie auf den runden Auswahlknopf oder den Namen einer Liste. Ein grüner Punkt kennzeichnet die aktive Liste. Stern und Notizfeld wirken immer auf sie. Sobald Listen bestehen, ist genau eine davon aktiv.
+- **Zahl hinter dem Namen:** die Anzahl der Anforderungen in der Liste.
+- **Menü einer Liste (···):** Umbenennen, Exportieren oder Löschen. Enthält die Liste Einträge, fragt der Explorer vor dem Löschen nach und nennt, wie viele davon Notizen haben.
 
-## Listen als Filter nutzen
+## Anforderungen aufnehmen: der Stern
 
-Listen verhalten sich in der Filterleiste wie jede andere Facette:
+Rechts neben dem Titel jeder Anforderung steht ein Stern. Seine Farbe zeigt, ob die Anforderung schon in einer Liste steht:
 
-- **✓ (Nur diese Liste):** Schränkt die Trefferliste auf die Anforderungen dieser Liste ein.
-- **✕ (Liste ausschließen):** Blendet alle Anforderungen aus, die in dieser Liste stehen.
-- **Kombinationen:** Mehrere Listen mit **✓** zeigen alle Anforderungen, die in mindestens einer dieser Listen vorkommen (ODER-Verknüpfung).
-- **Ausschluss der aktiven Liste:** Schließen Sie die aktive Liste mit **✕** aus, wird automatisch eine andere, nicht ausgeschlossene Liste aktiv. Sind alle Listen ausgeschlossen, bleibt die bisherige aktiv.
+| Stern | Bedeutung | Klick auf den Stern |
+| :---: | :--- | :--- |
+| ![Gelber Stern](bilder/stern-aktiv.png){width=9mm} | Die Anforderung steht in der **aktiven Liste**. | entfernt sie aus der aktiven Liste |
+| ![Grauer Stern](bilder/stern-andere.png){width=9mm} | Die Anforderung steht nur in einer **anderen Liste**. | nimmt sie zusätzlich in die aktive Liste auf |
+| ![Stern als Umriss](bilder/stern-keine.png){width=9mm} | Die Anforderung steht in **keiner Liste**. | nimmt sie in die aktive Liste auf |
 
-## Anforderungen in Listen aufnehmen (Stern-Symbol)
+/// table-caption
+    attrs: {id: tbl-stern}
+Die drei Zustände des Sterns in der Detailansicht
+///
 
-Im Kopf der Detailansicht jeder Anforderung befindet sich rechts neben dem Titel ein **Stern-Symbol**:
+Der Tooltip des Sterns nennt alle Listen, in denen die Anforderung steht. Hat die Anforderung in der aktiven Liste eine Notiz, fragt der Explorer vor dem Entfernen nach, weil die Notiz dabei gelöscht wird.
 
-- **Gelber Stern:** Die Anforderung ist in der aktuell **aktiven Liste** enthalten. Ein Klick auf den Stern entfernt sie wieder.
-- **Grauer Stern:** Die Anforderung ist in mindestens einer **anderen Liste** enthalten, jedoch nicht in der aktiven Liste. Ein Klick auf den Stern nimmt die Anforderung zusätzlich in die aktive Liste auf (der Stern wird gelb).
-- **Leerer Stern (Umriss):** Die Anforderung ist in noch keiner Liste hinterlegt. Ein Klick nimmt sie in die aktive Liste auf.
-
-> [!TIP]
-> Gibt es noch keine Liste und Sie klicken auf einen Stern oder schreiben eine Notiz, legt Grundschutz++ Explorer automatisch die Liste **Merkliste** an, aktiviert diese und fügt die Anforderung dort ein.
-
-Auch in der mittleren Trefferliste signalisiert das Stern-Symbol auf einen Blick, ob eine Anforderung zu einer Liste gehört.
-
-## Notizen erfassen und verwalten
-
-Wechseln Sie in der Detailansicht auf den Reiter **Notizen**:
-
-- **Notiz verfassen:** Solange eine Liste aktiv ist, können Sie im Notizfeld beliebig Text eingeben. Die Eingabe wird sofort automatisch lokal in Ihrem Browser gespeichert – eine manuelle Speichern-Schaltfläche ist nicht erforderlich.
-- **Notizen anderer Listen einsehen:** Ist eine Anforderung in mehreren Listen enthalten, können Sie über die Auswahlliste oberhalb des Textfelds zwischen den Notizen der verschiedenen Listen umschalten. Notizen inaktiver Listen werden schreibgeschützt angezeigt.
-- **Statuspunkt am Reiter:** Ein grüner Punkt signalisiert eine Notiz in der aktiven Liste; ein grauer Punkt weist auf Notizen in anderen Listen hin (ohne Punkt: keine Notiz vorhanden).
-- **Bearbeitungsstand:** Unter der Überschrift dokumentiert ein Zeitstempel das Datum und die Uhrzeit der letzten Textänderung.
-- **Lokale Vertraulichkeit:** Alle Notizen werden ausschließlich in der lokalen Browser-Datenbank (IndexedDB) auf Ihrem Endgerät gespeichert. Es findet keinerlei Übertragung an externe Server oder Cloud-Dienste statt.
-
-## Listen sichern und austauschen (Export und Import)
-
-Um eigene Listen auf ein anderes Gerät zu übertragen, für Kolleginnen und Kollegen bereitzustellen oder vor dem Löschen des Browser-Speichers als Backup abzulegen, bietet der Explorer eine JSON-Export- und Importfunktion:
-
-- **Einzelne Liste exportieren:** Klicken Sie im Menü **···** der gewünschten Liste auf **Exportieren**.
-- **Alle Listen sichern:** Ein Klick auf das Ordner-Symbol neben **„+ Neue Liste“** lädt alle Listen samt Notizen in einer einzigen JSON-Datei herunter.
-- **Listen importieren:** Klicken Sie auf das Ordner-Symbol und wählen Sie eine zuvor exportierte JSON-Datei aus.
-- **Namenskonflikte intelligent lösen:** Existiert im Browser bereits eine Liste mit demselben Namen, bietet der Explorer drei Optionen:
-  - **Zusammenführen (Merge):** Führt beide Listen zusammen. Neue Einträge werden ergänzt. Weichen Notizen derselben Anforderung voneinander ab, werden beide Fassungen durch eine Trennlinie sauber zusammengeführt – es geht kein Text verloren!
-  - **Kopie anlegen:** Erstellt eine neue Liste mit fortlaufender Nummerierung (z. B. *Audit 2026 (2)*).
-  - **Überspringen:** Behält die bestehende lokale Liste unverändert bei.
+In der Liste der Anforderungen erscheinen Stern und Notizsymbol nur bei Anforderungen, die in einer Liste stehen: gelb bzw. grün für die aktive Liste, grau für eine andere Liste (siehe [Kapitel „Die Oberfläche im Überblick“](#kap-oberflaeche)).
 
 > [!TIP]
-> Die Exportdateien sind im standardisierten JSON-Format strukturiert. Sie lassen sich bei Bedarf mit gängigen Skriptsprachen weiterverarbeiten oder in Versionskontrollsystemen sichern.
+> Gibt es noch keine Liste und Sie klicken auf einen Stern oder schreiben eine Notiz, legt der Explorer automatisch die Liste **Merkliste** an und macht sie zur aktiven Liste.
+
+## Notizen
+
+Notizen schreiben Sie in der Detailansicht im Reiter **Notizen** (siehe [Kapitel „Die Detailansicht“](#kap-detailansicht)):
+
+- **Schreiben:** Die Eingabe wird automatisch in der aktiven Liste gespeichert. Schreiben Sie eine Notiz zu einer Anforderung, die noch nicht in der aktiven Liste steht, wird sie dabei aufgenommen.
+- **Punkt am Reiter:** Grün bedeutet eine Notiz in der aktiven Liste, grau eine Notiz nur in einer anderen Liste, ohne Punkt gibt es keine Notiz.
+- **Zeitstempel:** Datum und Uhrzeit der letzten Änderung.
+- **Notizen anderer Listen:** Das Auswahlfeld über dem Notizfeld wechselt zu den Notizen anderer Listen. Diese sind nur lesbar; mit **„Liste“ aktivieren** unter dem Text machen Sie die Liste aktiv und können die Notiz bearbeiten.
+
+![Notiz einer anderen Liste](bilder/detail-notizen-andere.png){width=48%}
+
+/// figure-caption
+    attrs: {id: fig-detail-notizen-andere}
+Notiz der nicht aktiven Liste „Entwicklungsteam“, nur lesbar
+///
+
+## Listen als Filter
+
+Listen wirken in der Filterleiste wie jeder andere Filterbereich:
+
+- **✓ (nur diese Liste):** zeigt nur die Anforderungen dieser Liste.
+- **✕ (Liste ausschließen):** blendet alle Anforderungen dieser Liste aus.
+- **Mehrere Listen mit ✓:** zeigt alle Anforderungen, die in mindestens einer dieser Listen stehen.
+- **Aktive Liste ausschließen:** Schließen Sie die aktive Liste mit ✕ aus, wird eine andere, nicht ausgeschlossene Liste aktiv. Sind alle Listen ausgeschlossen, bleibt die bisherige aktiv.
+
+## Listen sichern und austauschen
+
+Mit Export und Import übertragen Sie Listen auf ein anderes Gerät, geben sie an Kolleginnen und Kollegen weiter oder sichern sie, bevor Sie den Browserspeicher leeren:
+
+- **Eine Liste exportieren:** im Menü **···** der Liste auf **Exportieren** klicken. Der Explorer lädt eine JSON-Datei mit allen Einträgen und Notizen herunter.
+- **Alle Listen sichern:** das Ordner-Symbol neben **„+ Neue Liste“** öffnet ein Menü; **Alle Listen sichern** lädt alle Listen in einer Datei herunter.
+- **Listen importieren:** im selben Menü **Listen importieren …** wählen und eine zuvor exportierte JSON-Datei auswählen.
+
+Gibt es eine importierte Liste bereits (gleicher Name, unabhängig von Groß- und Kleinschreibung), fragt der Explorer nach:
+
+- **Zusammenführen:** Neue Einträge werden ergänzt. Unterscheiden sich die Notizen zu derselben Anforderung, bleiben beide erhalten, getrennt durch eine Trennlinie.
+- **Als „Name (2)“ anlegen:** Die importierte Liste wird unter einem freien Namen zusätzlich angelegt.
+- **Import abbrechen:** Der ganze Import wird abgebrochen, es wird nichts geändert.
+
+> [!TIP]
+> Die Exportdateien sind einfache JSON-Dateien. Sie lassen sich mit gängigen Werkzeugen weiterverarbeiten oder in einer Versionsverwaltung ablegen.

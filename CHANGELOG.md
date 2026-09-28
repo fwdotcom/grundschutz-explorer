@@ -2,35 +2,21 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unveröffentlicht]
+## [1.1.4] – 2026-09-27
 
 ### Neu
 
 - Filter Zielobjektkategorien: „Übergeordnete Kategorien einschließen“ bezieht die Ebenen darüber ein (Führungskräfte auch Mitarbeitende und Nutzende); sie erscheinen blau und im Chip.
 - Detailansicht: Neben der Zielobjektkategorie stehen die übergeordneten Kategorien, z. B. Führungskräfte ‹ Mitarbeitende ‹ Nutzende; sie steht nun auch auf dem Reiter „Übersicht“ über den Schutzzielen.
-
-### Geändert
-
-- Detailansicht: Listen (Unteranforderungen, Gefährdungen, verknüpfte Anforderungen) wirken durch Wegfall der durchgezogenen Trennlinien und dezente Abrundung wie zusammenhängende Aufzählungen statt einzelner Formularfelder; Sub-Kategorie-Überschriften erhalten einen dezenten Hintergrundbalken. Elementare Gefährdungen teilen nun denselben Zeilen- und Hover-Stil wie die Unteranforderungen (ohne gestrichelte Unterstreichung). Die Summenzähler in den Karten-Überschriften (Praktiken, Themen, Anforderungen, Unteranforderungen, elementare Gefährdungen) sowie bei den verknüpften Anforderungen wurden entfernt.
-- Detailansicht: Das Modalverb (MUSS/SOLLTE/KANN) wird wieder als farbliches Tag an zweiter Position im Kopfbereich angezeigt (nicht anklickbar, Filterung erfolgt über die Filterleiste). Der Abschnitt „Satzaufbau (BSI-Satzschablone)“ auf dem Reiter „Hilfestellung“ wurde entfernt, und die BSI-Hilfestellung nutzt nun dieselbe markante Textbox (`.card.statement`) wie der Anforderungstext unter „Übersicht“.
-- Aufteilung der Ansicht: Standardbreite der Detailansicht auf 30 % verringert (vormals 46 %). Die manuell eingestellte Breite wird nun im Browser gespeichert und bleibt beim Neuladen erhalten; ein Doppelklick auf die Trennlinie (oder Enter bei Tastaturfokus) setzt sie auf den Standard zurück.
-- Detailansicht: Auf schmalen Bildschirmen oder bei schmal gezogener Detailansicht (unter 500 px) rutschen Aufwand und Dokumentation automatisch untereinander, sodass Skala und Textangaben nicht mehr umbrechen.
-- Passt unter einer Praktik oder einem Thema keine Anforderung zu den Filtern, bleibt die Übersicht sichtbar, darüber steht ein Hinweis wie bei Anforderungen.
-
-## [1.1.4] – 2026-09-27
-
-### Neu
-
-- Reiter „Hilfestellung“: Abschnitt „Satzaufbau“ zerlegt den Anforderungstext nach der BSI-Satzschablone, jeder Bestandteil ist filterbar.
-- Zielobjektkategorie und Quellkatalog einer Anforderung, jeweils mit Definition und eigenem Filterbereich.
 - Erläuterungen erscheinen in einer Infobox am unteren Rand der Detailansicht statt ausgeklappt im Text.
 
 ### Geändert
 
-- Übersicht einer Anforderung neu gegliedert: Kenngrößen, Unteranforderungen, Gefährdungen, verknüpfte Anforderungen, Einordnung (Quellkatalog, Tags).
-- Kopf der Detailansicht: Zahl der Unteranforderungen und Gefährdungen statt Modalverb-Badge.
-- Neue Reihenfolge der Filterleiste.
-- Kataloge mit Gruppen unterhalb der Themen werden beim Laden mit Fehlermeldung abgewiesen, statt dass Anforderungen fehlen.
+- Detailansicht: UI optimiert
+- Aufteilung der Ansicht: Die manuell eingestellte Breite wird nun im Browser gespeichert und bleibt beim Neuladen erhalten; ein Doppelklick auf die Trennlinie (oder Enter bei Tastaturfokus) setzt sie auf den Standard zurück.
+- Detailanzeige von ausgefilterten Praktiken, Themen und Anforderungen vereinheitlicht: Die Anzeige bleibt erhalten, ein Hinweis wird eingeblendet
+
+
 
 ## [1.1.3] – 2026-09-26
 

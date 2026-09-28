@@ -2071,23 +2071,7 @@
                     </dl>
                   </div>
 
-                  <!-- 2. Kategorieblock: Unteranforderungen (falls vorhanden) -->
-                  <div v-if="selectedControl.subcontrols?.length" class="card">
-                    <div class="card-head">
-                      <h4>Unteranforderungen</h4>
-                    </div>
-                    <ul class="sub-list">
-                      <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
-                        <button class="sub-item" @click="selectControl(subc)">
-                          <span class="mono">{{ subc.id }}</span>
-                          <span class="grow">{{ subc.title }}</span>
-                          <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <!-- 3. Kategorieblock: Elementare Gefährdungen -->
+                  <!-- 2. Kategorieblock: Elementare Gefährdungen (direkt unter den Kenngrößen, fast immer vorhanden und kurz) -->
                   <div v-if="selectedControl.elementareGefaehrdungen?.length" class="card">
                     <div class="card-head">
                       <h4>Elementare Gefährdungen</h4>
@@ -2105,6 +2089,22 @@
                         >
                           <span class="threat-code">{{ splitThreat(threat).code }}</span>
                           <span class="threat-title">{{ splitThreat(threat).title || threat }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- 3. Kategorieblock: Unteranforderungen (falls vorhanden) -->
+                  <div v-if="selectedControl.subcontrols?.length" class="card">
+                    <div class="card-head">
+                      <h4>Unteranforderungen</h4>
+                    </div>
+                    <ul class="sub-list">
+                      <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
+                        <button class="sub-item" @click="selectControl(subc)">
+                          <span class="mono">{{ subc.id }}</span>
+                          <span class="grow">{{ subc.title }}</span>
+                          <span class="verb-label" :class="verbKey(subc.modalVerb)">{{ verbKey(subc.modalVerb) ? subc.modalVerb : '' }}</span>
                         </button>
                       </li>
                     </ul>
