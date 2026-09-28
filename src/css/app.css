@@ -1037,6 +1037,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   font-size: calc(15.5px * var(--font-scale)); line-height: 1.7; color: var(--text);
   border-left: 3px solid var(--border-strong);
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  white-space: pre-line;
 }
 .statement.muss { border-left-color: var(--muss); }
 .statement.sollte { border-left-color: var(--sollte); }

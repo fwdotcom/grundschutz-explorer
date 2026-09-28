@@ -1752,6 +1752,12 @@
 
                 <div class="detail-tags">
                   <span class="tag tag-lg tag-accent">{{ selectedControl.isSubcontrol ? 'Unteranforderung' : 'Anforderung' }}</span>
+                  <span
+                    v-if="verbKey(selectedControl.modalVerb)"
+                    class="tag tag-lg"
+                    :class="'verb-' + verbKey(selectedControl.modalVerb)"
+                    :title="'Verbindlichkeit: ' + selectedControl.modalVerb"
+                  >{{ selectedControl.modalVerb }}</span>
                   <span v-if="selectedControlStats.sub" class="tag tag-lg tag-outline">{{ selectedControlStats.sub }} {{ selectedControlStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
                   <span
                     v-if="selectedControlStats.threats"
@@ -2130,111 +2136,13 @@
                   </div>
                 </div>
 
-                <!-- Hilfestellung des BSI, darunter die Bestandteile des Anforderungstexts nach der BSI-Satzschablone -->
+                <!-- Hilfestellung des BSI -->
                 <div v-else-if="detailActiveTab === 'guidance'" class="stack">
-                  <!-- 1. Kategorieblock: Hilfestellung des BSI -->
-                  <div class="card">
-                    <div class="card-head">
-                      <h4>Hilfestellung des BSI</h4>
-                    </div>
-                    <div class="card-pad">
-                      <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
-                      <p v-else class="muted-note">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
-                    </div>
+                  <div class="card card-pad">
+                    <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
+                    <p v-else class="muted-note" style="margin: 0">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
                   </div>
-
-                  <!-- 2. Kategorieblock: Satzaufbau (BSI-Satzschablone) -->
-                  <div class="card">
-                    <div class="card-head">
-                      <h4>Satzaufbau (BSI-Satzschablone)</h4>
-                    </div>
-                    <dl class="kv-grid" style="margin:0">
-                        <div class="kv">
-                          <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjektkategorien' : 'Zielobjektkategorie' }}</dt>
-                          <dd v-if="selectedControl.targetObjects.length">
-                            <!-- Je Kategorie ihr Pfad nach oben: Führungskräfte ‹ Mitarbeitende ‹ Nutzende -->
-                            <div class="kv-value-list to-paths">
-                              <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
-                                <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjektkategorie')" title="Nach dieser Zielobjektkategorie filtern">{{ t }}</button>
-                                <button
-                                  v-if="definition('targetObjects', t)"
-                                  class="info-btn"
-                                  :class="{ on: activeHelpKey === 'to:' + t }"
-                                  @click="toggleHelp('to:' + t)"
-                                  aria-controls="detail-help"
-                                  :aria-expanded="activeHelpKey === 'to:' + t"
-                                  :title="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                  :aria-label="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                >
-                                  <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                                </button>
-                                <span v-for="a in targetObjectAncestors(t)" :key="a" class="to-ancestor">
-                                  <span class="to-sep" aria-hidden="true">‹</span><span class="sr-only">gehört zu</span>
-                                  <button class="kv-link" @click="toggleTag('targetObject', a, 'include', a, 'Zielobjektkategorie')" :title="'Übergeordnete Kategorie – nach ' + a + ' filtern'">{{ a }}</button>
-                                </span>
-                              </span>
-                            </div>
-                          </dd>
-                          <dd v-else class="muted">–</dd>
-                        </div>
-                        <div class="kv">
-                          <dt>Modalverb</dt>
-                          <dd v-if="verbKey(selectedControl.modalVerb)">
-                            <span class="kv-value">
-                              <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
-                              <button
-                                v-if="definition('modalVerbs', selectedControl.modalVerb)"
-                                class="info-btn"
-                                :class="{ on: activeHelpKey === 'modalVerb' }"
-                                @click="toggleHelp('modalVerb')"
-                                aria-controls="detail-help"
-                                :aria-expanded="activeHelpKey === 'modalVerb'"
-                                :title="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                            </span>
-                          </dd>
-                          <dd v-else class="muted">–</dd>
-                        </div>
-                        <div class="kv full">
-                          <dt>Gefordertes Ergebnis</dt>
-                          <dd v-if="selectedControl.result">
-                            <button class="kv-link" @click="toggleTag('result', selectedControl.result, 'include', selectedControl.result, 'Ergebnis')" title="Nach diesem Ergebnis filtern">{{ selectedControl.result }}</button>
-                          </dd>
-                          <dd v-else class="muted">–</dd>
-                        </div>
-                        <div v-if="selectedControl.resultSpecification" class="kv full">
-                          <dt>Spezifikation</dt>
-                          <dd>
-                            <button class="kv-link" @click="toggleTag('resultSpecification', selectedControl.resultSpecification, 'include', selectedControl.resultSpecification, 'Spezifikation')" title="Nach dieser Spezifikation filtern">{{ selectedControl.resultSpecification }}</button>
-                          </dd>
-                        </div>
-                        <div class="kv full">
-                          <dt>Handlung</dt>
-                          <dd v-if="selectedControl.actionWord">
-                            <span class="kv-value">
-                              <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', selectedControl.actionWord, 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
-                              <button
-                                v-if="definition('actionWords', selectedControl.actionWord)"
-                                class="info-btn"
-                                :class="{ on: activeHelpKey === 'actionWord' }"
-                                @click="toggleHelp('actionWord')"
-                                aria-controls="detail-help"
-                                :aria-expanded="activeHelpKey === 'actionWord'"
-                                :title="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                            </span>
-                          </dd>
-                          <dd v-else class="muted">–</dd>
-                        </div>
-                      </dl>
-                    </div>
-                  </div>
+                </div>
 
                 <!-- Änderungen -->
                 <div v-else-if="detailActiveTab === 'diff'" class="stack">
