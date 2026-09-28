@@ -69,10 +69,10 @@ Die mittlere Spalte präsentiert die Anforderungen wahlweise als strukturierte *
 Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten Anforderung:
 
 - **Pfadleiste (Breadcrumb):** Beginnt mit einem **Buch-Symbol**, das zur Katalogübersicht zurückführt, gefolgt von der Praktik, dem Thema und gegebenenfalls übergeordneten Anforderungen.
-- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Anzahl der Unteranforderungen und Gefährdungen (jeweils einschließlich aller Unteranforderungen), Schutzbedarf und Änderungsstatus.
+- **Kopfbereich:** Kennung, vollständiger Titel, Stern für Listenaufnahme sowie Badges für Anforderungsart, Modalverb (Verbindlichkeit MUSS/SOLLTE), Schutzbedarf (normal/erhöht), Anzahl der Unteranforderungen und Gefährdungen (jeweils einschließlich aller Unteranforderungen) und Änderungsstatus.
 - **Reiter (Tabs):**
-  - **Übersicht:** Vollständiger Anforderungstext, Zielobjekt, Modalverb, Handlungswort, Dokumentationsvorgabe, Tags, Schutzziele, Aufwand, Gefährdungen und Unteranforderungen.
-  - **Hilfestellung:** BSI-Hinweise zur praktischen Umsetzung und darunter der Satzaufbau: der Anforderungstext zerlegt in Zielobjekt, Modalverb, gefordertes Ergebnis, Spezifikation und Handlung.
+  - **Übersicht:** Vollständiger Anforderungstext, Zielobjekt, Schutzziele, Aufwand, Dokumentationsvorgabe, Gefährdungen, Unteranforderungen, verknüpfte Anforderungen und Einordnung.
+  - **Hilfestellung:** BSI-Hinweise und Erläuterungen zur praktischen Umsetzung der Anforderung.
   - **Notizen:** Eigenes Notizfeld für die aktive Liste, Umschaltung zwischen Listennotizen und Änderungsdatum.
   - **Änderungen:** Im Vergleichsmodus Gegenüberstellung aller veränderten Felder und Wort-für-Wort-Vergleich.
 

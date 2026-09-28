@@ -1758,18 +1758,18 @@
                     :class="'verb-' + verbKey(selectedControl.modalVerb)"
                     :title="'Verbindlichkeit: ' + selectedControl.modalVerb"
                   >{{ selectedControl.modalVerb }}</span>
-                  <span v-if="selectedControlStats.sub" class="tag tag-lg tag-outline">{{ selectedControlStats.sub }} {{ selectedControlStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
-                  <span
-                    v-if="selectedControlStats.threats"
-                    class="tag tag-lg tag-outline"
-                    :title="selectedControlStats.sub ? 'Elementare Gefährdungen inkl. Unteranforderungen' : 'Elementare Gefährdungen'"
-                  >{{ selectedControlStats.threats }} {{ selectedControlStats.threats === 1 ? 'Gefährdung' : 'Gefährdungen' }}</span>
                   <span
                     v-if="selectedControl.secLevel"
                     class="tag tag-lg"
                     :class="selectedControl.secLevel === 'erhöht' ? 'tag-sec-erhoeht' : 'tag-outline'"
                     :title="'Schutzbedarf: ' + secLevelDisplayLabel(selectedControl.secLevel)"
                   >{{ secLevelDisplayLabel(selectedControl.secLevel) }}</span>
+                  <span v-if="selectedControlStats.sub" class="tag tag-lg tag-outline">{{ selectedControlStats.sub }} {{ selectedControlStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
+                  <span
+                    v-if="selectedControlStats.threats"
+                    class="tag tag-lg tag-outline"
+                    :title="selectedControlStats.sub ? 'Elementare Gefährdungen inkl. Unteranforderungen' : 'Elementare Gefährdungen'"
+                  >{{ selectedControlStats.threats }} {{ selectedControlStats.threats === 1 ? 'Gefährdung' : 'Gefährdungen' }}</span>
                   <span v-if="selectedControl.diff && selectedControl.diff.status !== 'unchanged'" class="tag tag-lg" :class="'diff-' + selectedControl.diff.status">{{ diffLabel(selectedControl.diff.status, true) }}</span>
                 </div>
 

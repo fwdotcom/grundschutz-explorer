@@ -49,8 +49,6 @@ Reicht der normative Anforderungstext für die praktische Ausgestaltung nicht au
 Registerkarte „Hilfestellung“ mit Verweisen auf Technische Richtlinien
 ///
 
-**Satzaufbau:** BSI-Anforderungen folgen einer festen Satzschablone. Der Abschnitt **Satzaufbau** unter dem Hinweistext zerlegt den Anforderungstext in seine Bestandteile, in der Reihenfolge des Satzes: **Zielobjekt**, **Modalverb**, **gefordertes Ergebnis**, **Spezifikation** (falls vorhanden) und **Handlung**. Ein Klick auf einen Bestandteil filtert danach, so lassen sich etwa alle Anforderungen mit derselben Spezifikation finden.
-
 ## Registerkarte „Notizen“
 
 Direkt an jeder Anforderung können Sie individuelle Notizen und Umsetzungskommentare erfassen:

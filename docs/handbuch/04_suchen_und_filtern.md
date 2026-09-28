@@ -93,6 +93,4 @@ Oberhalb der Anforderungsliste erscheinen alle aktiven Filter als übersichtlich
 
 ## Klickfilter aus der Detailansicht
 
-Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Zielobjekt, ein Handlungswort, eine Dokumentationsart, einen Tag oder eine elementare Gefährdung).
-
-Im Reiter **Hilfestellung** sind im Abschnitt **Satzaufbau** alle Bestandteile des Satzes anklickbar, auch **gefordertes Ergebnis** und **Spezifikation**. Diese beiden haben keinen eigenen Bereich in der Filterleiste, weil sie fast immer nur bei einer Anforderung vorkommen. Wiederkehrende Formulierungen wie „die Verfahren und Regelungen“ oder die Spezifikation `{{regelmäßig}}` lassen sich so aber gezielt finden. Der Filter erscheint wie jeder andere als Chip über der Liste der Anforderungen.
+Zahlreiche Eigenschaften in der Detailansicht sind dezent gestrichelt unterstrichen. Ein Klick darauf übernimmt diesen Wert direkt als Filter in die aktuelle Suche (z. B. ein Klick auf ein Zielobjekt, eine Dokumentationsart oder eine elementare Gefährdung). Die Tags im Kopfbereich dienen der schnellen visuellen Orientierung und sind nicht anklickbar; sämtliche Filterkriterien wie Modalverben lassen sich jederzeit direkt und gezielt über die Filterleiste auf der linken Seite steuern.
