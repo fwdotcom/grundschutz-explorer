@@ -15,7 +15,7 @@ Der Kopfbereich steht über allen Reitern:
 
 - **Pfadleiste:** vom Buch-Symbol (Katalogübersicht) über Praktik und Thema bis zu übergeordneten Anforderungen. Jeder Eintrag ist anklickbar.
 - **Kennung und Titel,** z. B. `SENS.11.3` *Whaling*.
-- **Stern:** nimmt die Anforderung in die aktive Liste auf oder entfernt sie wieder. Der Tooltip nennt alle Listen, in denen sie steht (siehe [Kapitel „Listen und Notizen“](#kap-listen-notizen)).
+- **Stern:** nimmt die Anforderung in die aktive Liste auf oder entfernt sie wieder. Seine Farbe signalisiert, ob die Anforderung bereits in einer Liste steht; der Tooltip nennt alle zugehörigen Listen (ausführlich in [Kapitel „Listen und Notizen“](#kap-listen-notizen)).
 - **Hinweise:** Art (*Anforderung* oder *Unteranforderung*), Modalverb, Schutzbedarf, die Zahl der Unteranforderungen und der elementaren Gefährdungen (jeweils einschließlich aller Unteranforderungen) und im Vergleichsmodus der Änderungsstatus (*Neu*, *Geändert*, *Gelöscht*).
 - **Reiter:** Mit der Maus oder, bei fokussierter Reiterleiste, mit **←** und **→** wechseln Sie zwischen den Reitern.
 
@@ -52,21 +52,16 @@ Reiter „Hilfestellung“ mit dem Hinweis des BSI zu DEV.3.4 Passwort-Hashing
 
 ## Reiter „Notizen“
 
-Im Reiter **Notizen** halten Sie eigene Anmerkungen zur Anforderung fest. Notizen gehören immer zu einer Liste.
+Im Reiter **Notizen** halten Sie eigene Anmerkungen zur gewählten Anforderung fest. Notizen gehören immer zu einer Liste und werden automatisch beim Tippen in der aktiven Liste gespeichert. Ein kleiner Punkt am Reiter signalisiert farblich, ob Notizen zur Anforderung vorliegen (grün für die aktive Liste, grau für eine andere Liste).
 
-![Reiter Notizen](bilder/detail-notizen.png){width=48%}
+![Reiter Notizen mit bearbeitbarer Notiz der aktiven Liste](bilder/detail-notizen.png){width=48%}
 
 /// figure-caption
     attrs: {id: fig-detail-notizen}
-Reiter „Notizen“ mit der Notiz der aktiven Liste und dem Zeitpunkt der letzten Änderung
+Reiter „Notizen“ mit bearbeitbarer Notiz der aktiven Liste und dem Zeitpunkt der letzten Änderung
 ///
 
-- **Schreiben:** Was Sie eingeben, wird automatisch in der **aktiven Liste** gespeichert. Eine Speichern-Schaltfläche gibt es nicht.
-- **Punkt am Reiter:** Grün bedeutet eine Notiz in der aktiven Liste, grau eine Notiz nur in einer anderen Liste.
-- **Zeitstempel:** nennt Datum und Uhrzeit der letzten Änderung.
-- **Notizen anderer Listen:** Hat die Anforderung auch in anderen Listen eine Notiz, wählen Sie die Liste über das Auswahlfeld oben. Solche Notizen sind nur lesbar.
-
-Wie Listen und Notizen zusammenspielen, beschreibt das [Kapitel „Listen und Notizen“](#kap-listen-notizen).
+Ausführliche Erläuterungen zu Notizen, den Zuständen des Punkts am Reiter sowie dem Lesen und Aktivieren von Notizen anderer Listen finden Sie im [Kapitel „Listen und Notizen“](#kap-listen-notizen) (siehe [Tabelle](#tbl-notizen-stati) und [Abbildung](#fig-detail-notizen-andere)).
 
 ## Reiter „Änderungen“
 

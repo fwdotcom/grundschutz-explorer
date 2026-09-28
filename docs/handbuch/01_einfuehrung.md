@@ -1,6 +1,6 @@
 # Einführung
 
-Grundschutz++ Explorer ist ein Werkzeug zum Lesen, Auswerten und Bearbeiten des **Anwenderkatalogs Grundschutz++**, den das Bundesamt für Sicherheit in der Informationstechnik (BSI) maschinenlesbar im Format NIST OSCAL veröffentlicht. Der Katalog umfasst rund tausend Anforderungen und Unteranforderungen. Mit dem Explorer finden Sie die für Sie relevanten Anforderungen schnell, halten eigene Notizen in Listen fest, schlagen Begriffsdefinitionen des BSI nach und vergleichen zwei Katalogstände Wort für Wort.
+Grundschutz++ Explorer ist ein Werkzeug zum Erkunden, Durchsuchen und Auswerten des **Anwenderkatalogs Grundschutz++**, den das Bundesamt für Sicherheit in der Informationstechnik (BSI) maschinenlesbar im Format NIST OSCAL veröffentlicht. Der Katalog umfasst rund tausend Anforderungen und Unteranforderungen. Mit dem Explorer finden Sie die für Sie relevanten Anforderungen schnell, halten eigene Notizen in Listen fest, schlagen Begriffsdefinitionen des BSI nach und vergleichen zwei Katalogstände Wort für Wort.
 
 Der Autor ist Informationssicherheitsbeauftragter einer deutschen Landesbehörde und hat das Projekt nebenberuflich als freies Open-Source-Vorhaben unter MIT-Lizenz entwickelt. Ziel ist ein schnelles, datensparsames und leicht verständliches Werkzeug für Sicherheitsverantwortliche, Auditorinnen und Auditoren sowie IT-Teams.
 
