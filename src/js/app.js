@@ -157,9 +157,10 @@ const app = createApp({
     const isHighContrast = ref(false);
     const fontScale = ref(1);
     const isLoadingInitial = ref(true);
-    const detailPaneWidth = ref(46); // Anteil der Detailsicht am Arbeitsbereich (%)
-    const DETAIL_PANE_MIN = 28;
+    const DETAIL_PANE_DEFAULT = 30; // Standardbreite der Detailsicht (%)
+    const DETAIL_PANE_MIN = 20;
     const DETAIL_PANE_MAX = 70;
+    const detailPaneWidth = ref(DETAIL_PANE_DEFAULT); // Anteil der Detailsicht am Arbeitsbereich (%)
     // Filterleiste als Drawer (nur unter 980px Breite)
     const isRailOpen = ref(false);
     const railToggleBtn = ref(null);
@@ -1379,6 +1380,18 @@ const app = createApp({
       const savedScale = Number(await setting('font_scale', 1));
       fontScale.value = FONT_SCALES.some((o) => o.value === savedScale) ? savedScale : 1;
       applyFontScale(fontScale.value);
+
+      // Breite der Detailsicht: gespeicherten Wert laden (Standard 30 %)
+      // Frühere Stände hatten 46 % als Standard; dieser alte Wert wird auf 30 % migriert
+      const savedWidth = Number(await setting('detail_pane_width', DETAIL_PANE_DEFAULT));
+      if (Number.isFinite(savedWidth) && savedWidth >= DETAIL_PANE_MIN && savedWidth <= DETAIL_PANE_MAX && savedWidth !== 46) {
+        detailPaneWidth.value = Math.round(savedWidth * 10) / 10;
+      } else {
+        detailPaneWidth.value = DETAIL_PANE_DEFAULT;
+        if (savedWidth === 46) {
+          saveSetting('detail_pane_width', DETAIL_PANE_DEFAULT).catch(() => {});
+        }
+      }
 
       if (footerLeft.value && window.ResizeObserver) {
         footerObserver = new ResizeObserver(updateFooterCompact);
@@ -2734,46 +2747,101 @@ const app = createApp({
     }
 
     // Resizer: Breite der Detailsicht in % des Split-Bereichs
+    let savePaneWidthTimeout = null;
+    function scheduleSavePaneWidth() {
+      clearTimeout(savePaneWidthTimeout);
+      savePaneWidthTimeout = setTimeout(() => {
+        saveSetting('detail_pane_width', detailPaneWidth.value).catch(() => {});
+      }, 250);
+    }
+
     function setDetailPaneWidth(pct) {
       detailPaneWidth.value = Math.round(Math.max(DETAIL_PANE_MIN, Math.min(DETAIL_PANE_MAX, pct)) * 10) / 10;
     }
 
-    // Pointer-Events decken Maus, Touch und Stift ab; die Pointer-Capture hält das Ziehen am Trenner
+    function resetDetailPaneWidth() {
+      clearTimeout(savePaneWidthTimeout);
+      setDetailPaneWidth(DETAIL_PANE_DEFAULT);
+      saveSetting('detail_pane_width', DETAIL_PANE_DEFAULT).catch(() => {});
+    }
+
+    let lastResizerClickTime = 0;
+    let resizerStartX = 0;
+    let resizerMoved = false;
+
+    // Pointer-Events decken Maus, Touch und Stift ab; Doppelklick setzt auf Standardbreite zurück
     function startResize(e) {
       const container = splitEl.value;
       if (!container || e.button !== 0) return;
+
+      const now = Date.now();
+      // Doppelklick-Erkennung: zwei Klicks innerhalb von 400 ms ohne nennenswerte Mausbewegung oder e.detail === 2
+      if ((now - lastResizerClickTime < 400 && !resizerMoved) || e.detail === 2) {
+        lastResizerClickTime = 0;
+        resetDetailPaneWidth();
+        e.preventDefault();
+        return;
+      }
+
+      lastResizerClickTime = now;
+      resizerStartX = e.clientX;
+      resizerMoved = false;
+
       e.preventDefault();
       const handle = e.currentTarget;
-      handle.setPointerCapture(e.pointerId);
+      const pointerId = e.pointerId;
+      try {
+        handle.setPointerCapture(pointerId);
+      } catch {}
+
       isResizing.value = true;
       document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
+
       const handleMove = (ev) => {
+        if (Math.abs(ev.clientX - resizerStartX) > 2) {
+          resizerMoved = true;
+          lastResizerClickTime = 0;
+        }
         const rect = container.getBoundingClientRect();
         setDetailPaneWidth(((rect.right - ev.clientX) / rect.width) * 100);
       };
+
       const stopResize = () => {
         isResizing.value = false;
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
-        handle.removeEventListener('pointermove', handleMove);
-        handle.removeEventListener('pointerup', stopResize);
-        handle.removeEventListener('pointercancel', stopResize);
+        try {
+          if (handle.hasPointerCapture(pointerId)) {
+            handle.releasePointerCapture(pointerId);
+          }
+        } catch {}
+        window.removeEventListener('pointermove', handleMove);
+        window.removeEventListener('pointerup', stopResize);
+        window.removeEventListener('pointercancel', stopResize);
+        clearTimeout(savePaneWidthTimeout);
+        saveSetting('detail_pane_width', detailPaneWidth.value).catch(() => {});
       };
-      handle.addEventListener('pointermove', handleMove);
-      handle.addEventListener('pointerup', stopResize);
-      handle.addEventListener('pointercancel', stopResize);
+
+      window.addEventListener('pointermove', handleMove);
+      window.addEventListener('pointerup', stopResize);
+      window.addEventListener('pointercancel', stopResize);
     }
 
-    // Tastatur am Trenner: Pfeiltasten 1 % (mit Umschalt 5 %), Pos1/Ende an die Grenzen
+    // Tastatur am Trenner: Pfeiltasten 1 % (mit Umschalt 5 %), Pos1/Ende an die Grenzen, Enter auf Standard
     function onResizerKeydown(e) {
       const step = e.shiftKey ? 5 : 1;
       if (e.key === 'ArrowLeft') setDetailPaneWidth(detailPaneWidth.value + step);
       else if (e.key === 'ArrowRight') setDetailPaneWidth(detailPaneWidth.value - step);
       else if (e.key === 'Home') setDetailPaneWidth(DETAIL_PANE_MAX);
       else if (e.key === 'End') setDetailPaneWidth(DETAIL_PANE_MIN);
-      else return;
+      else if (e.key === 'Enter') {
+        resetDetailPaneWidth();
+        e.preventDefault();
+        return;
+      } else return;
       e.preventDefault();
+      scheduleSavePaneWidth();
     }
 
     function formatDate(isoStr) {
@@ -3043,8 +3111,10 @@ const app = createApp({
       isDarkMode,
       isLoadingInitial,
       detailPaneWidth,
+      DETAIL_PANE_DEFAULT,
       DETAIL_PANE_MIN,
       DETAIL_PANE_MAX,
+      resetDetailPaneWidth,
       onResizerKeydown,
       isRailOpen,
       railToggleBtn,

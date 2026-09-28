@@ -11,6 +11,9 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
 ### Geändert
 
+- Detailansicht: Listen (Unteranforderungen, Gefährdungen, verknüpfte Anforderungen) wirken durch Wegfall der durchgezogenen Trennlinien und dezente Abrundung wie zusammenhängende Aufzählungen statt einzelner Formularfelder; Sub-Kategorie-Überschriften erhalten einen dezenten Hintergrundbalken. Elementare Gefährdungen teilen nun denselben Zeilen- und Hover-Stil wie die Unteranforderungen (ohne gestrichelte Unterstreichung). Die Summenzähler in den Karten-Überschriften (Praktiken, Themen, Anforderungen, Unteranforderungen, elementare Gefährdungen) sowie bei den verknüpften Anforderungen wurden entfernt.
+- Aufteilung der Ansicht: Standardbreite der Detailansicht auf 30 % verringert (vormals 46 %). Die manuell eingestellte Breite wird nun im Browser gespeichert und bleibt beim Neuladen erhalten; ein Doppelklick auf die Trennlinie (oder Enter bei Tastaturfokus) setzt sie auf den Standard zurück.
+- Detailansicht: Auf schmalen Bildschirmen oder bei schmal gezogener Detailansicht (unter 500 px) rutschen Aufwand und Dokumentation automatisch untereinander, sodass Skala und Textangaben nicht mehr umbrechen.
 - Passt unter einer Praktik oder einem Thema keine Anforderung zu den Filtern, bleibt die Übersicht sichtbar, darüber steht ein Hinweis wie bei Anforderungen.
 
 ## [1.1.4] – 2026-09-27

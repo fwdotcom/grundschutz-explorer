@@ -1493,8 +1493,9 @@
             :aria-valuemax="100 - DETAIL_PANE_MIN"
             :aria-valuenow="Math.round(100 - detailPaneWidth)"
             @pointerdown="startResize"
+            @dblclick="resetDetailPaneWidth"
             @keydown="onResizerKeydown"
-            title="Breite anpassen (auch mit Pfeiltasten)"
+            title="Breite anpassen (Doppelklick: Standardbreite 30 %, Pfeiltasten)"
           ></div>
 
           <!-- ---------- Detail pane ---------- -->
@@ -1617,7 +1618,6 @@
                   <div v-if="!scopePractice && activeCatalog.practices.length" class="card">
                     <div class="card-head">
                       <h4>Praktiken</h4>
-                      <span class="hint">{{ activeCatalog.practices.length }}</span>
                     </div>
                     <ul class="sub-list">
                       <li v-for="p in activeCatalog.practices" :key="p.id">
@@ -1634,7 +1634,6 @@
                   <div v-if="scopePractice && !scopeSubgroup && scopePractice.subgroups.length" class="card">
                     <div class="card-head">
                       <h4>Themen</h4>
-                      <span class="hint">{{ scopePractice.subgroups.length }}</span>
                     </div>
                     <ul class="sub-list">
                       <li v-for="sg in scopePractice.subgroups" :key="sg.id">
@@ -1651,7 +1650,6 @@
                   <div v-if="scopePractice && (scopeSubgroup ? scopeSubgroup.controls.length : scopeDirectControls.length)" class="card">
                     <div class="card-head">
                       <h4>Anforderungen</h4>
-                      <span class="hint">{{ (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls).length }}</span>
                     </div>
                     <ul class="sub-list">
                       <li v-for="c in (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls)" :key="c.id">
@@ -1967,7 +1965,7 @@
                           :title="'Liste nach ' + splitThreat(threat).code + ' filtern'"
                         >
                           <span class="threat-code">{{ splitThreat(threat).code }}</span>
-                          <span class="threat-title"><span class="threat-link">{{ splitThreat(threat).title || threat }}</span></span>
+                          <span class="threat-title">{{ splitThreat(threat).title || threat }}</span>
                         </button>
                       </li>
                     </ul>

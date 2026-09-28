@@ -77,7 +77,7 @@ Die rechte Spalte zeigt sämtliche Detailinformationen zur aktuell ausgewählten
   - **Änderungen:** Im Vergleichsmodus Gegenüberstellung aller veränderten Felder und Wort-für-Wort-Vergleich.
 
 > [!TIP]
-> Die Breite der Detailansicht lässt sich mit der Maus an der Trennlinie zwischen Liste und Detailbereich stufenlos anpassen.
+> Die Breite der Detailansicht lässt sich mit der Maus an der Trennlinie zwischen Liste und Detailbereich stufenlos anpassen (Standard: 30 %, Doppelklick auf die Trennlinie setzt sie zurück). Die gewählte Breite wird automatisch im Browser gespeichert.
 
 ## Darstellung anpassen
 
