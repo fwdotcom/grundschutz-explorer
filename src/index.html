@@ -1850,8 +1850,8 @@
                             </button>
                           </span>
                         </dt>
-                        <dd>
-                          <div v-if="hasSecurityTargets(selectedControl)" class="st-grid">
+                        <dd v-if="hasSecurityTargets(selectedControl)">
+                          <div class="st-grid">
                             <button
                               v-for="t in SECURITY_TARGETS"
                               :key="t.key"
@@ -1868,8 +1868,8 @@
                               <span class="st-level">{{ selectedControl[t.key] != null ? securityTargetLevelLabel(selectedControl[t.key]) : '–' }}</span>
                             </button>
                           </div>
-                          <p v-else class="muted-note">Keine Zuordnung im Katalog</p>
                         </dd>
+                        <dd v-else class="muted">–</dd>
                       </div>
 
                       <!-- Feld 3: Aufwand -->
@@ -1893,7 +1893,7 @@
                                 @click="toggleTag('effort', String(selectedControl.effortLevel), 'include', 'Stufe ' + selectedControl.effortLevel, 'Aufwand')"
                                 title="Nach dieser Aufwandsstufe filtern"
                               >
-                                <span class="effort-value">Stufe {{ selectedControl.effortLevel }} <span class="muted">von {{ maxEffort }}</span></span>
+                                <span class="effort-value"><span class="effort-val-text">Stufe {{ selectedControl.effortLevel }}</span> <span class="muted">von {{ maxEffort }}</span></span>
                               </button>
                               <button
                                 v-if="effortDefinition(selectedControl.effortLevel)"
@@ -1933,7 +1933,7 @@
                             </button>
                           </span>
                         </dd>
-                        <dd v-else class="muted">Nicht vorgegeben</dd>
+                        <dd v-else class="muted">–</dd>
                       </div>
                     </dl>
                   </div>
