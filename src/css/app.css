@@ -928,12 +928,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* Detail pane */
 .detail-pane { flex-shrink: 0; min-width: 380px; display: flex; flex-direction: column; background: var(--bg); min-height: 0; }
-.detail-empty { flex: 1; display: grid; place-items: center; padding: 32px; text-align: center; color: var(--text-3); }
-.detail-empty h3 { color: var(--text); font-size: calc(15px * var(--font-scale)); font-weight: 600; margin: 10px 0 4px; }
-.detail-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
-.detail-empty p { font-size: calc(13px * var(--font-scale)); max-width: 320px; }
 
-/* Hinweisbanner im Detailbereich, wenn die Anforderung links durch Filter ausgeblendet ist */
+/* Hinweisbanner im Detailbereich, wenn die Auswahl links durch Filter ausgeblendet ist */
 .detail-filtered-banner {
   display: flex;
   align-items: center;

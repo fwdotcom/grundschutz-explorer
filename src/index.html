@@ -1493,20 +1493,21 @@
 
           <!-- ---------- Detail pane ---------- -->
           <section id="detail-pane" class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
-            <!-- Die Auswahl ist links durch die Filter ausgeblendet (bei Strukturebenen ohne Treffer) -->
-            <div v-if="selectionFilteredOut && (!selectedControl || scopePractice)" class="detail-empty">
-              <div>
-                <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
-                <h3>Durch Filter ausgeblendet</h3>
-                <p>„{{ hiddenSelectionLabel }}“ passt nicht zu den aktuellen Filtern und steht deshalb nicht in der Liste.</p>
-                <div class="detail-empty-actions">
-                  <button class="btn btn-secondary" @click="resetFilters">Filter zurücksetzen</button>
+            <!-- Übersicht einer Strukturebene: Katalog (nichts gewählt), Praktik oder Thema (über Explorer bzw. Breadcrumb angesteuert) -->
+            <template v-if="!selectedControl || scopePractice">
+              <!-- Hinweisbanner, falls unter dieser Praktik bzw. diesem Thema keine Anforderung zu den Filtern passt -->
+              <div v-if="selectionFilteredOut" class="detail-filtered-banner" role="status">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div class="detail-filtered-banner-text">
+                  <strong>In Liste ausgeblendet:</strong> {{ scopeSubgroup ? 'Dieses Thema' : 'Diese Praktik' }} enthält keine Anforderungen, die zu den aktiven Filtern passen.
+                </div>
+                <div class="detail-filtered-banner-actions">
+                  <button class="btn btn-sm btn-secondary" @click="resetFilters" title="Alle Filter und Suche aufheben">
+                    Filter zurücksetzen
+                  </button>
                 </div>
               </div>
-            </div>
 
-            <!-- Übersicht einer Strukturebene: Katalog (nichts gewählt), Praktik oder Thema (über Explorer bzw. Breadcrumb angesteuert) -->
-            <template v-else-if="!selectedControl || scopePractice">
               <div class="detail-head scope-head">
                 <nav class="crumbs" aria-label="Hierarchie">
                   <span v-if="!scopePractice" class="crumb-current" aria-current="page" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M10 2v8l3-3 3 3V2"/></svg><span class="sr-only">Katalog</span></span>

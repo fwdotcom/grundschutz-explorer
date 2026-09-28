@@ -958,13 +958,6 @@ const app = createApp({
       return /^\d{4}-\d{2}-\d{2}T/.test(value) && !isNaN(new Date(value)) ? formatDate(value) : value;
     }
 
-    // Bezeichnung der Auswahl, die durch Filter ausgeblendet ist
-    const hiddenSelectionLabel = computed(() => {
-      if (scopeSubgroup.value) return `${scopeSubgroup.value.id} ${scopeSubgroup.value.title}`;
-      if (scopePractice.value) return `${scopePractice.value.id} ${scopePractice.value.title}`;
-      return selectedControl.value ? `${selectedControl.value.id} ${selectedControl.value.title}` : '';
-    });
-
     // Kennzahlen der Übersicht (Katalog, Praktik oder Thema) über alle Ebenen darunter
     const overviewStats = computed(() => {
       if (scopeSubgroup.value) return summarizeControls(flattenControls(scopeSubgroup.value.controls));
@@ -3095,7 +3088,6 @@ const app = createApp({
       catalogMeta,
       activeRowId,
       showCatalogOverview,
-      hiddenSelectionLabel,
       formatChangeValue,
       chooseComparisonCatalog,
       startupError,

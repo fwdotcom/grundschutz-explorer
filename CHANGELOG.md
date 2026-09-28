@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- Passt unter einer Praktik oder einem Thema keine Anforderung zu den Filtern, bleibt die Übersicht sichtbar, darüber steht ein Hinweis wie bei Anforderungen.
+
 ## [1.1.4] – 2026-09-27
 
 ### Neu
