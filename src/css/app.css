@@ -1072,14 +1072,23 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tag-chip-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .tag-item {
   display: inline-flex; align-items: center;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: var(--btn-bg); border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   border-radius: var(--radius-sm); font-size: calc(12px * var(--font-scale)); color: var(--text-2);
   transition: all 0.12s ease;
 }
-.tag-item:hover { border-color: var(--border-strong); color: var(--text); }
+.tag-item:hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
 .tag-item.active {
   background: var(--accent-soft); border-color: var(--accent-border);
   color: var(--accent-text); font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.tag-item.active:hover {
+  border-color: var(--accent);
 }
 .tag-item-btn {
   display: inline-flex; align-items: center; gap: 5px;
