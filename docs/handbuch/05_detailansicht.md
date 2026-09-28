@@ -30,11 +30,12 @@ Detailansicht einer Anforderung mit Breadcrumb, Metadaten und Reiter „Übersic
 Die Übersicht gliedert sich in folgende funktionale Abschnitte:
 
 - **Anforderungstext:** Der normative Kern der Anforderung. Das maßgebliche Modalverb ist farbig hervorgehoben; Parameterplatzhalter sind mit konkreten Werten aufgelöst.
-- **Zielobjekt, Modalverb, Handlung und Dokumentation:** Ein Viererblock mit den wichtigsten Angaben für die Umsetzung. Das Zielobjekt zeigt, worauf sich die Anforderung bezieht; die Dokumentationsvorgabe bestimmt den geforderten Nachweis. Neben dem Zielobjekt stehen gedämpft die übergeordneten Kategorien, zu denen es gehört (z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*). Ein Klick auf Zielobjekt, Modalverb, Handlungswort oder Dokumentation filtert danach.
-- **Tags:** Thematische Schlagwörter, direkt als Klickfilter nutzbar.
-- **Schutzziele und Aufwand:** Ein gemeinsamer Kasten unter den Tags. Zwei Punkte symbolisieren die Schutzwirkung auf Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au) (●● = im Zentrum, ●○ = wirkt hin, ○○ = keine Zuordnung). Ein fünfstufiger Farbbalken verdeutlicht den geschätzten Realisierungsaufwand nach BSI-Definition (Stufe 0 = zwingend umzusetzen / Aufwand nicht bewertet).
+- **Kenngrößen (Zielobjekt, Schutzziele, Aufwand und Dokumentation):** Die operativen Basisangaben der Anforderung in einer gemeinsamen Karte. Das Zielobjekt zeigt, worauf sich die Anforderung bezieht, ergänzt um die übergeordneten Kategorien (z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*). Die Schutzwirkung auf Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au) wird mit zwei Punkten symbolisiert (●● = im Zentrum, ●○ = wirkt hin, ○○ = keine Zuordnung). Ein fünfstufiger Farbbalken verdeutlicht den geschätzten Realisierungsaufwand nach BSI-Definition, und die Dokumentationsvorgabe bestimmt den geforderten Nachweis. Ein Klick auf Zielobjekt, Schutzziele, Aufwand oder Dokumentation filtert direkt danach.
+- **Unteranforderungen:** Falls vorhanden, listet eine Karte die untergeordneten Anforderungen mit Kennung, Titel und Modalverb auf.
 - **Gefährdungen:** Abgewendete BSI-Gefährdungen (G 0.1 bis G 0.47), die direkt als Klickfilter nutzbar sind.
-- **Definitionen (i-Symbol):** Neben Zielobjekt, Modalverb, Handlung, Dokumentation, Aufwand und Schutzzielen klappt ein Klick auf das Info-Symbol die offizielle BSI-Definition (inkl. Synonymen und Vorgaben) auf.
+- **Verknüpfte Anforderungen:** Zeigt Voraussetzungen und verwandte Anforderungen.
+- **Einordnung:** Quellkatalog und thematische Tags, direkt als Klickfilter nutzbar.
+- **Definitionen (i-Symbol):** Neben den Angaben klappt ein Klick auf das Info-Symbol die offizielle BSI-Definition am unteren Bildschirmrand als Erläuterung auf.
 - **UUID:** Am Ende der Übersicht steht die eindeutige, unveränderliche Kennung der Anforderung im NIST-OSCAL-Datenbestand.
 
 ## Registerkarte „Hilfestellung“

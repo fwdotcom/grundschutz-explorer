@@ -7,7 +7,7 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 ### Neu
 
 - Filter Zielobjektkategorien: „Übergeordnete Kategorien einschließen“ bezieht die Ebenen darüber ein (Führungskräfte auch Mitarbeitende und Nutzende); sie erscheinen blau und im Chip.
-- Detailansicht: Neben der Zielobjektkategorie stehen die übergeordneten Kategorien, z. B. Führungskräfte ‹ Mitarbeitende ‹ Nutzende.
+- Detailansicht: Neben der Zielobjektkategorie stehen die übergeordneten Kategorien, z. B. Führungskräfte ‹ Mitarbeitende ‹ Nutzende; sie steht nun auch auf dem Reiter „Übersicht“ über den Schutzzielen.
 
 ### Geändert
 
