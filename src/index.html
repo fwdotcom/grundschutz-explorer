@@ -36,6 +36,12 @@
 <body>
   <div id="app" v-cloak class="app">
 
+    <!-- ============ Barrierefreiheit: Sprunglinks (nur mit Liste und Detailbereich; nicht bei offener Filterschublade) ============ -->
+    <template v-if="!isLoadingInitial && activeCatalog && !isRailOpen">
+      <a href="#list-scroll" class="skip-link">Direkt zur Anforderungsliste</a>
+      <a href="#detail-pane" class="skip-link">Direkt zum Detailbereich</a>
+    </template>
+
     <!-- ============ Topbar ============ -->
     <header class="topbar" :inert="isRailOpen || null">
       <div class="brand">
@@ -43,7 +49,7 @@
           <img src="media/gsexplorer_logo.webp" alt="Grundschutz++ Logo" class="brand-logo" />
         </div>
         <div class="brand-text">
-          <div class="brand-title">Grundschutz++ Explorer</div>
+          <h1 class="brand-title">Grundschutz++ Explorer</h1>
           <div class="brand-sub" :title="activeCatalog?.title">
             <template v-if="activeCatalog">{{ activeCatalog.title }}<template v-if="activeCatalog.version"> · {{ formatVersion(activeCatalog.version) }}</template></template>
             <template v-else>Kein Katalog geladen</template>
@@ -59,10 +65,11 @@
           v-model="filters.searchQuery"
           :disabled="!activeCatalog"
           placeholder="Kennung, Titel, Text, Gefährdung oder Tag suchen …"
+          aria-label="Katalog durchsuchen"
           @keydown.esc="filters.searchQuery = ''; $event.target.blur()"
         />
         <div class="search-end">
-          <button v-if="filters.searchQuery" class="icon-btn sm" @click="filters.searchQuery = ''" title="Suche leeren">
+          <button v-if="filters.searchQuery" class="icon-btn sm" @click="filters.searchQuery = ''" title="Suche leeren" aria-label="Suche leeren">
             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
           <span v-else class="kbd">Strg K</span>
@@ -132,7 +139,7 @@
         <div class="welcome">
           <section class="welcome-hero">
             <img class="welcome-logo" src="media/gsexplorer_logo.webp" alt="" />
-            <h1 class="welcome-title">Grundschutz++ Explorer</h1>
+            <h2 class="welcome-title">Grundschutz++ Explorer</h2>
             <div class="welcome-meta">
               <span>Version {{ appVersion }}</span>
               <span class="welcome-sep" aria-hidden="true">|</span>
@@ -197,13 +204,13 @@
           :class="{ open: isRailOpen }"
           :role="isRailOpen ? 'dialog' : null"
           :aria-modal="isRailOpen ? 'true' : null"
-          :aria-label="isRailOpen ? 'Filter' : null"
+          aria-label="Filter"
         >
           <div class="rail-header">
             <span class="rail-header-title">Filter</span>
             <span class="spacer"></span>
             <button class="icon-btn sm btn-outline" :disabled="!hasActiveFilters" @click="resetFilters" title="Alle Filter zurücksetzen" aria-label="Alle Filter zurücksetzen">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
             <div class="btn-group">
               <button
@@ -214,29 +221,35 @@
                 :title="railOnlyMatching ? 'Werte ohne Treffer wieder anzeigen' : 'Werte ohne Treffer ausblenden'"
                 aria-label="Werte ohne Treffer ausblenden"
               >
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
               </button>
-              <button class="icon-btn sm btn-outline" @click="expandAllRail" title="Alle Filterbereiche aufklappen">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+              <button class="icon-btn sm btn-outline" @click="expandAllRail" title="Alle Filterbereiche aufklappen" aria-label="Alle Filterbereiche aufklappen">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
               </button>
-              <button class="icon-btn sm btn-outline" @click="collapseAllRail" title="Alle Filterbereiche zuklappen">
-                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
+              <button class="icon-btn sm btn-outline" @click="collapseAllRail" title="Alle Filterbereiche zuklappen" aria-label="Alle Filterbereiche zuklappen">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
               </button>
             </div>
             <button ref="railCloseBtn" class="icon-btn sm only-narrow" @click="closeRail" title="Filter schließen" aria-label="Filter schließen">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
           <div class="rail-scroll">
 
             <!-- 1. Eigene Listen (Anforderungen mit Notizen) -->
             <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.lists = !railCollapsed.lists" title="Listen ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.lists"
+                @click="railCollapsed.lists = !railCollapsed.lists"
+                title="Listen ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Listen</span>
                 <span v-if="activeTagCountFor('list')" class="rail-active-badge">{{ activeTagCountFor('list') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.lists }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.lists }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.lists" class="rail-section-body">
 
                 <div role="radiogroup" aria-label="Aktive Liste" class="list-rows">
@@ -277,15 +290,16 @@
                           :class="{ 'is-exclude-trash': getTagMode('list', list.id) === 'exclude' }"
                           @click.stop="removeTag('list', list.id)"
                           :title="getTagMode('list', list.id) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="getTagMode('list', list.id) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
                         </button>
                         <template v-else>
-                          <button class="rail-btn btn-check" @click.stop="toggleListFilter(list, 'include')" title="Nur Anforderungen dieser Liste (✓)">
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <button class="rail-btn btn-check" @click.stop="toggleListFilter(list, 'include')" title="Nur Anforderungen dieser Liste (✓)" aria-label="Nur Anforderungen dieser Liste einschließen (✓)">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                           </button>
-                          <button class="rail-btn btn-cross" @click.stop="toggleListFilter(list, 'exclude')" title="Anforderungen dieser Liste ausschließen (✕)">
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                          <button class="rail-btn btn-cross" @click.stop="toggleListFilter(list, 'exclude')" title="Anforderungen dieser Liste ausschließen (✕)" aria-label="Anforderungen dieser Liste ausschließen (✕)">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
                           </button>
                         </template>
                         <button
@@ -293,9 +307,10 @@
                           :aria-expanded="listMenuId === list.id"
                           aria-haspopup="menu"
                           :title="'Liste „' + list.name + '“: umbenennen, exportieren, löschen'"
+                          :aria-label="'Optionen für Liste „' + list.name + '“'"
                           @click.stop="toggleListMenu(list.id)"
                         >
-                          <svg class="icon-check" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                         </button>
                       </div>
                       <div v-if="listMenuId === list.id" class="list-menu" role="menu">
@@ -337,12 +352,18 @@
 
             <!-- 2. Praktiken -->
             <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.practices = !railCollapsed.practices" title="Praktiken ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.practices"
+                @click="railCollapsed.practices = !railCollapsed.practices"
+                title="Praktiken ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Praktiken</span>
                 <span v-if="activeTagCountFor('practice')" class="rail-active-badge">{{ activeTagCountFor('practice') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.practices }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.practices" class="rail-section-body">
                 <p v-if="railSectionEmpty('practice', activeCatalog.practices.map((p) => p.id), practiceCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
@@ -371,8 +392,9 @@
                       class="rail-btn btn-trash"
                       @click.stop="removeTag('practice', p.id)"
                       title="Filter aufheben (löschen)"
+                      :aria-label="'Filter für Praktik ' + p.id + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -381,8 +403,9 @@
                       class="rail-btn btn-trash is-exclude-trash"
                       @click.stop="removeTag('practice', p.id)"
                       title="Ausschluss aufheben (löschen)"
+                      :aria-label="'Ausschluss für Praktik ' + p.id + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -391,8 +414,9 @@
                         class="rail-btn btn-check"
                         @click.stop="toggleTag('practice', p.id, 'include', p.id + ' ' + p.title, 'Praktik')"
                         title="Nur diese Praktik einschließen (✓)"
+                        :aria-label="'Nur Praktik ' + p.id + ' einschließen (✓)'"
                       >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                       </button>
@@ -400,8 +424,9 @@
                         class="rail-btn btn-cross"
                         @click.stop="toggleTag('practice', p.id, 'exclude', p.id + ' ' + p.title, 'Praktik')"
                         title="Diese Praktik ausschließen (✕)"
+                        :aria-label="'Praktik ' + p.id + ' ausschließen (✕)'"
                       >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M18 6 6 18M6 6l12 12"/>
                         </svg>
                       </button>
@@ -413,12 +438,18 @@
 
             <!-- 3. Schutzbedarf / Sicherheitsniveau -->
             <div v-if="availableSecLevels.length > 0" class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.secLevels = !railCollapsed.secLevels" title="Schutzbedarf / Sicherheitsniveau ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.secLevels"
+                @click="railCollapsed.secLevels = !railCollapsed.secLevels"
+                title="Schutzbedarf / Sicherheitsniveau ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Schutzbedarf</span>
                 <span v-if="activeTagCountFor('secLevel')" class="rail-active-badge">{{ activeTagCountFor('secLevel') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.secLevels }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.secLevels" class="rail-section-body">
                 <p v-if="railSectionEmpty('secLevel', availableSecLevels, secLevelCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
@@ -446,8 +477,9 @@
                       class="rail-btn btn-trash"
                       @click.stop="removeTag('secLevel', lvl)"
                       title="Filter aufheben (löschen)"
+                      :aria-label="'Filter für Schutzbedarf ' + secLevelDisplayLabel(lvl) + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -456,8 +488,9 @@
                       class="rail-btn btn-trash is-exclude-trash"
                       @click.stop="removeTag('secLevel', lvl)"
                       title="Ausschluss aufheben (löschen)"
+                      :aria-label="'Ausschluss für Schutzbedarf ' + secLevelDisplayLabel(lvl) + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -466,8 +499,9 @@
                         class="rail-btn btn-check"
                         @click.stop="toggleTag('secLevel', lvl, 'include', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
                         title="Nur diesen Schutzbedarf einschließen (✓)"
+                        :aria-label="'Nur Schutzbedarf ' + secLevelDisplayLabel(lvl) + ' einschließen (✓)'"
                       >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                       </button>
@@ -475,8 +509,9 @@
                         class="rail-btn btn-cross"
                         @click.stop="toggleTag('secLevel', lvl, 'exclude', secLevelDisplayLabel(lvl), 'Schutzbedarf')"
                         title="Diesen Schutzbedarf ausschließen (✕)"
+                        :aria-label="'Schutzbedarf ' + secLevelDisplayLabel(lvl) + ' ausschließen (✕)'"
                       >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M18 6 6 18M6 6l12 12"/>
                         </svg>
                       </button>
@@ -491,15 +526,21 @@
               { cat: 'targetObject', rail: 'targetObjects', ns: 'targetObjects', title: 'Zielobjektkategorien', chip: 'Zielobjektkategorie', search: true, placeholder: 'Zielobjektkategorie suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
-                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                <button
+                  type="button"
+                  class="rail-heading"
+                  :aria-expanded="!railCollapsed[fs.rail]"
+                  @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]"
+                  :title="fs.title + ' ein-/ausklappen'"
+                >
                   <span class="rail-heading-title">{{ fs.title }}</span>
                   <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
                   <span class="spacer"></span>
-                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-                </div>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <label class="rail-option" title="Gewählte Kategorien schließen ihre übergeordneten Kategorien ein, z. B. Führungskräfte auch Mitarbeitende und Nutzende">
                     <input type="checkbox" v-model="targetObjectInheritance" />
@@ -519,13 +560,13 @@
                     >
                       <div
                         class="rail-row-main"
-                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                         :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : impliedTargetObjects.has(v) ? 'Eingeschlossen über ' + impliedTargetObjects.get(v).join(', ') : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
                         </span>
-                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-label">{{ facetItemLabel(fs.cat, v) }}</span>
                         <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
                       </div>
                       <div class="rail-row-actions">
@@ -535,27 +576,30 @@
                           :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
                           @click.stop="removeTag(fs.cat, v)"
                           :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="(getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben: ' : 'Ausschluss aufheben: ') + facetItemLabel(fs.cat, v)"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                           </svg>
                         </button>
                         <template v-else>
                           <button
                             class="rail-btn btn-check"
-                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Nur diesen Wert einschließen (✓)"
+                            :aria-label="'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ einschließen (✓)'"
                           >
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </button>
                           <button
                             class="rail-btn btn-cross"
-                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Diesen Wert ausschließen (✕)"
+                            :aria-label="fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ ausschließen (✕)'"
                           >
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <path d="M18 6 6 18M6 6l12 12"/>
                             </svg>
                           </button>
@@ -570,12 +614,18 @@
 
             <!-- 4b. Modalverben -->
             <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.modalVerbs = !railCollapsed.modalVerbs" title="Modalverben ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.modalVerbs"
+                @click="railCollapsed.modalVerbs = !railCollapsed.modalVerbs"
+                title="Modalverben ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Modalverben</span>
                 <span v-if="activeTagCountFor('modalVerb')" class="rail-active-badge">{{ activeTagCountFor('modalVerb') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.modalVerbs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.modalVerbs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.modalVerbs" class="rail-section-body">
                 <p v-if="railSectionEmpty('modalVerb', ['MUSS', 'SOLLTE', 'KANN'], modalVerbCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
@@ -605,8 +655,9 @@
                       class="rail-btn btn-trash"
                       @click.stop="removeTag('modalVerb', v)"
                       title="Filter aufheben (löschen)"
+                      :aria-label="'Filter für Modalverb ' + v + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -616,8 +667,9 @@
                       class="rail-btn btn-trash is-exclude-trash"
                       @click.stop="removeTag('modalVerb', v)"
                       title="Ausschluss aufheben (löschen)"
+                      :aria-label="'Ausschluss für ' + v + ' aufheben (löschen)'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -627,8 +679,9 @@
                         class="rail-btn btn-check"
                         @click.stop="toggleTag('modalVerb', v, 'include', v, 'Modalverb')"
                         title="Nur diesen Wert einschließen (✓)"
+                        :aria-label="'Nur Modalverb ' + v + ' einschließen (✓)'"
                       >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                       </button>
@@ -636,8 +689,9 @@
                         class="rail-btn btn-cross"
                         @click.stop="toggleTag('modalVerb', v, 'exclude', v, 'Modalverb')"
                         title="Diesen Wert ausschließen (✕)"
+                        :aria-label="'Modalverb ' + v + ' ausschließen (✕)'"
                       >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M18 6 6 18M6 6l12 12"/>
                         </svg>
                       </button>
@@ -652,15 +706,21 @@
               { cat: 'actionWord', rail: 'actionWords', ns: 'actionWords', title: 'Handlungswort', chip: 'Handlung', search: true, placeholder: 'Handlungswort suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
-                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                <button
+                  type="button"
+                  class="rail-heading"
+                  :aria-expanded="!railCollapsed[fs.rail]"
+                  @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]"
+                  :title="fs.title + ' ein-/ausklappen'"
+                >
                   <span class="rail-heading-title">{{ fs.title }}</span>
                   <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
                   <span class="spacer"></span>
-                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-                </div>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -675,13 +735,13 @@
                     >
                       <div
                         class="rail-row-main"
-                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                         :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
                         </span>
-                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-label">{{ facetItemLabel(fs.cat, v) }}</span>
                         <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
                       </div>
                       <div class="rail-row-actions">
@@ -691,27 +751,30 @@
                           :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
                           @click.stop="removeTag(fs.cat, v)"
                           :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="(getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben: ' : 'Ausschluss aufheben: ') + facetItemLabel(fs.cat, v)"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                           </svg>
                         </button>
                         <template v-else>
                           <button
                             class="rail-btn btn-check"
-                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Nur diesen Wert einschließen (✓)"
+                            :aria-label="'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ einschließen (✓)'"
                           >
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </button>
                           <button
                             class="rail-btn btn-cross"
-                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Diesen Wert ausschließen (✕)"
+                            :aria-label="fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ ausschließen (✕)'"
                           >
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <path d="M18 6 6 18M6 6l12 12"/>
                             </svg>
                           </button>
@@ -726,12 +789,18 @@
 
             <!-- 5a. Schutzziele -->
             <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.securityTargets = !railCollapsed.securityTargets" title="Schutzziele ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.securityTargets"
+                @click="railCollapsed.securityTargets = !railCollapsed.securityTargets"
+                title="Schutzziele ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Schutzziele</span>
                 <span v-if="SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0)" class="rail-active-badge">{{ SECURITY_TARGETS.reduce((n, t) => n + activeTagCountFor(t.key), 0) }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.securityTargets }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.securityTargets }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.securityTargets" class="rail-section-body">
                 <div v-for="t in SECURITY_TARGETS" :key="t.key" class="st-rail-row">
                   <span class="st-rail-label" :title="shortDefinition('securityTargets', t.nsKey)">{{ t.label }}</span>
@@ -748,12 +817,12 @@
                       @click="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'include', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
                       @contextmenu.prevent="getTagMode(t.key, v) ? removeTag(t.key, v) : toggleTag(t.key, v, 'exclude', v + ' (' + securityTargetLevelLabel(v) + ')', t.label)"
                       :title="t.label + ' ' + v + ' – ' + (definition('securityTargetLevels', v) || securityTargetLevelLabel(v)) + '\n\nKlick: nur diesen Wert · Rechtsklick: ausschließen'"
+                      :aria-label="t.label + ' Stufe ' + v + ' (' + securityTargetLevelLabel(v) + '), ' + (facetCounts[t.key][v] || 0) + ' Anforderungen' + (getTagMode(t.key, v) === 'include' ? ', eingeschlossen' : getTagMode(t.key, v) === 'exclude' ? ', ausgeschlossen' : '')"
                     >
                       <span class="st-dots sm" :class="'st-level-' + v" aria-hidden="true">
                         <span class="st-dot" :class="{ on: Number(v) >= 1 }"></span>
                         <span class="st-dot" :class="{ on: Number(v) >= 2 }"></span>
                       </span>
-                      <span class="sr-only">{{ v }}</span>
                       <span class="st-chip-count">{{ facetCounts[t.key][v] || 0 }}</span>
                     </button>
                   </div>
@@ -766,15 +835,21 @@
               { cat: 'effort', rail: 'effort', title: 'Aufwand', chip: 'Aufwand', search: false }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
-                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                <button
+                  type="button"
+                  class="rail-heading"
+                  :aria-expanded="!railCollapsed[fs.rail]"
+                  @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]"
+                  :title="fs.title + ' ein-/ausklappen'"
+                >
                   <span class="rail-heading-title">{{ fs.title }}</span>
                   <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
                   <span class="spacer"></span>
-                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-                </div>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -789,13 +864,13 @@
                     >
                       <div
                         class="rail-row-main"
-                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                         :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
                         </span>
-                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-label">{{ facetItemLabel(fs.cat, v) }}</span>
                         <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
                       </div>
                       <div class="rail-row-actions">
@@ -805,27 +880,30 @@
                           :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
                           @click.stop="removeTag(fs.cat, v)"
                           :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="(getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben: ' : 'Ausschluss aufheben: ') + facetItemLabel(fs.cat, v)"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                           </svg>
                         </button>
                         <template v-else>
                           <button
                             class="rail-btn btn-check"
-                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Nur diesen Wert einschließen (✓)"
+                            :aria-label="'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ einschließen (✓)'"
                           >
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </button>
                           <button
                             class="rail-btn btn-cross"
-                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Diesen Wert ausschließen (✕)"
+                            :aria-label="fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ ausschließen (✕)'"
                           >
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <path d="M18 6 6 18M6 6l12 12"/>
                             </svg>
                           </button>
@@ -843,15 +921,21 @@
               { cat: 'documentation', rail: 'documentation', ns: 'documentation', title: 'Dokumentation', chip: 'Dokumentation', search: true, placeholder: 'Dokumentation suchen …' }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat].length > 0" class="rail-section">
-                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                <button
+                  type="button"
+                  class="rail-heading"
+                  :aria-expanded="!railCollapsed[fs.rail]"
+                  @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]"
+                  :title="fs.title + ' ein-/ausklappen'"
+                >
                   <span class="rail-heading-title">{{ fs.title }}</span>
                   <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
                   <span class="spacer"></span>
-                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-                </div>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" />
+                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -866,13 +950,13 @@
                     >
                       <div
                         class="rail-row-main"
-                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                        @click="getTagMode(fs.cat, v) ? removeTag(fs.cat, v) : toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                         :title="fs.cat === 'effort' ? 'Stufe ' + v + ': ' + effortDefinition(v) : (getTagMode(fs.cat, v) ? 'Klicken zum Aufheben des Filters' : (shortDefinition(fs.ns, v) || 'Nur ' + fs.title + ' „' + v + '“ filtern'))"
                       >
                         <span v-if="fs.cat === 'effort'" class="effort-meter sm" aria-hidden="true">
                           <span v-for="n in maxEffort" :key="n" class="effort-seg" :style="n <= Number(v) ? { background: effortColor(v) } : null"></span>
                         </span>
-                        <span class="rail-row-label">{{ fs.cat === 'effort' ? 'Stufe ' + v : v }}</span>
+                        <span class="rail-row-label">{{ facetItemLabel(fs.cat, v) }}</span>
                         <span class="rail-row-count">{{ facetCounts[fs.cat][v] || 0 }}</span>
                       </div>
                       <div class="rail-row-actions">
@@ -882,27 +966,30 @@
                           :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
                           @click.stop="removeTag(fs.cat, v)"
                           :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="(getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben: ' : 'Ausschluss aufheben: ') + facetItemLabel(fs.cat, v)"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                           </svg>
                         </button>
                         <template v-else>
                           <button
                             class="rail-btn btn-check"
-                            @click.stop="toggleTag(fs.cat, v, 'include', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Nur diesen Wert einschließen (✓)"
+                            :aria-label="'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ einschließen (✓)'"
                           >
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </button>
                           <button
                             class="rail-btn btn-cross"
-                            @click.stop="toggleTag(fs.cat, v, 'exclude', fs.cat === 'effort' ? 'Stufe ' + v : v, fs.chip)"
+                            @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Diesen Wert ausschließen (✕)"
+                            :aria-label="fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ ausschließen (✕)'"
                           >
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <path d="M18 6 6 18M6 6l12 12"/>
                             </svg>
                           </button>
@@ -917,12 +1004,18 @@
 
             <!-- 6. Elementare Gefährdungen -->
             <div class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.threats = !railCollapsed.threats" title="Elementare Gefährdungen ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.threats"
+                @click="railCollapsed.threats = !railCollapsed.threats"
+                title="Elementare Gefährdungen ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Gefährdungen</span>
                 <span v-if="activeTagCountFor('threat')" class="rail-active-badge">{{ activeTagCountFor('threat') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.threats }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.threats }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.threats" class="rail-section-body">
                 <div class="rail-threat-search">
                   <input
@@ -930,6 +1023,7 @@
                     class="rail-search-input"
                     v-model="threatRailSearch"
                     placeholder="Gefährdung suchen (z.B. G 0.14)..."
+                    aria-label="Gefährdung im Filter suchen"
                   />
                 </div>
                 <p v-if="displayedThreatOptions.length === 0" class="rail-empty-note">{{ threatRailSearch ? 'Keine Treffer' : 'Keine Werte mit Treffern' }}</p>
@@ -959,8 +1053,9 @@
                         class="rail-btn btn-trash"
                         @click.stop="removeTag('threat', t.code)"
                         title="Filter aufheben (löschen)"
+                        :aria-label="'Filter für Gefährdung ' + t.code + ' aufheben (löschen)'"
                       >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                         </svg>
                       </button>
@@ -969,8 +1064,9 @@
                         class="rail-btn btn-trash is-exclude-trash"
                         @click.stop="removeTag('threat', t.code)"
                         title="Ausschluss aufheben (löschen)"
+                        :aria-label="'Ausschluss für Gefährdung ' + t.code + ' aufheben (löschen)'"
                       >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                         </svg>
                       </button>
@@ -979,8 +1075,9 @@
                           class="rail-btn btn-check"
                           @click.stop="toggleTag('threat', t.code, 'include', t.code + ' ' + t.title, 'Gefährdung')"
                           title="Nur diese Gefährdung einschließen (✓)"
+                          :aria-label="'Nur Gefährdung ' + t.code + ' einschließen (✓)'"
                         >
-                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
                         </button>
@@ -988,8 +1085,9 @@
                           class="rail-btn btn-cross"
                           @click.stop="toggleTag('threat', t.code, 'exclude', t.code + ' ' + t.title, 'Gefährdung')"
                           title="Diese Gefährdung ausschließen (✕)"
+                          :aria-label="'Gefährdung ' + t.code + ' ausschließen (✕)'"
                         >
-                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M18 6 6 18M6 6l12 12"/>
                           </svg>
                         </button>
@@ -1005,12 +1103,18 @@
               { cat: 'sourceCatalog', rail: 'sourceCatalogs', ns: 'sourceCatalogs', title: 'Quellkataloge', chip: 'Quellkatalog', search: false }
             ]" :key="fs.cat">
               <div v-if="facetOptions[fs.cat] && facetOptions[fs.cat].length > 0" class="rail-section">
-                <div class="rail-heading" @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]" :title="fs.title + ' ein-/ausklappen'">
+                <button
+                  type="button"
+                  class="rail-heading"
+                  :aria-expanded="!railCollapsed[fs.rail]"
+                  @click="railCollapsed[fs.rail] = !railCollapsed[fs.rail]"
+                  :title="fs.title + ' ein-/ausklappen'"
+                >
                   <span class="rail-heading-title">{{ fs.title }}</span>
                   <span v-if="activeTagCountFor(fs.cat)" class="rail-active-badge">{{ activeTagCountFor(fs.cat) }}</span>
                   <span class="spacer"></span>
-                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-                </div>
+                  <svg class="icon-xs chev" :class="{ open: !railCollapsed[fs.rail] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div>
                     <div
@@ -1038,8 +1142,9 @@
                           :class="{ 'is-exclude-trash': getTagMode(fs.cat, v) === 'exclude' }"
                           @click.stop="removeTag(fs.cat, v)"
                           :title="getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                          :aria-label="(getTagMode(fs.cat, v) === 'include' ? 'Filter aufheben: ' : 'Ausschluss aufheben: ') + facetItemLabel(fs.cat, v)"
                         >
-                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                           </svg>
                         </button>
@@ -1048,8 +1153,9 @@
                             class="rail-btn btn-check"
                             @click.stop="toggleTag(fs.cat, v, 'include', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Nur diesen Wert einschließen (✓)"
+                            :aria-label="'Nur ' + fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ einschließen (✓)'"
                           >
-                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
                           </button>
@@ -1057,8 +1163,9 @@
                             class="rail-btn btn-cross"
                             @click.stop="toggleTag(fs.cat, v, 'exclude', facetItemLabel(fs.cat, v), fs.chip)"
                             title="Diesen Wert ausschließen (✕)"
+                            :aria-label="fs.title + ' „' + facetItemLabel(fs.cat, v) + '“ ausschließen (✕)'"
                           >
-                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                               <path d="M18 6 6 18M6 6l12 12"/>
                             </svg>
                           </button>
@@ -1073,12 +1180,18 @@
 
             <!-- 6b. Tags (kontrolliertes Vokabular aus tags.csv) -->
             <div v-if="allCatalogTags.length > 0" class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.tags = !railCollapsed.tags" title="Tags ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.tags"
+                @click="railCollapsed.tags = !railCollapsed.tags"
+                title="Tags ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Tags</span>
                 <span v-if="activeTagCountFor('tags')" class="rail-active-badge">{{ activeTagCountFor('tags') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.tags }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.tags }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
 
               <div v-show="!railCollapsed.tags" class="rail-section-body">
                 <div class="rail-threat-search">
@@ -1087,6 +1200,7 @@
                     class="rail-search-input"
                     v-model="tagRailSearch"
                     placeholder="Tag suchen …"
+                    aria-label="Tag suchen"
                     @keydown.esc="tagRailSearch = ''"
                   />
                 </div>
@@ -1118,8 +1232,9 @@
                         class="rail-btn btn-trash"
                         @click.stop="removeTag('tags', item.tag)"
                         title="Filter aufheben (löschen)"
+                        :aria-label="'Filter Tag „' + item.tag + '“ aufheben'"
                       >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                         </svg>
                       </button>
@@ -1128,8 +1243,9 @@
                         class="rail-btn btn-trash is-exclude-trash"
                         @click.stop="removeTag('tags', item.tag)"
                         title="Ausschluss aufheben (löschen)"
+                        :aria-label="'Ausschluss Tag „' + item.tag + '“ aufheben'"
                       >
-                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                         </svg>
                       </button>
@@ -1138,8 +1254,9 @@
                           class="rail-btn btn-check"
                           @click.stop="toggleTag('tags', item.tag, 'include', item.tag, 'Tag')"
                           title="Nur dieses Tag einschließen (✓)"
+                          :aria-label="'Nur Tag „' + item.tag + '“ einschließen (✓)'"
                         >
-                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12"/>
                           </svg>
                         </button>
@@ -1147,8 +1264,9 @@
                           class="rail-btn btn-cross"
                           @click.stop="toggleTag('tags', item.tag, 'exclude', item.tag, 'Tag')"
                           title="Dieses Tag ausschließen (✕)"
+                          :aria-label="'Tag „' + item.tag + '“ ausschließen (✕)'"
                         >
-                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M18 6 6 18M6 6l12 12"/>
                           </svg>
                         </button>
@@ -1161,12 +1279,18 @@
 
             <!-- 7. Änderungen (Diff) -->
             <div v-if="diffSummary?.hasDiff" class="rail-section">
-              <div class="rail-heading" @click="railCollapsed.diffs = !railCollapsed.diffs" title="Änderungen ein-/ausklappen">
+              <button
+                type="button"
+                class="rail-heading"
+                :aria-expanded="!railCollapsed.diffs"
+                @click="railCollapsed.diffs = !railCollapsed.diffs"
+                title="Änderungen ein-/ausklappen"
+              >
                 <span class="rail-heading-title">Änderungen</span>
                 <span v-if="activeTagCountFor('diff')" class="rail-active-badge">{{ activeTagCountFor('diff') }}</span>
                 <span class="spacer"></span>
-                <svg class="icon-xs chev" :class="{ open: !railCollapsed.diffs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>
-              </div>
+                <svg class="icon-xs chev" :class="{ open: !railCollapsed.diffs }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
               <div v-show="!railCollapsed.diffs" class="rail-section-body">
                 <p v-if="railSectionEmpty('diff', ['added', 'modified', 'deleted'], diffCounts)" class="rail-empty-note">Keine Werte mit Treffern</p>
                 <div
@@ -1198,8 +1322,9 @@
                       class="rail-btn btn-trash"
                       @click.stop="removeTag('diff', st.id)"
                       title="Filter aufheben (löschen)"
+                      :aria-label="'Filter Status „' + st.label + '“ aufheben'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -1208,8 +1333,9 @@
                       class="rail-btn btn-trash is-exclude-trash"
                       @click.stop="removeTag('diff', st.id)"
                       title="Ausschluss aufheben (löschen)"
+                      :aria-label="'Ausschluss Status „' + st.label + '“ aufheben'"
                     >
-                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                       </svg>
                     </button>
@@ -1218,8 +1344,9 @@
                         class="rail-btn btn-check"
                         @click.stop="toggleTag('diff', st.id, 'include', st.label, 'Status')"
                         title="Nur diesen Status einschließen (✓)"
+                        :aria-label="'Nur Status „' + st.label + '“ einschließen (✓)'"
                       >
-                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                       </button>
@@ -1227,8 +1354,9 @@
                         class="rail-btn btn-cross"
                         @click.stop="toggleTag('diff', st.id, 'exclude', st.label, 'Status')"
                         title="Diesen Status ausschließen (✕)"
+                        :aria-label="'Status „' + st.label + '“ ausschließen (✕)'"
                       >
-                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M18 6 6 18M6 6l12 12"/>
                         </svg>
                       </button>
@@ -1287,8 +1415,9 @@
                         class="chip-remove-btn"
                         @click="removeChip(chip)"
                         title="Filter löschen"
+                        :aria-label="'Filter „' + chip.categoryLabel + ': ' + chip.label + '“ entfernen'"
                       >
-                        <svg class="icon-chip-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="icon-chip-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                           <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/>
                         </svg>
                       </button>
@@ -1309,18 +1438,19 @@
                   :aria-expanded="isRailOpen"
                   :aria-label="'Filter' + (allActiveChips.length ? ' (' + allActiveChips.length + ' aktiv)' : '')"
                 >
-                  <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+                  <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
                   Filter
                   <span v-if="allActiveChips.length" class="rail-active-badge" aria-hidden="true">{{ allActiveChips.length }}</span>
                 </button>
                 <span><strong>{{ filteredControlIds.size }}</strong> von {{ activeCatalog.allControls.length }} Anforderungen</span>
+                <span class="sr-only" role="status">{{ resultAnnouncement }}</span>
                 <span class="spacer"></span>
                 <div class="btn-group" v-if="listViewMode === 'tree'">
-                  <button class="icon-btn sm btn-outline" @click="expandAll" title="Alle aufklappen">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                  <button class="icon-btn sm btn-outline" @click="expandAll" title="Alle aufklappen" aria-label="Alle aufklappen">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
                   </button>
-                  <button class="icon-btn sm btn-outline" @click="collapseAll" title="Alle zuklappen">
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
+                  <button class="icon-btn sm btn-outline" @click="collapseAll" title="Alle zuklappen" aria-label="Alle zuklappen">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
                   </button>
                 </div>
                 <div class="btn-group" style="margin-left:6px">
@@ -1329,22 +1459,25 @@
                     :class="{ active: listViewMode === 'tree' }"
                     @click="listViewMode = 'tree'"
                     title="Baumansicht"
+                    aria-label="Baumansicht"
                   >
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
                   </button>
                   <button
                     class="icon-btn sm btn-outline"
                     :class="{ active: listViewMode === 'flat' }"
                     @click="listViewMode = 'flat'"
                     title="Flache Trefferliste"
+                    aria-label="Flache Trefferliste"
                   >
-                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                   </button>
                 </div>
               </div>
             </div>
 
             <div
+              id="list-scroll"
               class="list-scroll"
               ref="listScroll"
               :role="filteredControlIds.size === 0 ? 'group' : listViewMode === 'flat' ? 'listbox' : 'tree'"
@@ -1499,7 +1632,7 @@
           ></div>
 
           <!-- ---------- Detail pane ---------- -->
-          <section id="detail-pane" class="detail-pane" :style="{ width: detailPaneWidth + '%' }">
+          <section id="detail-pane" class="detail-pane" tabindex="-1" :style="{ width: detailPaneWidth + '%' }">
             <!-- Übersicht einer Strukturebene: Katalog (nichts gewählt), Praktik oder Thema (über Explorer bzw. Breadcrumb angesteuert) -->
             <template v-if="!selectedControl || scopePractice">
               <!-- Hinweisbanner, falls unter dieser Praktik bzw. diesem Thema keine Anforderung zu den Filtern passt -->
@@ -1617,7 +1750,7 @@
                   <!-- Katalog: Praktiken -->
                   <div v-if="!scopePractice && activeCatalog.practices.length" class="card">
                     <div class="card-head">
-                      <h4>Praktiken</h4>
+                      <h3>Praktiken</h3>
                     </div>
                     <ul class="sub-list">
                       <li v-for="p in activeCatalog.practices" :key="p.id">
@@ -1633,7 +1766,7 @@
                   <!-- Praktik: Themen -->
                   <div v-if="scopePractice && !scopeSubgroup && scopePractice.subgroups.length" class="card">
                     <div class="card-head">
-                      <h4>Themen</h4>
+                      <h3>Themen</h3>
                     </div>
                     <ul class="sub-list">
                       <li v-for="sg in scopePractice.subgroups" :key="sg.id">
@@ -1649,7 +1782,7 @@
                   <!-- Anforderungen des Themas bzw. direkt an der Praktik -->
                   <div v-if="scopePractice && (scopeSubgroup ? scopeSubgroup.controls.length : scopeDirectControls.length)" class="card">
                     <div class="card-head">
-                      <h4>Anforderungen</h4>
+                      <h3>Anforderungen</h3>
                     </div>
                     <ul class="sub-list">
                       <li v-for="c in (scopeSubgroup ? scopeSubgroup.controls : scopeDirectControls)" :key="c.id">
@@ -1666,7 +1799,7 @@
 
                   <!-- Katalog: frühere Fassungen -->
                   <div v-if="!scopePractice && catalogMeta.revisions.length" class="card">
-                    <div class="card-head"><h4>Frühere Fassungen</h4></div>
+                    <div class="card-head"><h3>Frühere Fassungen</h3></div>
                     <ul class="meta-links">
                       <li v-for="(r, i) in catalogMeta.revisions" :key="i">
                         <span>{{ r.title || r.version }}</span>
@@ -2291,8 +2424,8 @@
           <h2 id="catalog-title">Kataloge</h2>
           <p>Gespeicherte Stände anzeigen, vergleichen oder löschen</p>
         </div>
-        <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="icon-btn" @click="isCatalogModalOpen = false" title="Schließen" aria-label="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -2335,7 +2468,7 @@
               <p><template v-if="cat.version">{{ formatVersion(cat.version) }} · </template>importiert {{ formatDate(cat.importedAt) }}</p>
             </div>
             <button class="icon-btn sm" @click="deleteCatalog(cat)" title="Katalog löschen" :aria-label="'Katalog löschen: ' + cat.title">
-              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
             </button>
           </div>
           <p class="cat-hint">
@@ -2360,8 +2493,8 @@
           <h2 id="load-title">Katalog laden</h2>
           <p>Der Katalog wird in Ihrem Browser gespeichert und angezeigt.</p>
         </div>
-        <button class="icon-btn" @click="closeLoadDialog()" title="Schließen">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="icon-btn" @click="closeLoadDialog()" title="Schließen" aria-label="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -2428,8 +2561,8 @@
           <h2 id="impressum-title">Impressum</h2>
           <p>Anbieterkennzeichnung und rechtliche Hinweise</p>
         </div>
-        <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="icon-btn" @click="isImpressumModalOpen = false" title="Schließen" aria-label="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -2507,8 +2640,8 @@
           <h2 id="license-title">Lizenz</h2>
           <p>Grundschutz++ Explorer steht unter der MIT-Lizenz</p>
         </div>
-        <button class="icon-btn" @click="isLicenseModalOpen = false" title="Schließen">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="icon-btn" @click="isLicenseModalOpen = false" title="Schließen" aria-label="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
@@ -2575,8 +2708,8 @@ SOFTWARE.</pre>
           <h2 id="datenschutz-title">Datenschutzerklärung</h2>
           <p>Informationen zur Verarbeitung Ihrer Daten</p>
         </div>
-        <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="icon-btn" @click="isDatenschutzModalOpen = false" title="Schließen" aria-label="Schließen">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 

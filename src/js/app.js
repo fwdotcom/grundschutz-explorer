@@ -509,6 +509,19 @@ const app = createApp({
       return matches;
     });
 
+    // Trefferzahl für Screenreader: erst nach einer Pause angesagt, damit sie beim Tippen nicht dazwischenredet
+    const resultAnnouncement = ref('');
+    let announceTimer = null;
+    watch(
+      () => filteredControlIds.value.size,
+      (n) => {
+        clearTimeout(announceTimer);
+        announceTimer = setTimeout(() => {
+          resultAnnouncement.value = activeCatalog.value ? `${n} von ${activeCatalog.value.allControls.length} Anforderungen` : '';
+        }, 1000);
+      }
+    );
+
     // Flache Trefferliste aller matchenden Anforderungen
     const flatFilteredControls = computed(() => {
       if (!activeCatalog.value) return [];
@@ -3173,6 +3186,7 @@ const app = createApp({
       threatRailSearch,
       railOnlyMatching,
       targetObjectInheritance,
+      resultAnnouncement,
       impliedTargetObjects,
       targetObjectAncestors,
       railRowVisible,
