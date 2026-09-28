@@ -149,6 +149,24 @@ export function lookupNamespace(name, value) {
 }
 
 /**
+ * Übergeordnete Einträge in einem Namespace mit Hierarchie (Spalten UUID und ChildOfUUID),
+ * von der nächsthöheren bis zur obersten Ebene, als Schlüsselwerte.
+ */
+export function namespaceAncestors(name, value) {
+  const keyColumn = NAMESPACE_FILES[name]?.key;
+  const byUuid = new Map(Object.values(namespaces[name] || {}).filter((e) => e.UUID).map((e) => [e.UUID, e]));
+  const out = [];
+  let entry = lookupNamespace(name, value);
+  while (entry?.ChildOfUUID) {
+    entry = byUuid.get(entry.ChildOfUUID);
+    // Fehlender Verweis oder Kreis in den Daten beendet die Kette
+    if (!entry || out.includes(entry[keyColumn])) break;
+    out.push(entry[keyColumn]);
+  }
+  return out;
+}
+
+/**
  * Definitionstext eines Namespace-Eintrags (Spalte "Definition").
  */
 export function namespaceDefinition(name, value) {

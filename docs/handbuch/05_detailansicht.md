@@ -30,7 +30,7 @@ Detailansicht einer Anforderung mit Breadcrumb, Metadaten und Reiter „Übersic
 Die Übersicht gliedert sich in folgende funktionale Abschnitte:
 
 - **Anforderungstext:** Der normative Kern der Anforderung. Das maßgebliche Modalverb ist farbig hervorgehoben; Parameterplatzhalter sind mit konkreten Werten aufgelöst.
-- **Zielobjekt, Modalverb, Handlung und Dokumentation:** Ein Viererblock mit den wichtigsten Angaben für die Umsetzung. Das Zielobjekt zeigt, worauf sich die Anforderung bezieht; die Dokumentationsvorgabe bestimmt den geforderten Nachweis. Ein Klick auf Zielobjekt, Modalverb, Handlungswort oder Dokumentation filtert danach.
+- **Zielobjekt, Modalverb, Handlung und Dokumentation:** Ein Viererblock mit den wichtigsten Angaben für die Umsetzung. Das Zielobjekt zeigt, worauf sich die Anforderung bezieht; die Dokumentationsvorgabe bestimmt den geforderten Nachweis. Neben dem Zielobjekt stehen gedämpft die übergeordneten Kategorien, zu denen es gehört (z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*). Ein Klick auf Zielobjekt, Modalverb, Handlungswort oder Dokumentation filtert danach.
 - **Tags:** Thematische Schlagwörter, direkt als Klickfilter nutzbar.
 - **Schutzziele und Aufwand:** Ein gemeinsamer Kasten unter den Tags. Zwei Punkte symbolisieren die Schutzwirkung auf Vertraulichkeit (C), Integrität (I), Verfügbarkeit (A) und Authentizität (Au) (●● = im Zentrum, ●○ = wirkt hin, ○○ = keine Zuordnung). Ein fünfstufiger Farbbalken verdeutlicht den geschätzten Realisierungsaufwand nach BSI-Definition (Stufe 0 = zwingend umzusetzen / Aufwand nicht bewertet).
 - **Gefährdungen:** Abgewendete BSI-Gefährdungen (G 0.1 bis G 0.47), die direkt als Klickfilter nutzbar sind.

@@ -60,7 +60,7 @@ Beispiele für kombinierte Filterbedingungen
 | **Listen** | Eigene Sammlungen: Zeigt oder schließt Anforderungen aus bestimmten Listen aus. |
 | **Praktiken** | Die 20 Fachpraktiken des BSI-Grundschutzes (z. B. *DEV*, *ARCH*, *BES*, *GC*). |
 | **Schutzbedarf** | Sicherheitsniveaus: Standard-Sicherheitsstufe oder Erhöhte Sicherheitsstufe. |
-| **Zielobjekte** | Worauf sich die Anforderung bezieht (z. B. *IT-Systeme*, *Webbrowser*, *Nutzende*). Eine Anforderung kann mehrere Zielobjekte haben. |
+| **Zielobjekte** | Worauf sich die Anforderung bezieht (z. B. *IT-Systeme*, *Webbrowser*, *Nutzende*). Eine Anforderung kann mehrere Zielobjekte haben. Mit **Übergeordnete Kategorien einschließen** gelten auch die Anforderungen der Ebenen darüber: *Führungskräfte* findet dann auch Anforderungen an *Mitarbeitende* und *Nutzende*. Diese Kategorien erscheinen in blauer Schrift und im Filter-Chip in Klammern. Ausschlüsse (✕) gelten immer nur für die gewählte Kategorie. |
 | **Modalverben** | Verbindlichkeitsgrad: MUSS, SOLLTE oder KANN. |
 | **Handlungswort** | Das primäre Verbum der Forderung (z. B. *dokumentieren*, *verankern*, *prüfen*). |
 | **Dokumentation** | Geforderte Dokumentenart (z. B. *Sicherheitskonzept*, *Freigabeplan*). |

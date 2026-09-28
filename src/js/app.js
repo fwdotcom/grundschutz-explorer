@@ -6,7 +6,7 @@
  */
 
 import { parseOscalCatalog, formatBsiThreat } from './oscalParser.js';
-import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition, sourceCatalogTitle } from './namespaces.js';
+import { namespaces, loadNamespaces, lookupNamespace, namespaceDefinition, namespaceAncestors, sourceCatalogTitle } from './namespaces.js';
 import { compareCatalogs, applyDiff, computeWordDiff } from './diffEngine.js';
 import { matchesFacets } from './filters.js';
 import {
@@ -228,6 +228,8 @@ const app = createApp({
     const threatRailSearch = ref('');
     // Werte ohne Treffer in der Filterleiste ausblenden (Umschalter im Kopf der Filterleiste)
     const railOnlyMatching = ref(false);
+    // Gewählte Zielobjektkategorien schließen ihre übergeordneten Kategorien ein (Umschalter im Filterbereich)
+    const targetObjectInheritance = ref(false);
 
     // Flache Trefferliste vs. Baumansicht ('tree' | 'flat')
     const listViewMode = ref('tree');
@@ -314,11 +316,14 @@ const app = createApp({
     function facetOptionsFiltered(category) {
       const q = (facetSearch.value[category] || '').trim().toLowerCase();
       const counts = facetCounts.value[category] || {};
-      const list = (facetOptions.value[category] || []).filter((v) => railRowVisible(category, v, counts[v] || 0));
+      // Eingeschlossene übergeordnete Zielobjektkategorien stehen immer direkt unter den gesetzten Werten
+      const implied = category === 'targetObject' ? impliedTargetObjects.value : new Map();
+      const list = (facetOptions.value[category] || []).filter((v) => railRowVisible(category, v, counts[v] || 0) || implied.has(v));
       if (category === 'effort' || category === 'sourceCatalog') return list;
       const selected = list.filter((v) => getTagMode(category, v));
-      const rest = list.filter((v) => !getTagMode(category, v) && (!q || v.toLowerCase().includes(q)));
-      return [...selected, ...rest];
+      const inherited = list.filter((v) => implied.has(v));
+      const rest = list.filter((v) => !getTagMode(category, v) && !implied.has(v) && (!q || v.toLowerCase().includes(q)));
+      return [...selected, ...inherited, ...rest];
     }
 
     // Aufwand als horizontaler Balken: Farbe von grün (0) bis rot (Maximum)
@@ -365,6 +370,24 @@ const app = createApp({
       return definition(name, value).split(/\n\s*\n/)[0];
     }
 
+    // Übergeordnete Kategorien der gewählten Zielobjektkategorien, die nicht selbst gewählt oder ausgeschlossen sind:
+    // Kategorie → gewählte Kategorien, über die sie einbezogen ist
+    const impliedTargetObjects = computed(() => {
+      const implied = new Map();
+      if (!targetObjectInheritance.value) return implied;
+      namespacesVersion.value;
+      const tagged = new Set(activeTags.value.filter((t) => t.category === 'targetObject').map((t) => t.value));
+      for (const t of activeTags.value) {
+        if (t.category !== 'targetObject' || t.mode !== 'include') continue;
+        for (const a of namespaceAncestors('targetObjects', t.value)) {
+          if (tagged.has(a)) continue;
+          if (!implied.has(a)) implied.set(a, []);
+          implied.get(a).push(t.value);
+        }
+      }
+      return implied;
+    });
+
     // Computed: Active filter specification grouped by category and mode
     const activeFilterSpec = computed(() => {
       const spec = {
@@ -384,8 +407,19 @@ const app = createApp({
           spec.exc[t.category].add(t.value);
         }
       }
+      // Übergeordnete Zielobjektkategorien wirken wie gewählt; ausgeschlossene bleiben ausgeschlossen
+      if (impliedTargetObjects.value.size) {
+        spec.inc.targetObject ||= new Set();
+        for (const v of impliedTargetObjects.value.keys()) spec.inc.targetObject.add(v);
+      }
       return spec;
     });
+
+    // Übergeordnete Kategorien einer Zielobjektkategorie, von der nächsthöheren bis zur obersten
+    function targetObjectAncestors(value) {
+      namespacesVersion.value;
+      return namespaceAncestors('targetObjects', value);
+    }
 
     function matchesFilterCategory(ctrl, ignoreCategory = null) {
       const f = filters.value;
@@ -704,7 +738,10 @@ const app = createApp({
       }
       for (const group of groups.values()) {
         const { labels, ...chip } = group;
-        chips.push({ ...chip, values: labels, label: labels.join(chip.mode === 'include' ? ' oder ' : ', ') });
+        // Einbezogene übergeordnete Zielobjektkategorien als Zusatz
+        const implied = chip.category === 'targetObject' && chip.mode === 'include' ? [...impliedTargetObjects.value.keys()] : [];
+        const extra = implied.length ? ` (+ ${implied.join(', ')})` : '';
+        chips.push({ ...chip, values: labels, extra, label: labels.join(chip.mode === 'include' ? ' oder ' : ', ') + extra });
       }
 
       // 3. Themen-Drilldown
@@ -1089,6 +1126,7 @@ const app = createApp({
             // Reaktive Proxys lassen sich nicht in IndexedDB klonen → einfache Kopien speichern
             activeTags: activeTags.value.map((t) => ({ ...t })),
             railOnlyMatching: railOnlyMatching.value,
+            targetObjectInheritance: targetObjectInheritance.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Filter:', err);
@@ -1171,6 +1209,7 @@ const app = createApp({
         filters.value.controlFilter,
         activeTags.value,
         railOnlyMatching.value,
+        targetObjectInheritance.value,
       ],
       () => {
         scheduleSaveFilters();
@@ -1292,6 +1331,9 @@ const app = createApp({
           const onlyMatching = savedFilterState.railOnlyMatching ?? savedFilterState.threatShowOnlyMatching;
           if (typeof onlyMatching === 'boolean') {
             railOnlyMatching.value = onlyMatching;
+          }
+          if (typeof savedFilterState.targetObjectInheritance === 'boolean') {
+            targetObjectInheritance.value = savedFilterState.targetObjectInheritance;
           }
         }
 
@@ -2892,7 +2934,12 @@ const app = createApp({
           type: 'text',
           title: `Zielobjektkategorie · ${t}`,
           text: definition('targetObjects', t),
-          meta: entry?.Kategorie ? `Kategorie: ${entry.Kategorie}` : '',
+          meta: [
+            entry?.Kategorie ? `Kategorie: ${entry.Kategorie}` : '',
+            targetObjectAncestors(t).length ? `Gehört zu: ${targetObjectAncestors(t).join(' ‹ ')}` : '',
+          ]
+            .filter(Boolean)
+            .join(' · '),
         };
       }
       if (key === 'modalVerb') {
@@ -3055,6 +3102,9 @@ const app = createApp({
       displayedThreatOptions,
       threatRailSearch,
       railOnlyMatching,
+      targetObjectInheritance,
+      impliedTargetObjects,
+      targetObjectAncestors,
       railRowVisible,
       railSectionEmpty,
       allCatalogTags,

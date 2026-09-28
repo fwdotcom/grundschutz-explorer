@@ -5,7 +5,7 @@
 
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCsv, loadNamespaces, namespaces, lookupNamespace, namespaceDefinition, sourceCatalogTitle } from '../src/js/namespaces.js';
+import { parseCsv, loadNamespaces, namespaces, lookupNamespace, namespaceDefinition, namespaceAncestors, sourceCatalogTitle } from '../src/js/namespaces.js';
 import { installLocalFetch } from './helpers.js';
 
 before(async () => {
@@ -61,4 +61,11 @@ test('Quellkataloge / sourceCatalogs mit Titeln und Definitionen', () => {
   assert.equal(sourceCatalogTitle('BSI-Stand-der-Technik-Kernel-G0'), 'Stand-der-Technik Kernel G0');
   assert.equal(sourceCatalogTitle('Unbekannter-Katalog'), 'Unbekannter-Katalog');
   assert.ok(namespaceDefinition('sourceCatalogs', 'BSI-Stand-der-Technik-Kernel-G0').length > 0);
+});
+
+test('Zielobjektkategorien: übergeordnete Kategorien von unten nach oben', () => {
+  assert.deepEqual(namespaceAncestors('targetObjects', 'Institutionsleitung'), ['Führungskräfte', 'Mitarbeitende', 'Nutzende']);
+  assert.deepEqual(namespaceAncestors('targetObjects', 'Serverräume'), ['Räume für technische Infrastruktur', 'Räume', 'Standorte']);
+  assert.deepEqual(namespaceAncestors('targetObjects', 'Nutzende'), []);
+  assert.deepEqual(namespaceAncestors('targetObjects', 'gibt es nicht'), []);
 });

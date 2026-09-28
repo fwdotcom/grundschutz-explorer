@@ -409,6 +409,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .rail-section-body { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 4px; }
 
 .rail-threat-search { padding: 4px 4px 6px; }
+/* Umschalter innerhalb eines Filterbereichs (z. B. übergeordnete Zielobjektkategorien einschließen) */
+.rail-option {
+  display: flex; align-items: center; gap: 6px; padding: 0 8px 6px;
+  font-size: calc(12px * var(--font-scale)); color: var(--text-2); cursor: pointer; user-select: none;
+}
+.rail-option input { margin: 0; accent-color: var(--accent); }
 .rail-search-input {
   width: 100%; height: 28px; padding: 0 8px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--surface); color: var(--text);
@@ -439,6 +445,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: rgba(239, 68, 68, 0.14); color: #fca5a5; border-color: rgba(239, 68, 68, 0.35);
 }
 .rail-row.is-empty { opacity: 0.45; }
+/* Über eine gewählte Unterkategorie eingeschlossen, selbst nicht gewählt */
+.rail-row.is-implied { color: var(--accent-text); opacity: 1; }
 
 .rail-row-main {
   flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
@@ -734,6 +742,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   overflow: hidden; text-overflow: ellipsis;
 }
 .chip-sep { font-weight: 400; color: var(--text-2); }
+.chip-extra { font-weight: 400; color: var(--accent-text); }
 .tag-chip.is-exclude .chip-label { color: #b91c1c; }
 .dark .tag-chip.is-exclude .chip-label { color: #fca5a5; }
 
@@ -846,6 +855,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .kv-value { display: inline-flex; align-items: flex-start; gap: 5px; max-width: 100%; }
 .kv-value .info-btn { margin: 4px 0 0; flex-shrink: 0; }
 .kv-value-list { display: flex; flex-wrap: wrap; gap: 2px 16px; }
+/* Zielobjektkategorien: je Kategorie eine Zeile mit den übergeordneten Kategorien, gedämpft */
+.kv-value-list.to-paths { flex-direction: column; gap: 6px; }
+/* Reicht die Breite nicht, rutschen ganze Oberkategorien („‹ Nutzende“) in die nächste Zeile statt Wörter zu trennen */
+.to-paths .kv-value { flex-wrap: wrap; row-gap: 0; }
+.to-ancestor { display: inline-flex; flex: none; max-width: 100%; align-items: baseline; gap: 5px; color: var(--text-2); }
+.to-sep { color: var(--text-3); }
 /* Dezentes Blau mit mind. 3:1 Kontrast; Hover in Akzentfarbe, geöffnet in Akzent-Textfarbe */
 .info-btn:hover { color: var(--accent); }
 /* Info-Symbol: gefüllter Kreis mit ausgestanztem „i“ (mit Serifen), wächst mit der Schriftgröße */
