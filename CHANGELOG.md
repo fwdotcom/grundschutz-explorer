@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unreleased] ##
+
+## Behoben
+
+- Felder der Detailansicht fließen bei extremen Bildschirmeinstellungen 
+
+
 ## [1.1.5] – 2026-09-28
 
 ### Neu

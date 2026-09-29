@@ -1415,6 +1415,7 @@ const app = createApp({
       document.fonts?.ready.then(updateFooterCompact);
 
       window.addEventListener('click', closeListMenuOnOutsideClick);
+      window.addEventListener('resize', onWindowResize);
       window.addEventListener('pagehide', flushNoteSaves);
       document.addEventListener('visibilitychange', flushNoteSaves);
 
@@ -1475,6 +1476,7 @@ const app = createApp({
       window.removeEventListener('keydown', handleGlobalKeydown);
       narrowQuery?.removeEventListener('change', onNarrowChange);
       window.removeEventListener('click', closeListMenuOnOutsideClick);
+      window.removeEventListener('resize', onWindowResize);
       window.removeEventListener('pagehide', flushNoteSaves);
       document.removeEventListener('visibilitychange', flushNoteSaves);
       flushNoteSaves();
@@ -2769,13 +2771,29 @@ const app = createApp({
     }
 
     function setDetailPaneWidth(pct) {
-      detailPaneWidth.value = Math.round(Math.max(DETAIL_PANE_MIN, Math.min(DETAIL_PANE_MAX, pct)) * 10) / 10;
+      const container = splitEl.value;
+      let max = DETAIL_PANE_MAX;
+      let min = DETAIL_PANE_MIN;
+      if (container && container.clientWidth && (!window.innerWidth || window.innerWidth > 860)) {
+        const w = container.clientWidth;
+        // Liste benötigt mind. 280px, Trenner 1px
+        const maxPct = ((w - 281) / w) * 100;
+        // Detailbereich benötigt mind. 280px
+        const minPct = (280 / w) * 100;
+        max = Math.min(DETAIL_PANE_MAX, Math.max(minPct, maxPct));
+        min = Math.max(DETAIL_PANE_MIN, Math.min(minPct, max));
+      }
+      detailPaneWidth.value = Math.round(Math.max(min, Math.min(max, pct)) * 10) / 10;
     }
 
     function resetDetailPaneWidth() {
       clearTimeout(savePaneWidthTimeout);
       setDetailPaneWidth(DETAIL_PANE_DEFAULT);
       saveSetting('detail_pane_width', DETAIL_PANE_DEFAULT).catch(() => {});
+    }
+
+    function onWindowResize() {
+      setDetailPaneWidth(detailPaneWidth.value);
     }
 
     let lastResizerClickTime = 0;
@@ -3129,6 +3147,7 @@ const app = createApp({
       DETAIL_PANE_DEFAULT,
       DETAIL_PANE_MIN,
       DETAIL_PANE_MAX,
+      setDetailPaneWidth,
       resetDetailPaneWidth,
       onResizerKeydown,
       isRailOpen,

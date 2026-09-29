@@ -716,10 +716,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .notes-readonly .link-btn { font-size: inherit; }
 
 /* Main split */
-.split { flex: 1; display: flex; min-width: 0; min-height: 0; }
+.split { flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
 
 /* List pane */
-.list-pane { flex: 1; min-width: 340px; display: flex; flex-direction: column; background: var(--surface); min-height: 0; }
+.list-pane { flex: 1 1 0%; min-width: 280px; display: flex; flex-direction: column; background: var(--surface); min-height: 0; }
 .filterbar { padding: 10px 16px; border-bottom: 1px solid var(--border); display: grid; gap: 8px; flex-shrink: 0; }
 
 /* Tag-basierte Filterleiste */
@@ -971,7 +971,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .resizer:focus-visible { outline: none; background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 
 /* Detail pane */
-.detail-pane { flex-shrink: 0; min-width: 380px; display: flex; flex-direction: column; background: var(--bg); min-height: 0; container-type: inline-size; }
+.detail-pane {
+  flex: 0 1 auto;
+  min-width: 280px;
+  max-width: calc(100% - 281px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-height: 0;
+  container-type: inline-size;
+}
 
 /* Hinweisbanner im Detailbereich, wenn die Auswahl links durch Filter ausgeblendet ist */
 .detail-filtered-banner {
@@ -1094,6 +1103,12 @@ ul { margin: 0; padding: 0; list-style: none; }
   .kv-grid { grid-template-columns: 1fr; }
   .kv-grid > .kv { border-right: 0 !important; border-top: 1px solid var(--border) !important; }
   .kv-grid > .kv:first-child { border-top: 0 !important; }
+}
+@container (max-width: 440px) {
+  .detail-head, .detail-body, .detail-filtered-banner, .detail-callout {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 /* Tags in Detailansicht */
@@ -1589,7 +1604,7 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   .split { flex-direction: column; overflow-y: auto; }
   .list-pane { min-width: 0; flex: none; height: 55vh; }
   .resizer { display: none; }
-  .detail-pane { width: 100% !important; min-width: 0; flex: none; }
+  .detail-pane { width: 100% !important; min-width: 0; max-width: none; flex: none; }
   .detail-body { overflow: visible; }
   .topbar { grid-template-columns: auto 1fr auto; gap: 8px; padding: 0 12px; }
   .brand-text, .hide-sm, .search-end .kbd { display: none; }
