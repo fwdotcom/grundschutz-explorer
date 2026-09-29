@@ -61,13 +61,13 @@ const { createApp, ref, shallowRef, computed, onMounted, onBeforeUnmount, watch,
 const PRESET_CATALOG_URL =
   'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/control_layer/Grundschutz%2B%2B/Grundschutz%2B%2B-resolved_catalog.json';
 
-// Projektseite auf GitHub (Fußzeile: Projektseite, Lizenz)
-const PROJECT_URL = 'https://github.com/fwdotcom/grundschutz-explorer';
+// Projektseite (Fußzeile: Projektseite)
+const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 
-// Handbuch, von scripts/build_manual.py je Version erzeugt
-const MANUAL_PATH = 'docs/manual/grundschutz-explorer-handbuch-v';
+// Handbuch: Weiterleitung auf die aktuelle PDF, von scripts/build_manual.py erzeugt
+const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.1.6';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -3269,7 +3269,7 @@ const app = createApp({
       scrollSubgroupIntoView,
       appVersion: APP_VERSION,
       PROJECT_URL,
-      manualUrl: `${MANUAL_PATH}${APP_VERSION}.pdf`,
+      manualUrl: MANUAL_PATH,
       toggleControlExpand,
       filterByThreat,
       stepSelection,

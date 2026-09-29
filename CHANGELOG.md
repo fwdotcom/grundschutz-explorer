@@ -2,11 +2,18 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unreleased] ##
+## [1.1.6] – 2026-09-29
 
-## Behoben
+### Geändert
 
-- Felder der Detailansicht fließen bei extremen Bildschirmeinstellungen 
+- Hosting-Adresse der Webanwendung auf `app.grundschutz-explorer.de` umgestellt.
+- Fußzeile: Link „GitHub-Projektseite“ durch „Projektseite“ (`www.grundschutz-explorer.de`) ersetzt.
+- Interne und externe Seitenlinks, Canonical-URLs, Open-Graph-Metadaten sowie Handbuch und Dokumentation an die neue Adresse angepasst.
+- Benutzerhandbuch liegt jetzt unter `https://app.grundschutz-explorer.de/manual/`; die bisherigen Adressen unter `/docs/manual/` entfallen ohne Weiterleitung.
+
+### Behoben
+
+- Felder der Detailansicht fließen bei extremen Bildschirmeinstellungen und manuellem Verschieben des Trenners nicht mehr über den rechten Rand.
 
 
 ## [1.1.5] – 2026-09-28

@@ -33,7 +33,7 @@ jobs:
           cache: pip
           cache-dependency-path: docs/handbuch/requirements.txt
 
-      - name: Handbuch bauen (src/docs/manual)
+      - name: Handbuch bauen (src/manual)
         run: |
           pip install -r docs/handbuch/requirements.txt
           python scripts/build_manual.py

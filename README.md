@@ -11,9 +11,11 @@ Grundschutz++ Explorer macht den Anwenderkatalog Grundschutz++ des BSI im
 Browser durchsuchbar: Anforderungen finden, flexibel filtern, eigene Listen mit
 Notizen führen, Definitionen nachschlagen und Katalogversionen miteinander vergleichen – ohne Server, ohne Anmeldung, alle Daten bleiben lokal.
 
-**→ [www.grundschutz-explorer.de](https://www.grundschutz-explorer.de)**
+**→ [app.grundschutz-explorer.de](https://app.grundschutz-explorer.de)** (Webanwendung)
 
-**→ [Benutzerhandbuch (PDF)](https://www.grundschutz-explorer.de/docs/manual/)**, auch in der App über die Fußzeile erreichbar.
+**→ [www.grundschutz-explorer.de](https://www.grundschutz-explorer.de)** (Projektseite)
+
+**→ [Benutzerhandbuch (PDF)](https://app.grundschutz-explorer.de/manual/)**, auch in der App über die Fußzeile erreichbar.
 
 ## Funktionen
 

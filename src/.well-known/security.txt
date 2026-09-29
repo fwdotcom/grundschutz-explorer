@@ -8,4 +8,4 @@ Contact: https://github.com/fwdotcom/grundschutz-explorer/security/advisories/ne
 Contact: mailto:studio@frankwinter.com
 Expires: 2027-09-24T22:00:00.000Z
 Preferred-Languages: de, en
-Canonical: https://www.grundschutz-explorer.de/.well-known/security.txt
+Canonical: https://app.grundschutz-explorer.de/.well-known/security.txt

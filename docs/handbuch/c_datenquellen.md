@@ -48,7 +48,8 @@ Grundschutz++ Explorer ist ein unabhängiges Open-Source-Projekt ohne Verbindung
 
 | Eigenschaft | Angabe |
 | :--- | :--- |
-| **Webadresse** | `https://www.grundschutz-explorer.de` |
+| **Anwendung** | `https://app.grundschutz-explorer.de` |
+| **Projektseite** | `https://www.grundschutz-explorer.de` |
 | **Autor & Copyright** | © 2026 Frank Winter |
 | **Technik** | Läuft vollständig im Browser, Daten werden nur lokal gespeichert (IndexedDB) |
 | **Standards** | NIST OSCAL 1.1.3; orientiert sich an WCAG 2.1 AA, im hohen Kontrastmodus an AAA-Kontrast |

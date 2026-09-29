@@ -53,9 +53,11 @@ test('Handbuch-Pfad in app.js passt zu scripts/build_manual.py', async () => {
   const app = await readFile(path.join(SRC, 'js/app.js'), 'utf8');
   const script = await readFile(path.join(SRC, '..', 'scripts/build_manual.py'), 'utf8');
   const manualPath = app.match(/^const MANUAL_PATH = '([^']+)';/m)?.[1];
-  const prefix = script.match(/^FILE_PREFIX = "([^"]+)"/m)?.[1];
-  assert.ok(manualPath && prefix, 'MANUAL_PATH oder FILE_PREFIX nicht gefunden');
-  assert.equal(manualPath, `docs/manual/${prefix}`);
+  const outDir = script.match(/^OUT_DIR = ROOT((?: \/ "[^"]+")+)$/m)?.[1];
+  assert.ok(manualPath && outDir, 'MANUAL_PATH oder OUT_DIR nicht gefunden');
+  const parts = [...outDir.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(parts[0], 'src');
+  assert.equal(manualPath, `${parts.slice(1).join('/')}/`);
 });
 
 test('Lizenztext im Dialog stimmt mit LICENSE überein', async () => {

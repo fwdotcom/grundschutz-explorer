@@ -4,9 +4,9 @@
 """
 Baut das Benutzerhandbuch (docs/handbuch) mit markpublish als PDF.
 
-Ablage: src/docs/manual/grundschutz-explorer-handbuch-v<VERSION>.pdf
-Dazu entsteht src/docs/manual/index.html, die auf diese PDF weiterleitet. So zeigt
-/docs/manual/ immer auf das aktuelle Handbuch, ohne dass die PDF doppelt abgelegt wird.
+Ablage: src/manual/grundschutz-explorer-handbuch-v<VERSION>.pdf
+Dazu entsteht src/manual/index.html, die auf diese PDF weiterleitet. So zeigt
+/manual/ immer auf das aktuelle Handbuch, ohne dass die PDF doppelt abgelegt wird.
 Die Version kommt aus APP_VERSION in src/js/app.js und wird für den Build in die
 Handbuch-Konfiguration übernommen, damit Deckblatt und Fußzeile dieselbe Version zeigen
 wie die App. Die markpublish.yaml selbst bleibt dabei unverändert.
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 APP_JS = ROOT / "src" / "js" / "app.js"
 MANUAL_DIR = ROOT / "docs" / "handbuch"
 CONFIG = MANUAL_DIR / "markpublish.yaml"
-OUT_DIR = ROOT / "src" / "docs" / "manual"
+OUT_DIR = ROOT / "src" / "manual"
 FILE_PREFIX = "grundschutz-explorer-handbuch-v"
 REDIRECT = OUT_DIR / "index.html"
 

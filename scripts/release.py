@@ -13,7 +13,7 @@ Schritte:
        CHANGELOG.md                   ("## [Unveröffentlicht]" wird zu "## [<VERSION>] – <Datum>")
   2. npm run check und npm test
   3. Screenshots:  node scripts/capture_screenshots.js
-  4. Handbuch:     scripts/build_manual.py (PDF und Weiterleitung unter src/docs/manual/)
+  4. Handbuch:     scripts/build_manual.py (PDF und Weiterleitung unter src/manual/)
 
 Committet, getaggt und veröffentlicht wird nicht; das bleibt Handarbeit.
 

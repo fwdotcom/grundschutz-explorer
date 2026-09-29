@@ -19,7 +19,7 @@ Der Autor ist Informationssicherheitsbeauftragter einer deutschen Landesbehörde
 Sie benötigen nur einen aktuellen Webbrowser, etwa Chrome, Edge, Firefox oder Safari. Installation, Registrierung oder Anmeldung sind nicht nötig. Rufen Sie die Anwendung auf:
 
 ```text
-https://www.grundschutz-explorer.de
+https://app.grundschutz-explorer.de
 ```
 
 ![Startseite beim ersten Aufruf](bilder/startseite.png){width=100%}
