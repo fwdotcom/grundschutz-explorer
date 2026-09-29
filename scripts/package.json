@@ -1,0 +1,13 @@
+{
+  "name": "grundschutz-explorer-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Hilfsskripte für den Grundschutz++ Explorer (Handbuch-Screenshots)",
+  "scripts": {
+    "screenshots": "node capture-screenshots.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

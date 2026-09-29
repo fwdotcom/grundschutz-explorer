@@ -12,14 +12,14 @@ Schritte:
        docs/handbuch/markpublish.yaml (version: "…")
        CHANGELOG.md                   ("## [Unveröffentlicht]" wird zu "## [<VERSION>] – <Datum>")
   2. npm run check und npm test
-  3. Screenshots:  node scripts/capture_screenshots.js
+  3. Screenshots:  npm run screenshots im Ordner scripts (vorher npm install, falls node_modules fehlt)
   4. Handbuch:     scripts/build_manual.py (PDF und Weiterleitung unter src/manual/)
 
 Committet, getaggt und veröffentlicht wird nicht; das bleibt Handarbeit.
 
 Aufruf:  python scripts/release.py 1.2.0
          python scripts/release.py 1.2.0 --keine-screenshots
-Voraussetzung:  Node.js, Google Chrome, pip install -r docs/handbuch/requirements.txt
+Voraussetzung:  Node.js, pip install -r scripts/markpublish_requirements.txt
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ APP_JS = ROOT / "src" / "js" / "app.js"
 PACKAGE_JSON = ROOT / "package.json"
 MANUAL_CONFIG = ROOT / "docs" / "handbuch" / "markpublish.yaml"
 CHANGELOG = ROOT / "CHANGELOG.md"
-SCREENSHOTS = ROOT / "scripts" / "capture_screenshots.js"
+SCRIPTS = ROOT / "scripts"
 
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 UNRELEASED = "## [Unveröffentlicht]"
@@ -102,12 +102,12 @@ def set_version(version: str) -> None:
     update_changelog(version)
 
 
-def run(*command: str) -> None:
+def run(*command: str, cwd: Path = ROOT) -> None:
     executable = shutil.which(command[0])
     if not executable:
         fail(f"{command[0]} wurde nicht gefunden")
     print(f"> {' '.join(command)}", flush=True)
-    result = subprocess.run([executable, *command[1:]], cwd=ROOT)
+    result = subprocess.run([executable, *command[1:]], cwd=cwd)
     if result.returncode != 0:
         fail(f"{' '.join(command)} ist fehlgeschlagen (Exit-Code {result.returncode})")
 
@@ -142,7 +142,9 @@ def main() -> None:
     if args.keine_screenshots:
         print("  übersprungen (--keine-screenshots)")
     else:
-        run("node", str(SCREENSHOTS))
+        if not (SCRIPTS / "node_modules").is_dir():
+            run("npm", "install", cwd=SCRIPTS)
+        run("npm", "run", "screenshots", cwd=SCRIPTS)
 
     print("\n== 4/4 Handbuch")
     build_manual.main()

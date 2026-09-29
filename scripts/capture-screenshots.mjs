@@ -2,10 +2,23 @@
  * SPDX-FileCopyrightText: 2026 Frank Winter
  * SPDX-License-Identifier: MIT
  *
- * Automatische Screenshot-Erstellung für das Handbuch via Chrome DevTools Protocol.
+ * Erstellt die Screenshots für das Handbuch (docs/handbuch/bilder/*.png) mit Playwright.
+ *
+ * Ablauf: Die App wird aus src/ über einen lokalen HTTP-Server ausgeliefert. Nach Startseite und Dialog
+ * „Katalog laden“ werden der Katalog aus testdaten/, eine daraus abgeleitete Vergleichsversion, Listen,
+ * Notizen und Einstellungen direkt in die IndexedDB der App geschrieben; danach wird die Seite neu geladen und die App über ihre eigenen
+ * Funktionen in die gewünschten Zustände gebracht.
+ *
+ * Aufruf (im Ordner scripts):
+ *   npm install           # Playwright und Chromium
+ *   npm run screenshots
+ *
+ * Umgebungsvariablen:
+ *   BILDER_DIR=<Ordner>   Bilder woanders ablegen (z. B. zum Vergleich)
+ *   HEADED=1              Browser sichtbar starten (zum Nachvollziehen)
  */
 
-import { spawn } from 'node:child_process';
+import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -13,7 +26,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
-const TESTDATEN = path.join(ROOT, 'testdaten');
+// Anwenderkatalog aus der Stand-der-Technik-Bibliothek des BSI (Stand 10.09.2026)
+const BASE_CATALOG = path.join(ROOT, 'testdaten', 'Grundschutz++-resolved_catalog.json');
 // Zielordner; mit BILDER_DIR=<Ordner> lassen sich die Bilder zum Vergleich woanders ablegen
 const BILDER_DIR = process.env.BILDER_DIR || path.join(ROOT, 'docs', 'handbuch', 'bilder');
 
@@ -32,6 +46,169 @@ const MIME = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+// ---------- Vergleichskatalog ----------
+
+const NS = 'https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek/tree/main/documentation/namespaces/';
+const NS_FILE = {
+  sec_level: 'security_level.csv',
+  effort_level: 'effort_level.csv',
+  confidentiality: 'security_targets.csv',
+  integrity: 'security_targets.csv',
+  availability: 'security_targets.csv',
+  authenticity: 'security_targets.csv',
+  threats: 'basethreats.csv',
+  tags: 'tags.csv',
+  target_object_categories: 'target_object_categories.csv',
+  documentation: 'documentation_guidelines.csv',
+  result: 'result.csv',
+  action_word: 'action_words.csv',
+  modal_verb: 'modal_verbs.csv',
+};
+
+// Eigenschaften in der Form des Katalogs: [name, wert] → { name, ns, value }
+const props = (pairs) =>
+  pairs.map(([name, value]) => (NS_FILE[name] ? { name, ns: NS + NS_FILE[name], value } : { name, value }));
+
+function newControl(id, title, { props: controlProps, statement, statementProps, guidance }) {
+  return {
+    id,
+    class: 'BSI-Stand-der-Technik-Kernel-G0',
+    title,
+    props: props(controlProps),
+    parts: [
+      { id: `${id}_stm`, name: 'statement', props: props(statementProps), prose: statement },
+      { id: `${id}_gdn`, name: 'guidance', prose: guidance },
+    ],
+  };
+}
+
+function controlIndex(node, map = new Map()) {
+  for (const c of node.controls || []) {
+    map.set(c.id, { control: c, parent: node });
+    controlIndex(c, map);
+  }
+  for (const g of node.groups || []) controlIndex(g, map);
+  return map;
+}
+
+/**
+ * Vergleichsversion des Katalogs für Vergleichsmodus und Reiter „Änderungen“: je zwei neue und
+ * gelöschte Anforderungen, geänderte Texte, Modalverben und Kenngrößen.
+ */
+function buildComparisonCatalog(base) {
+  const data = structuredClone(base);
+  const cat = data.catalog;
+  cat.uuid = '4e8b3a72-9c1f-4d3b-8517-7e6d0a2c9184';
+  Object.assign(cat.metadata, {
+    title: 'Anwenderkatalog Grundschutz++ (Vergleichsversion)',
+    'last-modified': '2026-09-25T20:00:00Z',
+    version: '2026.2-Testvergleich',
+    remarks:
+      'Modifizierter Testkatalog zur Verifikation des Differenzvergleichs (Neu, Geändert, Gelöscht, Wortvergleich) im Grundschutz++ Explorer.',
+  });
+
+  const index = controlIndex(cat);
+  const get = (id) => {
+    const hit = index.get(id);
+    if (!hit) throw new Error(`${id} nicht im Katalog gefunden – Vergleichskatalog anpassen.`);
+    return hit;
+  };
+  const part = (id, name) => get(id).control.parts.find((p) => p.name === name);
+  const setProps = (node, values) => {
+    for (const [name, value] of Object.entries(values)) node.props.find((p) => p.name === name).value = value;
+  };
+  const remove = (id) => {
+    const { parent } = get(id);
+    parent.controls = parent.controls.filter((c) => c.id !== id);
+  };
+
+  // Geändert
+  setProps(part('GC.1.1', 'statement'), { modal_verb: 'SOLLTE' });
+  part('GC.1.1', 'statement').prose =
+    'Governance und Compliance MUSS Verfahren und Regelungen zur Errichtung, kontinuierlichen Aufrechterhaltung ' +
+    'sowie jährlichen Überprüfung eines ISMS nach {{ insert: param, gc.1.1-prm1 }} verankern.';
+  part('DEV.2.1', 'guidance').prose +=
+    ' Neu hinzugefügt: Architekturentscheidungen müssen in Architecture Decision Records (ADR) nachvollziehbar festgehalten werden.';
+  setProps(get('DEV.3.4').control, {
+    sec_level: 'erhöht',
+    effort_level: '3',
+    integrity: '2',
+    authenticity: '2',
+    threats: 'G 0.19, G 0.46, G 0.47',
+    tags: 'Cryptography, Passwortsicherheit, Zero Trust',
+  });
+  setProps(part('DEV.4.3', 'statement'), { modal_verb: 'MUSS' });
+  part('DEV.4.3', 'statement').prose =
+    'Entwicklung für Anwendungen MUSS alle eingesetzten Bestandteile und Abhängigkeiten mit Hilfe einer ' +
+    'standardisierten Software Bill of Materials (SBOM im CycloneDX- oder SPDX-Format) vor jedem Release ' +
+    'automatisiert dokumentieren.';
+  part('DEV.4.3', 'guidance').prose =
+    'Details siehe BSI TR-03183-2 sowie BSI CS 148. Anwendungen zur Modulverwaltung und Software Composition ' +
+    'Analysis (SCA) MÜSSEN SBOMs als Teil des CI/CD-Prozesses generieren und digital signieren.';
+
+  // Gelöscht
+  remove('DEV.2.6.2');
+  remove('DEV.4.7');
+
+  // Neu
+  get('DEV.1.1').control.controls.push(
+    newControl('DEV.1.1.4', 'Verbindlichkeit und Sanktionen', {
+      props: [
+        ['alt-identifier', 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'],
+        ['sec_level', 'normal-SdT'],
+        ['effort_level', '1'],
+        ['confidentiality', '1'],
+        ['integrity', '1'],
+        ['availability', '0'],
+        ['authenticity', '0'],
+        ['threats', 'G 0.18'],
+      ],
+      statementProps: [
+        ['target_object_categories', 'Anwendungen'],
+        ['documentation', 'Sicherheitsrichtlinie'],
+        ['action_word', 'festlegen'],
+        ['modal_verb', 'SOLLTE'],
+      ],
+      statement:
+        'Die Institution SOLLTE festlegen, welche Konsequenzen und Eskalationsschritte bei vorsätzlicher oder ' +
+        'grob fahrlässiger Nichteinhaltung der Entwicklungsrichtlinien greifen.',
+      guidance: 'Klare Regelungen schaffen Verbindlichkeit für Entwicklungsteams und externe Dienstleister.',
+    })
+  );
+  get('DEV.4.3').parent.controls.push(
+    newControl('DEV.4.12', 'Automatisierte Schwachstellenscans in der Bereitstellungspipeline', {
+      props: [
+        ['alt-identifier', 'f47ac10b-58cc-4372-a567-0e02b2c3d479'],
+        ['sec_level', 'normal-SdT'],
+        ['effort_level', '2'],
+        ['confidentiality', '2'],
+        ['integrity', '2'],
+        ['availability', '1'],
+        ['authenticity', '1'],
+        ['threats', 'G 0.14, G 0.23, G 0.39'],
+        ['tags', 'Secure Compiling Practices, Automatisierung, CI/CD'],
+      ],
+      statementProps: [
+        ['target_object_categories', 'Anwendungen'],
+        ['documentation', 'Entwicklungsdokumentation'],
+        ['result', 'automatisierte Prüfungen auf Sicherheitslücken und veraltete Komponenten (SAST und SCA)'],
+        ['action_word', 'integrieren'],
+        ['modal_verb', 'MUSS'],
+      ],
+      statement:
+        'Entwicklung für Anwendungen MUSS automatisierte Prüfungen auf Sicherheitslücken und veraltete Komponenten ' +
+        '(SAST und SCA) in den Build- und Bereitstellungsprozess integrieren.',
+      guidance:
+        'Automatisierte Scans in CI/CD-Pipelines identifizieren Schwachstellen bereits vor dem Deployment in Test- ' +
+        'oder Produktionsumgebungen (Shift-Left). Gefundene Sicherheitslücken mit hohem Schweregrad sollten das ' +
+        'automatische Ausrollen verhindern.',
+    })
+  );
+  return data;
+}
+
+// ---------- Browser ----------
+
 function createStaticServer() {
   const server = http.createServer(async (req, res) => {
     try {
@@ -39,12 +216,7 @@ function createStaticServer() {
       let pathname = decodeURIComponent(url.pathname);
       if (pathname === '/') pathname = '/index.html';
 
-      let filePath;
-      if (pathname.startsWith('/testdaten/')) {
-        filePath = path.join(TESTDATEN, pathname.replace('/testdaten/', ''));
-      } else {
-        filePath = path.join(SRC, pathname.replace(/^\//, ''));
-      }
+      const filePath = path.join(SRC, pathname.replace(/^\//, ''));
 
       const content = await readFile(filePath);
       const ext = path.extname(filePath).toLowerCase();
@@ -69,89 +241,32 @@ function createStaticServer() {
 
 async function main() {
   const { server, port } = await createStaticServer();
+  const appUrl = `http://127.0.0.1:${port}/index.html`;
   console.log(`HTTP-Server läuft auf http://127.0.0.1:${port}`);
 
-  const tempDir = path.join(process.env.TEMP, `gsexplorer-chrome-${Date.now()}`);
-  const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-  const cdpPort = 9335;
+  const VIEW_W = 1440;
+  const VIEW_H = 900;
 
-  const chrome = spawn(chromePath, [
-    '--headless=new',
-    `--remote-debugging-port=${cdpPort}`,
-    `--user-data-dir=${tempDir}`,
-    '--no-first-run',
-    '--disable-extensions',
-    '--no-default-browser-check',
-    '--window-size=1440,900',
-    '--hide-scrollbars',
-  ]);
+  const browser = await chromium.launch({ headless: !process.env.HEADED });
 
   try {
-    let wsUrl = null;
-    for (let i = 0; i < 40; i++) {
-      await new Promise((r) => setTimeout(r, 200));
-      try {
-        const res = await fetch(`http://127.0.0.1:${cdpPort}/json/list`);
-        const tabs = await res.json();
-        const pageTab = tabs.find((t) => t.type === 'page');
-        if (pageTab?.webSocketDebuggerUrl) {
-          wsUrl = pageTab.webSocketDebuggerUrl;
-          break;
-        }
-      } catch {}
-    }
-    if (!wsUrl) throw new Error('Chrome CDP konnte nicht erreicht werden.');
-
-    const ws = new WebSocket(wsUrl);
-    await new Promise((r) => (ws.onopen = r));
-
-    let msgId = 1;
-    const send = (method, params = {}) =>
-      new Promise((resolve, reject) => {
-        const currentId = msgId++;
-        const onMsg = (evt) => {
-          const data = JSON.parse(evt.data);
-          if (data.id === currentId) {
-            ws.removeEventListener('message', onMsg);
-            if (data.error) reject(new Error(`${method}: ${JSON.stringify(data.error)}`));
-            else resolve(data.result);
-          }
-        };
-        ws.addEventListener('message', onMsg);
-        ws.send(JSON.stringify({ id: currentId, method, params }));
-      });
-
-    const evalJs = async (expr) => {
-      const res = await send('Runtime.evaluate', {
-        expression: expr,
-        returnByValue: true,
-        awaitPromise: true,
-      });
-      return res.result?.value;
-    };
-
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
-    const waitFor = async (expr, timeout = 12000) => {
-      const start = Date.now();
-      while (Date.now() - start < timeout) {
-        const res = await evalJs(`Boolean(${expr})`);
-        if (res) return true;
-        await wait(200);
-      }
-      throw new Error(`Timeout waiting for ${expr}`);
-    };
-
-    await send('Page.enable');
-    await send('DOM.enable');
-    await send('Runtime.enable');
-    await send('Emulation.setEmulatedMedia', {
-      media: 'screen',
-      features: [
-        { name: 'prefers-color-scheme', value: 'light' },
-        { name: 'prefers-contrast', value: 'no-preference' },
-      ],
+    const context = await browser.newContext({
+      viewport: { width: VIEW_W, height: VIEW_H },
+      deviceScaleFactor: 2,
+      locale: 'de-DE',
+      timezoneId: 'Europe/Berlin',
+      colorScheme: 'light',
+      contrast: 'no-preference',
     });
+    const page = await context.newPage();
+    page.on('pageerror', (err) => console.warn('  [Seitenfehler]', err.message));
+
+    // Ausdruck im Seitenkontext auswerten; Promises werden abgewartet
+    const evalJs = (expr) => page.evaluate(expr);
+
+    const wait = (ms) => page.waitForTimeout(ms);
+
+    const waitFor = (expr, timeout = 12000) => page.waitForFunction(expr, null, { timeout });
 
     await mkdir(BILDER_DIR, { recursive: true });
 
@@ -164,20 +279,16 @@ async function main() {
 
     const capture = async (filename, clip = null) => {
       await ensureLightTheme();
-      const opts = { format: 'png' };
+      const opts = { path: path.join(BILDER_DIR, filename) };
       if (clip) {
         opts.clip = {
           x: Math.max(0, Math.round(clip.x)),
           y: Math.max(0, Math.round(clip.y)),
           width: Math.round(clip.width),
           height: Math.round(clip.height),
-          scale: 1,
         };
       }
-      const res = await send('Page.captureScreenshot', opts);
-      const buf = Buffer.from(res.data, 'base64');
-      const outPath = path.join(BILDER_DIR, filename);
-      await writeFile(outPath, buf);
+      const buf = await page.screenshot(opts);
       console.log(`Screenshot gespeichert (hell): ${filename} (${(buf.length / 1024).toFixed(0)} KB)`);
     };
 
@@ -198,10 +309,7 @@ async function main() {
       })()`);
       if (err) throw new Error(`App-Aufruf fehlgeschlagen: ${err}`);
     };
-    const setViewport = (width, height) =>
-      send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 2, mobile: false });
-    const VIEW_W = 1440;
-    const VIEW_H = 900;
+    const setViewport = (width, height) => page.setViewportSize({ width, height });
 
     // Anforderung auswählen und Reiter öffnen
     const showControl = async (id, tab = 'overview') => {
@@ -232,11 +340,9 @@ async function main() {
         list.scrollTop += el.getBoundingClientRect().top - list.getBoundingClientRect().top - sticky;
       })()`);
 
-    await setViewport(VIEW_W, VIEW_H);
-
     // 1. STARTSEITE (noch kein Katalog geladen)
     console.log('\n--- 1. Startseite ---');
-    await send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` });
+    await page.goto(appUrl);
     await waitFor('document.querySelector(".welcome")');
     await wait(400);
     await capture('startseite.png');
@@ -256,90 +362,75 @@ async function main() {
     await evalJs(`document.querySelector('dialog[aria-labelledby="load-title"] .icon-btn')?.click()`);
     await wait(300);
 
-    // 3. DATENBANK: Basiskatalog, Vergleichskatalog, Listen und Notizen
+    // 3. DATENBANK: Basiskatalog, Vergleichskatalog, Listen und Notizen (über js/storage.js der App)
     console.log('\n--- 3. Datenbank initialisieren ---');
-    const baseRaw = await readFile(path.join(TESTDATEN, 'Grundschutz++-resolved_catalog.json'), 'utf8');
-    const testRaw = await readFile(path.join(TESTDATEN, 'Grundschutz++-vergleich_catalog.json'), 'utf8');
+    const baseJson = JSON.parse(await readFile(BASE_CATALOG, 'utf8'));
+    const testJson = buildComparisonCatalog(baseJson);
 
-    await evalJs(`(async () => {
-      const baseJson = ${baseRaw};
-      const testJson = ${testRaw};
+    await page.evaluate(
+      async ({ baseJson, testJson }) => {
+        const s = await import('./js/storage.js');
+        await s.clearAllData();
 
-      const req = indexedDB.open('grundschutz_explorer', 2);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains('catalogs')) {
-          const cs = db.createObjectStore('catalogs', { keyPath: 'id' });
-          cs.createIndex('importedAt', 'importedAt');
-        }
-        if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
-        if (!db.objectStoreNames.contains('lists')) db.createObjectStore('lists', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('listEntries')) {
-          const es = db.createObjectStore('listEntries', { keyPath: 'key' });
-          es.createIndex('listId', 'listId');
-        }
-      };
-      const db = await new Promise((resolve, reject) => {
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
+        await s.saveCatalogRecord({
+          id: 'bsi-base',
+          title: 'Anwenderkatalog Grundschutz++',
+          version: '2026-09-10',
+          sourceType: 'official',
+          sourceName: 'BSI Stand-der-Technik-Bibliothek',
+          importedAt: '2026-09-24T10:00:00.000Z',
+          catalogData: baseJson,
+        });
+        await s.saveCatalogRecord({
+          id: 'test-vergleich',
+          title: 'Anwenderkatalog Grundschutz++ (Vergleichsversion)',
+          version: '2026.2-Testvergleich',
+          sourceType: 'file',
+          sourceName: 'Grundschutz++-vergleich_catalog.json',
+          importedAt: '2026-09-25T20:00:00.000Z',
+          catalogData: testJson,
+        });
 
-      const tx = db.transaction(['catalogs', 'settings', 'lists', 'listEntries'], 'readwrite');
+        await s.saveListData(
+          [
+            { id: 'list-audit', name: 'Audit 2026', createdAt: '2026-09-25T12:00:00.000Z' },
+            { id: 'list-team', name: 'Entwicklungsteam', createdAt: '2026-09-25T14:00:00.000Z' },
+          ],
+          [
+            {
+              key: 'list-audit|DEV.3.4',
+              listId: 'list-audit',
+              controlId: 'DEV.3.4',
+              note: 'Passwort-Hashing nach BSI TR-02102 auf Argon2id umstellen. Salt mindestens 128 Bit Zufallswert.',
+              updatedAt: '2026-09-25T15:30:00.000Z',
+            },
+            {
+              key: 'list-team|DEV.4.3',
+              listId: 'list-team',
+              controlId: 'DEV.4.3',
+              note: 'Prüfen, ob SBOM im CI/CD-Build automatisiert erzeugt und digital signiert wird.',
+              updatedAt: '2026-09-25T16:00:00.000Z',
+            },
+          ]
+        );
 
-      tx.objectStore('catalogs').put({
-        id: 'bsi-base',
-        title: 'Anwenderkatalog Grundschutz++',
-        version: '2026-09-10',
-        sourceType: 'official',
-        sourceName: 'BSI Stand-der-Technik-Bibliothek',
-        importedAt: '2026-09-24T10:00:00.000Z',
-        catalogData: baseJson
-      });
-      tx.objectStore('catalogs').put({
-        id: 'test-vergleich',
-        title: 'Anwenderkatalog Grundschutz++ (Vergleichsversion)',
-        version: '2026.2-Testvergleich',
-        sourceType: 'file',
-        sourceName: 'Grundschutz++-vergleich_catalog.json',
-        importedAt: '2026-09-25T20:00:00.000Z',
-        catalogData: testJson
-      });
-
-      tx.objectStore('settings').put({ key: 'last_active_catalog_id', value: 'bsi-base' });
-      tx.objectStore('settings').put({ key: 'comparison_catalog_id', value: '' });
-      tx.objectStore('settings').put({ key: 'active_list_id', value: 'list-audit' });
-      tx.objectStore('settings').put({ key: 'dark_mode', value: false });
-      tx.objectStore('settings').put({ key: 'high_contrast', value: false });
-      tx.objectStore('settings').put({ key: 'font_scale', value: 1 });
-      // Breitere Detailansicht, damit Pfadleiste und Reiter in den Ausschnitten nicht umbrechen
-      tx.objectStore('settings').put({ key: 'detail_pane_width', value: 40 });
-
-      tx.objectStore('lists').put({ id: 'list-audit', name: 'Audit 2026', createdAt: '2026-09-25T12:00:00.000Z' });
-      tx.objectStore('lists').put({ id: 'list-team', name: 'Entwicklungsteam', createdAt: '2026-09-25T14:00:00.000Z' });
-
-      tx.objectStore('listEntries').put({
-        key: 'list-audit|DEV.3.4',
-        listId: 'list-audit',
-        controlId: 'DEV.3.4',
-        note: 'Passwort-Hashing nach BSI TR-02102 auf Argon2id umstellen. Salt mindestens 128 Bit Zufallswert.',
-        updatedAt: '2026-09-25T15:30:00.000Z'
-      });
-      tx.objectStore('listEntries').put({
-        key: 'list-team|DEV.4.3',
-        listId: 'list-team',
-        controlId: 'DEV.4.3',
-        note: 'Prüfen, ob SBOM im CI/CD-Build automatisiert erzeugt und digital signiert wird.',
-        updatedAt: '2026-09-25T16:00:00.000Z'
-      });
-
-      await new Promise((resolve) => {
-        tx.oncomplete = resolve;
-      });
-      db.close();
-    })()`);
+        const settings = {
+          last_active_catalog_id: 'bsi-base',
+          comparison_catalog_id: '',
+          active_list_id: 'list-audit',
+          dark_mode: false,
+          high_contrast: false,
+          font_scale: 1,
+          // Breitere Detailansicht, damit Pfadleiste und Reiter in den Ausschnitten nicht umbrechen
+          detail_pane_width: 40,
+        };
+        for (const [key, value] of Object.entries(settings)) await s.saveSetting(key, value);
+      },
+      { baseJson, testJson }
+    );
 
     console.log('Datenbank befüllt, Seite wird neu geladen ...');
-    await send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` });
+    await page.reload();
     await waitFor(`document.querySelector('.topbar') && document.querySelector('.detail-pane') && document.getElementById('app')._vnode?.component`);
     await wait(600);
 
@@ -569,12 +660,11 @@ async function main() {
     await setViewport(VIEW_W, VIEW_H);
 
     console.log('\nAlle Screenshots erfolgreich aufgenommen!');
-    ws.close();
   } catch (err) {
     console.error('Fehler bei Screenshot-Erstellung:', err);
     process.exitCode = 1;
   } finally {
-    chrome.kill();
+    await browser.close();
     server.close();
   }
 }

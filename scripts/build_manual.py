@@ -12,7 +12,7 @@ Handbuch-Konfiguration übernommen, damit Deckblatt und Fußzeile dieselbe Versi
 wie die App. Die markpublish.yaml selbst bleibt dabei unverändert.
 
 Aufruf:  python scripts/build_manual.py
-Voraussetzung:  pip install markpublish
+Voraussetzung:  pip install -r scripts/markpublish_requirements.txt
 """
 
 from __future__ import annotations
