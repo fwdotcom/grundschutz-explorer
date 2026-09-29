@@ -8,7 +8,7 @@ Die Detailansicht rechts zeigt alle Angaben einer Anforderung, verteilt auf die 
 
 /// figure-caption
     attrs: {id: fig-detailansicht}
-Detailansicht von SENS.11.3 Whaling: Pfadleiste, Kopfbereich und Reiter „Übersicht“ mit den Kenngrößen
+Detailansicht
 ///
 
 Der Kopfbereich steht über allen Reitern:
@@ -44,7 +44,7 @@ Zielobjektkategorie, Modalverb und Handlungswort können mit dem Pfeil unten rec
 
 /// figure-caption
     attrs: {id: fig-detail-klappbereich}
-Aufgeklappte Begriffe unter dem Anforderungstext von SENS.11.3 Whaling
+Begriffe zum Anforderungstext
 ///
 
 - **Zielobjektkategorie:** worauf sich die Anforderung bezieht, einschließlich der übergeordneten Kategorien, zu denen sie gehört, z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*.
@@ -59,7 +59,7 @@ Die Hilfestellung enthält Hinweise zur praktischen Umsetzung einer Anforderung.
 
 /// figure-caption
     attrs: {id: fig-detail-hilfestellung}
-Reiter „Hilfestellung“ mit dem Hinweis des BSI zu DEV.3.4 Passwort-Hashing
+Reiter „Hilfestellung“
 ///
 
 ## Reiter „Notizen“
@@ -70,10 +70,10 @@ Im Reiter **Notizen** halten Sie eigene Anmerkungen zur gewählten Anforderung f
 
 /// figure-caption
     attrs: {id: fig-detail-notizen}
-Reiter „Notizen“ mit bearbeitbarer Notiz der aktiven Liste und dem Zeitpunkt der letzten Änderung
+Reiter „Notizen“
 ///
 
-Ausführliche Erläuterungen zu Notizen, den Zuständen des Punkts am Reiter sowie dem Lesen und Aktivieren von Notizen anderer Listen finden Sie im [Kapitel „Listen und Notizen“](#kap-listen-notizen) (siehe [Tabelle](#tbl-notizen-stati) und [Abbildung](#fig-detail-notizen-andere)).
+Ausführliche Erläuterungen zu Notizen, den Zuständen des Punkts am Reiter sowie dem Lesen und Aktivieren von Notizen anderer Listen finden Sie im [Kapitel „Listen und Notizen“](#kap-listen-notizen) (siehe [Abbildung](#fig-detail-notizen-andere)).
 
 ## Reiter „Änderungen“
 

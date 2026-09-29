@@ -6,7 +6,7 @@ Suche und Filter lassen sich beliebig kombinieren. Sie folgen in allen Bereichen
 
 /// figure-caption
     attrs: {id: fig-filter}
-Kombinierte Filter: eingeschlossen (NUR Modalverb MUSS) und ausgeschlossen (NICHT Aufwand Stufe 5), darunter die flache Trefferliste
+Kombinierte Filter
 ///
 
 ## Volltextsuche
@@ -28,11 +28,6 @@ Jeder Wert in der Filterleiste hat eigene Schaltflächen:
 | **✕** | **Ausschließen (NICHT):** blendet Anforderungen mit diesem Wert aus. |
 | **Papierkorb** oder erneuter Klick auf den Wert | Hebt den Filter für diesen Wert wieder auf. |
 
-/// table-caption
-    attrs: {id: tbl-filter-aktionen}
-Schaltflächen an einem Wert der Filterleiste
-///
-
 Die Zahl neben jedem Wert nennt, wie viele Anforderungen diesen Wert haben, unter Berücksichtigung aller Filter in den **anderen** Bereichen. So sehen Sie vor dem Klick, wie viele Treffer ein zusätzlicher Wert bringen würde.
 
 > [!TIP]
@@ -53,11 +48,6 @@ Für alle Bereiche gilt dieselbe Regel:
 | ✓ Praktik DEV, ✕ Tag VPN | alle Anforderungen der Praktik DEV ohne das Tag „VPN“ |
 | ✓ Liste Audit 2026 | nur die Anforderungen der eigenen Liste „Audit 2026“ |
 
-/// table-caption
-    attrs: {id: tbl-filter-beispiele}
-Beispiele für kombinierte Filter
-///
-
 ## Die Filterbereiche
 
 | Bereich | Bedeutung |
@@ -76,11 +66,6 @@ Beispiele für kombinierte Filter
 | **Tags** | Schlagwörter aus dem kontrollierten Vokabular des BSI. |
 | **Änderungen** | Nur im Vergleichsmodus: neue, geänderte oder gelöschte Anforderungen. |
 
-/// table-caption
-    attrs: {id: tbl-filterbereiche}
-Die Bereiche der Filterleiste
-///
-
 ## Zielobjektkategorien mit übergeordneten Kategorien
 
 Die Zielobjektkategorien des BSI sind hierarchisch geordnet. *Führungskräfte* etwa gehören zu den *Mitarbeitenden*, diese wiederum zu den *Nutzenden*. Was für Mitarbeitende gefordert ist, gilt damit auch für Führungskräfte.
@@ -97,7 +82,7 @@ Mit der Option **Übergeordnete Kategorien einschließen** unter dem Suchfeld de
 
 /// figure-caption
     attrs: {id: fig-filter-zielobjekte}
-Filter nach Zielobjektkategorie mit eingeschlossenen übergeordneten Kategorien
+Filter nach Zielobjektkategorie
 ///
 
 ## Schutzziele filtern
@@ -109,11 +94,6 @@ Die Schutzziele Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität 
 | ○○ | 0 | keine Wirkung auf dieses Schutzziel |
 | ●○ | 1 | die Anforderung wirkt auf das Schutzziel hin |
 | ●● | 2 | das Schutzziel steht im Zentrum der Anforderung |
-
-/// table-caption
-    attrs: {id: tbl-schutzziele}
-Stufen der Schutzziele
-///
 
 Ein Klick auf eine Stufe filtert danach, ein Rechtsklick (oder die Kontextmenü-Taste) schließt sie aus. Wählen Sie z. B. bei der Vertraulichkeit `●○` und `●●`, erhalten Sie alle Anforderungen mit Wirkung auf die Vertraulichkeit.
 

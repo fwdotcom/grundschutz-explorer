@@ -672,7 +672,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .list-menu button:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
 .list-menu button.is-danger { color: var(--muss); }
-.list-notice { color: var(--text-2); }
+/* Treffer in Liste: Menü unter dem Stern-Knopf in der Kopfzeile der Liste */
+.hits-menu { width: max-content; max-width: min(360px, 80vw); }
+.hits-menu button { overflow-wrap: anywhere; }
 
 /* Stern am Titel: leer = in keiner Liste, grau = in anderer Liste, gelb = in der aktiven Liste */
 .detail-title-row { display: flex; align-items: flex-start; gap: 12px; }
@@ -788,6 +790,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .list-meta { display: flex; align-items: center; gap: 10px; font-size: calc(12.5px * var(--font-scale)); color: var(--text-3); }
 .list-meta strong { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .list-meta .spacer { flex: 1; }
+/* Knöpfe rechts (Stern, Auf-/Zuklappen, Ansicht) mit 8px Abstand wie in der Kopfzeile der Filterleiste */
+.list-meta .hits-list-anchor + *,
+.list-meta .btn-group + .btn-group { margin-left: -2px; }
 
 .list-scroll { flex: 1; overflow-y: auto; padding-bottom: 24px; min-height: 0; }
 
@@ -1453,6 +1458,9 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
 .modal-foot .spacer { flex: 1; }
 /* Bestätigungsdialog */
 .confirm-dialog { max-width: 440px; }
+/* Mit drittem Knopf (z. B. „Nur … ohne Notiz entfernen“) breiter; auf schmalen Bildschirmen brechen die Knöpfe um */
+.confirm-dialog.has-alt { max-width: calc(560px * var(--font-scale)); }
+.confirm-dialog .modal-foot { flex-wrap: wrap; justify-content: flex-end; }
 .confirm-dialog form { display: flex; flex-direction: column; min-height: 0; }
 .confirm-dialog .modal-body { gap: 8px; }
 .confirm-message { margin: 0; font-size: calc(13.5px * var(--font-scale)); line-height: 1.5; color: var(--text-2); }

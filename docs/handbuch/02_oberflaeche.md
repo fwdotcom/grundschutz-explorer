@@ -6,7 +6,7 @@ Der Arbeitsbereich des Grundschutz++ Explorers besteht aus vier Bereichen: der *
 
 /// figure-caption
     attrs: {id: fig-oberflaeche}
-Gesamtansicht: Filterleiste, Baumansicht mit der gewählten Anforderung DEV.3.4 und ihre Detailansicht
+Gesamtansicht
 ///
 
 ## Kopfzeile
@@ -15,7 +15,7 @@ Gesamtansicht: Filterleiste, Baumansicht mit der gewählten Anforderung DEV.3.4 
 
 /// figure-caption
     attrs: {id: fig-kopfzeile}
-Kopfzeile mit Katalogname, Suche, Katalogen und Darstellungsschaltern
+Kopfzeile
 ///
 
 Von links nach rechts bietet die Kopfzeile:
@@ -37,7 +37,7 @@ Die linke Spalte enthält alle Filter in auf- und zuklappbaren Bereichen. Nach d
 
 /// figure-caption
     attrs: {id: fig-filterleiste}
-Ausschnitt der Filterleiste: Schaltflächen oben, auf- und zugeklappte Bereiche, eingeschlossenes Modalverb MUSS und ausgeschlossene Erhöhte Sicherheitsstufe
+Filterleiste
 ///
 
 Die Bereiche in ihrer Reihenfolge:
@@ -72,10 +72,10 @@ Die mittlere Spalte zeigt die Anforderungen als **Baumansicht** oder als **flach
 
 /// figure-caption
     attrs: {id: fig-listen-markierungen}
-Zeilen der Baumansicht mit Stern, Notizsymbol, Gefährdungen, Schutzziel im Zentrum und Modalverb
+Markierungen in der Anforderungsliste
 ///
 
-Darüber stehen die Trefferzahl, im Baum die Schaltflächen **Alle aufklappen** und **Alle zuklappen** sowie die beiden Umschalter für Baum und flache Liste. Sind Filter gesetzt, fassen **Filter-Chips** über der Liste sie zusammen (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)). Jede Zeile zeigt Kennung, Titel und rechts das Modalverb. Dazwischen stehen, wenn zutreffend, diese Markierungen:
+Darüber stehen die Trefferzahl, ein Stern, mit dem Sie alle Treffer in die aktive Liste aufnehmen oder daraus entfernen (siehe [Kapitel „Listen und Notizen“](#kap-listen-notizen)), im Baum die Schaltflächen **Alle aufklappen** und **Alle zuklappen** sowie die beiden Umschalter für Baum und flache Liste. Sind Filter gesetzt, fassen **Filter-Chips** über der Liste sie zusammen (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)). Jede Zeile zeigt Kennung, Titel und rechts das Modalverb. Dazwischen stehen, wenn zutreffend, diese Markierungen:
 
 | Markierung | Bedeutung |
 | :--- | :--- |
@@ -86,11 +86,6 @@ Darüber stehen die Trefferzahl, im Baum die Schaltflächen **Alle aufklappen** 
 | **C, I, A, Au** | Schutzziele, die im Zentrum der Anforderung stehen (Vertraulichkeit, Integrität, Verfügbarkeit, Authentizität). |
 | **Neu, Geändert, Gelöscht** | Nur im Vergleichsmodus: Änderungsstatus gegenüber dem Vergleichsstand. |
 
-/// table-caption
-    attrs: {id: tbl-listen-markierungen}
-Markierungen in den Zeilen der Anforderungsliste
-///
-
 ## Detailansicht
 
 Die rechte Spalte zeigt alle Angaben zur ausgewählten Anforderung. Ist keine Anforderung gewählt, zeigt sie eine Übersicht über den Katalog, bei gewählter Praktik oder gewähltem Thema eine Übersicht über diese Ebene.
@@ -99,7 +94,7 @@ Die rechte Spalte zeigt alle Angaben zur ausgewählten Anforderung. Ist keine An
 
 /// figure-caption
     attrs: {id: fig-detail-kopf}
-Kopfbereich der Detailansicht am Beispiel der Unteranforderung GC.9.1.1.1: Pfadleiste mit übergeordneten Anforderungen, Kennung, Titel, Stern, Hinweise und Reiter
+Kopfbereich der Detailansicht
 ///
 
 - **Pfadleiste:** beginnt mit einem Buch-Symbol, das zur Katalogübersicht führt, gefolgt von Praktik, Thema und gegebenenfalls übergeordneten Anforderungen.

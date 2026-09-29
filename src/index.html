@@ -306,7 +306,7 @@
                           class="rail-btn list-menu-btn"
                           :aria-expanded="listMenuId === list.id"
                           aria-haspopup="menu"
-                          :title="'Liste „' + list.name + '“: umbenennen, exportieren, löschen'"
+                          :title="'Liste „' + list.name + '“: umbenennen, exportieren, leeren, löschen'"
                           :aria-label="'Optionen für Liste „' + list.name + '“'"
                           @click.stop="toggleListMenu(list.id)"
                         >
@@ -316,6 +316,7 @@
                       <div v-if="listMenuId === list.id" class="list-menu" role="menu">
                         <button role="menuitem" @click="startRenameList(list)">Umbenennen</button>
                         <button role="menuitem" @click="exportList(list)">Exportieren</button>
+                        <button v-if="listSizes[list.id]" role="menuitem" class="is-danger" @click="clearList(list)">Leeren</button>
                         <button role="menuitem" class="is-danger" @click="removeList(list)">Löschen</button>
                       </div>
                     </div>
@@ -346,7 +347,6 @@
                   </div>
                   <input ref="listImportInput" type="file" accept=".json,application/json" hidden @change="onListImportFile" />
                 </div>
-                <p v-if="listNotice" class="rail-empty-note list-notice" role="status">{{ listNotice }}</p>
               </div>
             </div>
 
@@ -1445,6 +1445,27 @@
                 <span><strong>{{ filteredControlIds.size }}</strong> von {{ activeCatalog.allControls.length }} Anforderungen</span>
                 <span class="sr-only" role="status">{{ resultAnnouncement }}</span>
                 <span class="spacer"></span>
+                <div class="list-menu-anchor hits-list-anchor">
+                  <button
+                    class="icon-btn sm btn-outline list-menu-btn"
+                    :disabled="filteredControlIds.size === 0"
+                    :aria-expanded="listMenuId === '__hits'"
+                    aria-haspopup="menu"
+                    :title="'Treffer in „' + writeList.name + '“ aufnehmen oder daraus entfernen'"
+                    :aria-label="'Treffer in Liste „' + writeList.name + '“ aufnehmen oder daraus entfernen'"
+                    @click.stop="toggleListMenu('__hits')"
+                  >
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
+                  </button>
+                  <div v-if="listMenuId === '__hits'" class="list-menu hits-menu" role="menu">
+                    <button role="menuitem" :disabled="hitsInWriteList.missing.length === 0" @click="addHitsToList">
+                      {{ hitsInWriteList.missing.length ? filteredControlIds.size + ' Treffer in „' + writeList.name + '“ aufnehmen' : 'Alle Treffer stehen in „' + writeList.name + '“' }}
+                    </button>
+                    <button v-if="hitsInWriteList.present.length" role="menuitem" class="is-danger" @click="removeHitsFromList">
+                      {{ hitsInWriteList.present.length }} Treffer aus „{{ writeList.name }}“ entfernen
+                    </button>
+                  </div>
+                </div>
                 <div class="btn-group" v-if="listViewMode === 'tree'">
                   <button class="icon-btn sm btn-outline" @click="expandAll" title="Alle aufklappen" aria-label="Alle aufklappen">
                     <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
@@ -1453,7 +1474,7 @@
                     <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 20 5-5 5 5"/><path d="m7 4 5 5 5-5"/></svg>
                   </button>
                 </div>
-                <div class="btn-group" style="margin-left:6px">
+                <div class="btn-group">
                   <button
                     class="icon-btn sm btn-outline"
                     :class="{ active: listViewMode === 'tree' }"
@@ -2452,6 +2473,7 @@
     <dialog
       ref="confirmDialogEl"
       class="modal confirm-dialog"
+      :class="{ 'has-alt': confirmState?.altLabel }"
       aria-labelledby="confirm-title"
       aria-describedby="confirm-message"
       @close="onConfirmDialogClose"
@@ -2467,7 +2489,7 @@
         </div>
         <div class="modal-foot">
           <span class="spacer"></span>
-          <button class="btn btn-secondary" value="cancel" :data-autofocus="confirmState.danger ? '' : null">{{ confirmState.cancelLabel }}</button>
+          <button v-if="confirmState.cancelLabel" class="btn btn-secondary" value="cancel" :data-autofocus="confirmState.danger ? '' : null">{{ confirmState.cancelLabel }}</button>
           <button v-if="confirmState.altLabel" class="btn btn-secondary" value="alt">{{ confirmState.altLabel }}</button>
           <button class="btn" :class="confirmState.danger ? 'btn-danger-solid' : 'btn-primary'" value="confirm" :data-autofocus="confirmState.danger ? null : ''">{{ confirmState.confirmLabel }}</button>
         </div>

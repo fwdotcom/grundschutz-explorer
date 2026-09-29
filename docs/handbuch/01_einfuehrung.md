@@ -26,7 +26,7 @@ https://app.grundschutz-explorer.de
 
 /// figure-caption
     attrs: {id: fig-startseite}
-Startseite beim ersten Aufruf
+Startseite
 ///
 
 Beim ersten Aufruf erscheint die Startseite. Über **Katalog laden** öffnen Sie den Ladedialog. Dort laden Sie den aktuellen Grundschutz++-Katalog direkt vom BSI oder einen anderen Katalog im Schema des Grundschutz++ per URL oder Datei. Darunter fasst die Startseite zusammen, woher die Daten stammen, dass der Explorer nur im Browser läuft und wie er mit Ihren Daten umgeht. Ein geladener Katalog bleibt in Ihrem Browser gespeichert und steht beim nächsten Besuch sofort bereit.
@@ -35,7 +35,7 @@ Beim ersten Aufruf erscheint die Startseite. Über **Katalog laden** öffnen Sie
 
 /// figure-caption
     attrs: {id: fig-start-katalog-laden}
-Dialog „Katalog laden“ mit offizieller BSI-Quelle, URL-Eingabe und Dateiauswahl
+Dialog „Katalog laden“
 ///
 
 > [!NOTE]

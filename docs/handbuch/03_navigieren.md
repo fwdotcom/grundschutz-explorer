@@ -22,7 +22,7 @@ Die Baumansicht bildet diese Gliederung ab:
 
 /// figure-caption
     attrs: {id: fig-unteranforderungen}
-Mehrstufige Unteranforderungen am Beispiel von GC.9.1 Festlegung einer Sicherheitsorganisation
+Mehrstufige Unteranforderungen
 ///
 
 ## Übersicht von Katalog, Praktik und Thema

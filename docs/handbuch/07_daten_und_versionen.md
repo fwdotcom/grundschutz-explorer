@@ -12,11 +12,6 @@ Grundschutz++ Explorer speichert beliebig viele Stände des Grundschutz++-Katalo
 | **URL zur JSON-Datei** | Lädt einen Katalog im Schema des Grundschutz++ von einer Webadresse. Erlaubt sind nur Adressen mit `https`. |
 | **JSON-Datei** | Lädt einen Katalog im Schema des Grundschutz++ von Ihrem Rechner, per Dateiauswahl oder durch Ablegen der Datei auf dem Feld. |
 
-/// table-caption
-    attrs: {id: tbl-katalog-laden}
-Wege, einen Katalog zu laden
-///
-
 - **Doppelte Kataloge:** Ist ein inhaltlich identischer Katalog bereits gespeichert, meldet der Dialog das und lädt ihn nicht ein zweites Mal.
 - **Formatprüfung:** Der Explorer verarbeitet nur Kataloge im Schema des Grundschutz++ (JSON nach NIST OSCAL, gegliedert in Praktiken und Themen). Andere OSCAL-Kataloge, etwa mit weiteren Gruppen unterhalb der Themen, weist er mit einer Fehlermeldung ab, statt sie unvollständig anzuzeigen.
 
@@ -28,7 +23,7 @@ Der Dialog **Kataloge** in der Kopfzeile listet alle gespeicherten Stände mit T
 
 /// figure-caption
     attrs: {id: fig-kataloge-versionen}
-Dialog „Kataloge“ mit getrennten Auswahlknöpfen für „Anzeigen“ und „Vergleich“
+Dialog „Kataloge“
 ///
 
 - **Anzeigen:** bestimmt, welcher Katalog angezeigt wird. Der gewählte Stand ist blau hinterlegt.
@@ -44,7 +39,7 @@ Wählen Sie im Dialog **Kataloge** den neueren Stand zum **Anzeigen** und den ä
 
 /// figure-caption
     attrs: {id: fig-vergleich}
-Hinweisbalken unter der Kopfzeile mit den verglichenen Ständen und der Zahl der Änderungen
+Vergleichsmodus
 ///
 
 Im Vergleichsmodus stehen zusätzliche Hilfen bereit:
@@ -63,7 +58,7 @@ Unterscheiden sich die beiden Stände, zeigt die Detailansicht den Reiter **Änd
 
 /// figure-caption
     attrs: {id: fig-detail-aenderungen}
-Reiter „Änderungen“ mit Änderungsübersicht und Wortvergleich
+Reiter „Änderungen“
 ///
 
 1. **Änderungsübersicht:** alle geänderten Angaben mit den Bezeichnungen der Detailansicht, bei einzelnen Werten als *alt → neu*, z. B. ein Modalverb von `MUSS` auf `SOLLTE`. Bei Listen wie Tags oder Gefährdungen stehen entfallene Werte rot, hinzugekommene grün.

@@ -504,8 +504,12 @@ async function main() {
     // Notiz der nicht aktiven Liste „Entwicklungsteam“ (nur lesbar) anzeigen
     await act(`vm.notesViewListId = 'list-team'`);
     await waitFor(`document.querySelector('.notes-readonly')`);
+    // Das hohe, fast leere Notizfeld nur für die Aufnahme auf den Text verkleinern, damit der Hinweis zum
+    // Aktivieren direkt darunter steht
+    await evalJs(`(() => { const el = document.querySelector('.notes-text'); el.style.minHeight = '0'; el.style.height = 'auto'; })()`);
     await wait(300);
     await captureDetail('detail-notizen-andere.png', (await bottomOf(`document.querySelector('.notes-readonly')`)) + 16);
+    await evalJs(`document.querySelector('.notes-text')?.removeAttribute('style')`);
     await setViewport(VIEW_W, VIEW_H);
     await wait(300);
 
@@ -593,6 +597,27 @@ async function main() {
       await capture('filterleiste.png', { x: rail.x, y: rail.y, width: rail.width, height: verbBottom - rail.y + 4 });
     }
     await act(`vm.resetFilters()`);
+    await wait(300);
+
+    // 13c. TREFFER IN LISTE ÜBERNEHMEN: Thema DEV.3 als flache Liste (DEV.3.4 steht schon in „Audit 2026“), Menü am Stern geöffnet
+    console.log('\n--- 13c. Treffer in Liste übernehmen ---');
+    const prevViewMode = await evalJs(`document.getElementById('app')._vnode.component.proxy.listViewMode`);
+    await act(`vm.filters.subgroupFilter = 'DEV.3'; vm.listViewMode = 'flat'`);
+    await waitFor(`document.querySelectorAll('.tag-chip').length >= 1`);
+    await evalJs(`document.querySelector('.list-scroll').scrollTop = 0`);
+    await evalJs(`document.querySelector('.hits-list-anchor .list-menu-btn')?.click()`);
+    await waitFor(`document.querySelector('.hits-menu')`);
+    await wait(300);
+    {
+      const pane = await getRect('.list-pane');
+      const bottom = await evalJs(`Math.max(
+        document.querySelector('.hits-menu').getBoundingClientRect().bottom,
+        [...document.querySelectorAll('.list-scroll .ctrl-row')].pop()?.getBoundingClientRect().bottom || 0
+      )`);
+      await capture('treffer-in-liste.png', { x: pane.x, y: pane.y, width: pane.width, height: bottom - pane.y + 12 });
+    }
+    await evalJs(`document.querySelector('.hits-menu') && document.querySelector('.hits-list-anchor .list-menu-btn')?.click()`);
+    await act(`vm.resetFilters(); vm.listViewMode = ${JSON.stringify(prevViewMode)}`);
     await wait(300);
 
     // 14. ZIELOBJEKTKATEGORIEN MIT ÜBERGEORDNETEN KATEGORIEN (Filterbereich, Chip und Treffer)

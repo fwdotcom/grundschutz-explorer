@@ -163,6 +163,13 @@ export function deleteListEntry(key) {
   return write('listEntries', (tx) => tx.objectStore('listEntries').delete(key));
 }
 
+// Löscht mehrere Einträge in einer Transaktion (Treffer entfernen, Liste leeren)
+export function deleteListEntries(keys) {
+  return write('listEntries', (tx) => {
+    for (const key of keys) tx.objectStore('listEntries').delete(key);
+  });
+}
+
 // Löscht eine Liste samt aller Einträge
 export function deleteList(listId) {
   return write(['lists', 'listEntries'], (tx) => {

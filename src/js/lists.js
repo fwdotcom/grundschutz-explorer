@@ -86,6 +86,24 @@ export function parseListImport(data) {
     });
 }
 
+/**
+ * Teilt Anforderungen (z. B. die aktuellen Treffer) für eine Liste auf.
+ * entries: Einträge als Objekt entryKey → Eintrag. Liefert
+ *   missing:  Kennungen, die noch nicht in der Liste stehen
+ *   present:  vorhandene Einträge der Liste zu diesen Kennungen
+ *   withNote: davon die mit Notiz
+ */
+export function splitByList(entries, listId, controlIds) {
+  const missing = [];
+  const present = [];
+  for (const id of controlIds) {
+    const entry = entries[entryKey(listId, id)];
+    if (entry) present.push(entry);
+    else missing.push(id);
+  }
+  return { missing, present, withNote: present.filter((e) => e.note?.trim()) };
+}
+
 // Führt zwei Notizen zusammen, ohne Text zu verlieren
 export function mergeNotes(existing = '', incoming = '') {
   const a = existing.trim();

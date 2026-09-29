@@ -17,11 +17,6 @@ Grundschutz++ Explorer lässt sich vollständig mit der Tastatur bedienen:
 | **Tab / Umschalt + Tab** | Vorwärts bzw. rückwärts durch alle Bedienelemente |
 | **Leertaste / Eingabe** | Fokussierte Schaltfläche, Praktik oder Thema auslösen |
 
-/// table-caption
-    attrs: {id: tbl-tastenkuerzel}
-Tastenkürzel
-///
-
 > [!NOTE]
 > Die Pfeiltasten und **j** / **k** zur Listennavigation wirken nicht, solange der Cursor in einem Eingabefeld steht (Suche, Notizfeld, Suchfeld der Filterleiste).
 

@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [1.1.8] – 2026-09-29
+
+### Neu
+
+- Stern über der Anforderungsliste: alle aktuellen Treffer auf einmal in die aktive Liste aufnehmen oder daraus entfernen.
+- Listenmenü: „Leeren“ entfernt alle Einträge einer Liste, die Liste selbst bleibt bestehen.
+
+### Geändert
+
+- Keine Hinweise mehr im Listenbereich der Filterleiste; Fehler bei Listen und Notizen erscheinen als Dialog.
+- Rückfragen mit drei Knöpfen sind breiter, auf schmalen Bildschirmen brechen die Knöpfe um.
+- Knöpfe über der Anforderungsliste mit einheitlichem Abstand.
+
 ## [1.1.7] – 2026-09-29
 
 ### Neu

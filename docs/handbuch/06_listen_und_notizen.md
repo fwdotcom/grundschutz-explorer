@@ -6,7 +6,7 @@ Mit eigenen Listen stellen Sie Anforderungen für einen bestimmten Zweck zusamme
 
 /// figure-caption
     attrs: {id: fig-listen}
-Listenbereich in der Filterleiste: aktive Liste, Trefferzahlen, Filterschaltflächen und Menü einer Liste
+Listen in der Filterleiste
 ///
 
 ## Listen anlegen und verwalten
@@ -16,7 +16,7 @@ Der Bereich **Listen** steht ganz oben in der Filterleiste:
 - **Neue Liste anlegen:** Klicken Sie auf **„+ Neue Liste“**, geben Sie einen Namen ein (z. B. *Audit 2026*) und bestätigen Sie mit der Eingabetaste (**Esc** bricht ab).
 - **Aktive Liste:** Klicken Sie auf den Auswahlschalter oder den Namen einer Liste. Ein grüner Punkt kennzeichnet die aktive Liste. Stern und Notizfeld wirken immer auf sie. Sobald Listen bestehen, ist genau eine davon aktiv.
 - **Zahl hinter dem Namen:** die Anzahl der Anforderungen in der jeweiligen Liste.
-- **Menü einer Liste (···):** Umbenennen, Exportieren oder Löschen. Enthält die Liste Einträge, fragt der Explorer vor dem Löschen nach und nennt, wie viele davon Notizen haben.
+- **Menü einer Liste (···):** Umbenennen, Exportieren, Leeren oder Löschen. **Leeren** entfernt alle Einträge samt Notizen, die Liste selbst bleibt bestehen; der Eintrag erscheint nur, wenn die Liste Einträge hat. Vor dem Leeren und vor dem Löschen einer Liste mit Einträgen fragt der Explorer nach und nennt, wie viele davon Notizen haben.
 
 > [!TIP]
 > Gibt es noch keine Liste und Sie klicken auf einen Stern oder verfassen eine Notiz, legt der Explorer automatisch die Liste **Merkliste** an und macht sie zur aktiven Liste.
@@ -31,14 +31,26 @@ Rechts neben dem Titel jeder Anforderung steht in der Detailansicht eine Stern-S
 | ![Grauer Stern](bilder/stern-andere.png){width=5mm} | **Grau** (gefüllt) | Die Anforderung steht in mindestens einer **anderen Liste**. | Nimmt sie zusätzlich in die aktive Liste auf. |
 | ![Stern als Umriss](bilder/stern-keine.png){width=5mm} | **Umriss** (ungefüllt) | Die Anforderung steht in **keiner Liste**. | Nimmt sie in die aktive Liste auf. |
 
-/// table-caption
-    attrs: {id: tbl-stern}
-Die drei Zustände des Sterns in der Detailansicht
-///
-
 Der Tooltip des Sterns nennt alle Listen, in denen die Anforderung verzeichnet ist. Hat die Anforderung in der aktiven Liste eine Notiz, fragt der Explorer vor dem Entfernen nach, da die Notiz dabei gelöscht würde.
 
 In der Anforderungsliste (mittlere Spalte) zeigt ein kleiner gelber bzw. grauer Stern ebenfalls an, ob eine Anforderung in der aktiven oder einer anderen Liste steht.
+
+## Alle Treffer auf einmal aufnehmen oder entfernen
+
+Über der Anforderungsliste, links neben den Schaltflächen für die Ansicht, öffnet ein Stern ein Menü für alle aktuellen Treffer, also alle Anforderungen, die zu Suche und Filtern passen (unabhängig davon, ob sie im Baum aufgeklappt sind):
+
+- **„Treffer in … aufnehmen“:** nimmt alle Treffer in die aktive Liste auf. Anforderungen, die dort schon stehen, bleiben samt Notiz unverändert. Ist kein Filter gesetzt, fragt der Explorer nach, bevor er alle Anforderungen des Katalogs aufnimmt.
+- **„Treffer aus … entfernen“** (rot): entfernt alle Treffer aus der aktiven Liste. Der Eintrag erscheint nur, wenn Treffer in der Liste stehen. Haben davon welche eine Notiz, fragt der Explorer nach; Sie können dann auch nur die Einträge ohne Notiz entfernen.
+
+![Menü am Stern über der Anforderungsliste](bilder/treffer-in-liste.png){width=70%}
+
+/// figure-caption
+    attrs: {id: fig-treffer-in-liste}
+Treffer in Liste übernehmen
+///
+
+> [!TIP]
+> So dünnen Sie eine Liste gezielt aus: Filtern Sie auf die Liste (✓) und zusätzlich z. B. auf das Modalverb **KANN**, und entfernen Sie dann alle Treffer aus der Liste.
 
 ## Notizen
 
@@ -52,18 +64,13 @@ Ein farbiger Punkt am Reiter signalisiert den Notizen-Status:
 | **Grauer Punkt** | Notiz in anderer Liste | In der aktiven Liste gibt es keine Notiz, jedoch in mindestens einer anderen Liste. | Schreibgeschützt angezeigt; mit *„[Listenname]“ aktivieren* umschaltbar. |
 | **Kein Punkt** | Keine Notiz vorhanden | In keiner Liste ist eine Notiz zu dieser Anforderung hinterlegt. | Das Textfeld ist leer; eine Eingabe legt die Notiz direkt in der aktiven Liste an. |
 
-/// table-caption
-    attrs: {id: tbl-notizen-stati}
-Zustände des Punkts am Reiter „Notizen“
-///
-
 Gibt es Notizen in mehreren Listen, wechseln Sie über das Auswahlfeld über dem Textfeld zwischen diesen. Notizen inaktiver Listen sind schreibgeschützt, lassen sich aber über die Schaltfläche unter dem Hinweistext aktivieren und bearbeiten.
 
 ![Reiter Notizen mit schreibgeschützter Notiz einer anderen Liste](bilder/detail-notizen-andere.png){width=48%}
 
 /// figure-caption
     attrs: {id: fig-detail-notizen-andere}
-Reiter „Notizen“ mit Notiz der nicht aktiven Liste „Entwicklungsteam“ (schreibgeschützt mit Aktivierungs-Link)
+Notiz einer anderen Liste
 ///
 
 In der Anforderungsliste weist ein kleines Notizsymbol (grün für die aktive Liste, grau für eine andere Liste) direkt auf vorhandene Notizen hin.
@@ -83,7 +90,7 @@ Mit Export und Import übertragen Sie Listen auf ein anderes Gerät, geben sie a
 
 - **Eine Liste exportieren:** im Menü **···** der Liste auf **Exportieren** klicken. Der Explorer lädt eine JSON-Datei mit allen Einträgen und Notizen herunter.
 - **Alle Listen sichern:** das Ordner-Symbol neben **„+ Neue Liste“** öffnet ein Menü; **Alle Listen sichern** lädt alle Listen in einer Datei herunter.
-- **Listen importieren:** im selben Menü **Listen importieren …** wählen und eine zuvor exportierte JSON-Datei auswählen.
+- **Listen importieren:** im selben Menü **Listen importieren …** wählen und eine zuvor exportierte JSON-Datei auswählen. Ist die Datei keine gültige Exportdatei oder enthält sie keine Listen, meldet der Explorer das in einem Dialog und ändert nichts.
 
 Gibt es eine importierte Liste bereits (gleicher Name, unabhängig von Groß- und Kleinschreibung), fragt der Explorer nach:
 

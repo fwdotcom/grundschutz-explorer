@@ -21,6 +21,7 @@ import {
   getAllListEntries,
   saveListData,
   deleteListEntry,
+  deleteListEntries,
   deleteList,
 } from './storage.js';
 import {
@@ -29,6 +30,7 @@ import {
   buildListExport,
   parseListImport,
   mergeNotes,
+  splitByList,
   uniqueListName,
   listExportFileName,
 } from './lists.js';
@@ -67,7 +69,7 @@ const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 // Handbuch: Weiterleitung auf die aktuelle PDF, von scripts/build_manual.py erzeugt
 const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.7';
+const APP_VERSION = '1.1.8';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -257,7 +259,6 @@ const app = createApp({
     const listImportInput = ref(null);
     // Geöffnetes ⋯-Menü einer Liste bzw. '__all' für das Menü der Gruppe
     const listMenuId = ref('');
-    const listNotice = ref('');
 
     const sortedLists = computed(() =>
       [...lists.value].sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }))
@@ -799,6 +800,16 @@ const app = createApp({
     });
 
     const hasActiveFilters = computed(() => allActiveChips.value.length > 0);
+
+    // Aktuelle Treffer aufgeteilt nach der Zielliste (für „Treffer aufnehmen/entfernen“)
+    const hitsInWriteList = computed(() => splitByList(listEntries.value, writeList.value.id, filteredControlIds.value));
+
+    // Einträge je Liste, unabhängig von Filtern (für „Liste leeren“)
+    const listSizes = computed(() => {
+      const sizes = {};
+      for (const e of Object.values(listEntries.value)) sizes[e.listId] = (sizes[e.listId] || 0) + 1;
+      return sizes;
+    });
 
     // Einträge je Liste, die zu den übrigen Filtern passen
     const listCounts = computed(() => {
@@ -2153,13 +2164,9 @@ const app = createApp({
       }
     }
 
-    let listNoticeTimer = null;
-    function showListNotice(text) {
-      listNotice.value = text;
-      clearTimeout(listNoticeTimer);
-      listNoticeTimer = setTimeout(() => {
-        listNotice.value = '';
-      }, 6000);
+    // Fehler bei Listen und Notizen als Dialog mit nur „OK“
+    function showErrorDialog(message) {
+      askConfirm({ title: 'Fehler', message, confirmLabel: 'OK', cancelLabel: '' });
     }
 
     // Browser bitten, die Daten nicht bei Platzmangel zu räumen
@@ -2228,7 +2235,7 @@ const app = createApp({
           if (tag) tag.label = renamed.name;
         }
       } catch (err) {
-        showListNotice('Die Liste konnte nicht gespeichert werden.');
+        showErrorDialog('Die Liste konnte nicht gespeichert werden.');
         console.warn('Fehler beim Speichern der Liste:', err);
       }
     }
@@ -2257,7 +2264,7 @@ const app = createApp({
       try {
         await deleteList(list.id);
       } catch (err) {
-        showListNotice('Die Liste konnte nicht gelöscht werden.');
+        showErrorDialog('Die Liste konnte nicht gelöscht werden.');
         console.warn('Fehler beim Löschen der Liste:', err);
         return;
       }
@@ -2265,6 +2272,98 @@ const app = createApp({
       listEntries.value = Object.fromEntries(Object.entries(listEntries.value).filter(([, e]) => e.listId !== list.id));
       removeTag('list', list.id);
       ensureActiveList();
+    }
+
+    // Entfernt Einträge aus Anzeige und Speicher; ausstehende Notiz-Speicherungen verfallen
+    async function removeEntries(entries) {
+      const next = { ...listEntries.value };
+      for (const e of entries) {
+        clearTimeout(pendingNoteSaves.get(e.key));
+        pendingNoteSaves.delete(e.key);
+        delete next[e.key];
+      }
+      listEntries.value = next;
+      try {
+        await deleteListEntries(entries.map((e) => e.key));
+      } catch (err) {
+        showErrorDialog('Die Einträge konnten nicht entfernt werden.');
+        console.warn('Fehler beim Entfernen von Einträgen:', err);
+      }
+    }
+
+    const entryWord = (n) => `${n} ${n === 1 ? 'Eintrag' : 'Einträge'}`;
+
+    async function clearList(list) {
+      listMenuId.value = '';
+      const entries = Object.values(listEntries.value).filter((e) => e.listId === list.id);
+      if (!entries.length) return;
+      const withNote = entries.filter((e) => e.note?.trim()).length;
+      const confirmed = await askConfirm({
+        title: 'Liste leeren?',
+        message:
+          `Aus der Liste „${list.name}“ werden ${entryWord(entries.length)}` +
+          (withNote ? `, davon ${withNote} mit Notiz,` : '') +
+          ' entfernt. Die Liste selbst bleibt bestehen.',
+        hint: 'Tipp: Über „Exportieren“ im Listenmenü sichern Sie die Liste vorher als Datei.',
+        confirmLabel: 'Liste leeren',
+        danger: true,
+      });
+      if (!confirmed) return;
+      await removeEntries(entries);
+    }
+
+    // Alle aktuellen Treffer in die Zielliste aufnehmen; vorhandene Einträge und Notizen bleiben unverändert
+    async function addHitsToList() {
+      listMenuId.value = '';
+      const total = filteredControlIds.value.size;
+      if (!total) return;
+      if (
+        !hasActiveFilters.value &&
+        !(await askConfirm({
+          title: 'Alle Anforderungen aufnehmen?',
+          message: `Es ist kein Filter aktiv. Alle ${total} Anforderungen werden in die Liste „${writeList.value.name}“ aufgenommen.`,
+          confirmLabel: 'Alle aufnehmen',
+        }))
+      ) {
+        return;
+      }
+      const listId = ensureWriteList();
+      const { missing } = splitByList(listEntries.value, listId, filteredControlIds.value);
+      if (!missing.length) return;
+      const now = new Date().toISOString();
+      const added = missing.map((controlId) => ({ key: entryKey(listId, controlId), listId, controlId, note: '', createdAt: now, updatedAt: now }));
+      listEntries.value = { ...listEntries.value, ...Object.fromEntries(added.map((e) => [e.key, e])) };
+      try {
+        await saveListData([], added);
+      } catch (err) {
+        showErrorDialog('Die Einträge konnten nicht gespeichert werden.');
+        console.warn('Fehler beim Aufnehmen der Treffer:', err);
+      }
+    }
+
+    // Alle aktuellen Treffer aus der Zielliste entfernen; bei Notizen wird nachgefragt
+    async function removeHitsFromList() {
+      listMenuId.value = '';
+      const list = activeList.value;
+      if (!list) return;
+      const { present, withNote } = splitByList(listEntries.value, list.id, filteredControlIds.value);
+      if (!present.length) return;
+      let toRemove = present;
+      if (withNote.length) {
+        const withoutNote = present.length - withNote.length;
+        const answer = await askConfirm({
+          title: 'Treffer aus Liste entfernen?',
+          message:
+            `Aus der Liste „${list.name}“ werden ${entryWord(present.length)} entfernt, davon ${withNote.length} mit Notiz. ` +
+            (withNote.length === 1 ? 'Die Notiz wird dabei gelöscht.' : 'Die Notizen werden dabei gelöscht.'),
+          confirmLabel: 'Alle entfernen',
+          altLabel: withoutNote ? `Nur ${withoutNote} ohne Notiz entfernen` : '',
+          danger: true,
+        });
+        if (!answer) return;
+        if (answer === 'alt') toRemove = present.filter((e) => !e.note?.trim());
+      }
+      await removeEntries(toRemove);
     }
 
     // Filter auf eine Liste (✓ / ✕), wie bei den übrigen Facetten
@@ -2280,7 +2379,7 @@ const app = createApp({
       const entry = listEntries.value[key];
       if (!entry) return;
       saveListData([], [{ ...entry }]).catch((err) => {
-        showListNotice('Die Notiz konnte nicht gespeichert werden.');
+        showErrorDialog('Die Notiz konnte nicht gespeichert werden.');
         console.warn('Fehler beim Speichern der Notiz:', err);
       });
     }
@@ -2299,7 +2398,7 @@ const app = createApp({
       try {
         await saveListData([], [{ ...entry }]);
       } catch (err) {
-        showListNotice('Der Eintrag konnte nicht gespeichert werden.');
+        showErrorDialog('Der Eintrag konnte nicht gespeichert werden.');
         console.warn('Fehler beim Speichern des Eintrags:', err);
       }
     }
@@ -2315,7 +2414,7 @@ const app = createApp({
       railCollapsed.value.lists = false;
       requestPersistentStorage();
       saveListData([list]).catch((err) => {
-        showListNotice('Die Merkliste konnte nicht gespeichert werden.');
+        showErrorDialog('Die Merkliste konnte nicht gespeichert werden.');
         console.warn('Fehler beim Anlegen der Merkliste:', err);
       });
       return list.id;
@@ -2409,11 +2508,11 @@ const app = createApp({
       try {
         imported = parseListImport(JSON.parse(await file.text()));
       } catch (err) {
-        showListNotice(err instanceof SyntaxError ? 'Die Datei ist keine gültige JSON-Datei.' : err.message);
+        showErrorDialog(err instanceof SyntaxError ? 'Die Datei ist keine gültige JSON-Datei.' : err.message);
         return;
       }
       if (imported.length === 0) {
-        showListNotice('Die Datei enthält keine Listen.');
+        showErrorDialog('Die Datei enthält keine Listen.');
         return;
       }
 
@@ -2423,7 +2522,6 @@ const app = createApp({
       const nextEntries = { ...listEntries.value };
       const changedLists = [];
       const changedEntries = [];
-      let entryCount = 0;
 
       for (const incoming of imported) {
         const takenNames = nextLists.map((l) => l.name);
@@ -2439,10 +2537,7 @@ const app = createApp({
               cancelLabel: 'Import abbrechen',
             })
           : 'alt';
-        if (!choice) {
-          showListNotice('Import abgebrochen, es wurde nichts geändert.');
-          return;
-        }
+        if (!choice) return;
         const merge = choice === true;
         let target;
         if (merge) {
@@ -2467,14 +2562,13 @@ const app = createApp({
             : { key, listId: target.id, controlId: e.controlId, note: e.note, createdAt: e.createdAt, updatedAt: e.updatedAt };
           nextEntries[key] = entry;
           changedEntries.push({ ...entry });
-          entryCount++;
         }
       }
 
       try {
         await saveListData(changedLists, changedEntries);
       } catch (err) {
-        showListNotice('Der Import konnte nicht gespeichert werden.');
+        showErrorDialog('Der Import konnte nicht gespeichert werden.');
         console.warn('Fehler beim Import der Listen:', err);
         return;
       }
@@ -2483,10 +2577,6 @@ const app = createApp({
       ensureActiveList();
       railCollapsed.value.lists = false;
       requestPersistentStorage();
-      showListNotice(
-        `${imported.length} ${imported.length === 1 ? 'Liste' : 'Listen'} mit ${entryCount} ` +
-          `${entryCount === 1 ? 'Eintrag' : 'Einträgen'} importiert.`
-      );
     }
 
     function toggleListMenu(id) {
@@ -3099,7 +3189,6 @@ const app = createApp({
       listEdit,
       listImportInput,
       listMenuId,
-      listNotice,
       listCounts,
       selectedStarState,
       selectedStarTitle,
@@ -3110,6 +3199,11 @@ const app = createApp({
       cancelListEdit,
       commitListEdit,
       removeList,
+      clearList,
+      listSizes,
+      hitsInWriteList,
+      addHitsToList,
+      removeHitsFromList,
       toggleListFilter,
       toggleStar,
       updateNote,

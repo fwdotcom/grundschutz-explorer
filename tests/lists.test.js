@@ -11,6 +11,7 @@ import {
   buildListExport,
   parseListImport,
   mergeNotes,
+  splitByList,
   uniqueListName,
   listExportFileName,
 } from '../src/js/lists.js';
@@ -82,4 +83,13 @@ test('Dateiname der Sicherung', () => {
   const day = new Date('2026-09-25T10:00:00Z');
   assert.equal(listExportFileName('Workshop IT-Betrieb Ärger', day), 'grundschutz-explorer-liste-workshop-it-betrieb-aerger-2026-09-25.json');
   assert.equal(listExportFileName('', day), 'grundschutz-explorer-listen-2026-09-25.json');
+});
+
+test('Treffer nach Liste aufteilen: fehlend, vorhanden, mit Notiz', () => {
+  const byKey = Object.fromEntries(entries.map((e) => [e.key, e]));
+  const { missing, present, withNote } = splitByList(byKey, 'a', ['GC.1.1', 'GC.2.1', 'GC.10.1']);
+  assert.deepEqual(missing, ['GC.1.1']);
+  assert.deepEqual(present.map((e) => e.controlId), ['GC.2.1', 'GC.10.1']);
+  assert.deepEqual(withNote.map((e) => e.controlId), ['GC.2.1']);
+  assert.deepEqual(splitByList(byKey, '', ['GC.2.1']).missing, ['GC.2.1']);
 });
