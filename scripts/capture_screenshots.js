@@ -378,6 +378,18 @@ async function main() {
     // bis einschließlich der Karte mit den Kenngrößen
     await captureDetail('detailansicht.png', (await bottomOf(`document.querySelectorAll('.detail-body > .stack > .card')[1]`)) + 16);
 
+    // 7a. AUFGEKLAPPTE BEGRIFFE UNTER DEM ANFORDERUNGSTEXT (SENS.11.3): nur die Karte mit dem Wortlaut
+    console.log('\n--- 7a. Detailansicht: Begriffe aus dem Anforderungstext (SENS.11.3) ---');
+    await act(`vm.statementTermsOpen = true`);
+    await wait(300);
+    {
+      const pane = await getRect('.detail-pane');
+      const card = await getRect('.detail-body > .stack > .card');
+      await capture('detail-klappbereich.png', { x: pane.x, y: card.y - 16, width: pane.width, height: card.height + 32 });
+    }
+    await act(`vm.statementTermsOpen = false`);
+    await wait(200);
+
     // 7b. KOPFBEREICH EINER UNTERANFORDERUNG (GC.9.1.1.1): Pfadleiste mit übergeordneten Anforderungen bis zu den Reitern
     console.log('\n--- 7b. Detailansicht: Kopfbereich (GC.9.1.1.1) ---');
     await showControl('GC.9.1.1.1');

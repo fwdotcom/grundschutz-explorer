@@ -21,9 +21,7 @@ Der Kopfbereich steht über allen Reitern:
 
 Darunter bündelt der Reiter **Übersicht** alle Angaben für die Umsetzung, von oben nach unten:
 
-- **Anforderungstext:** der verbindliche Text. Das Modalverb ist farbig hervorgehoben, Parameter sind durch ihre Werte ersetzt. Der Pfeil unten rechts blendet darunter die Begriffe aus dem Text einzeln ein; ein Klick darauf filtert die Liste danach, das (i) blendet die Definition ein:
-  - **Zielobjektkategorie:** worauf sich die Anforderung bezieht. Daneben stehen gedämpft die übergeordneten Kategorien, zu denen sie gehört, z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*. Bei mehreren Kategorien steht jede in einer eigenen Zeile.
-  - **Modalverb** und **Handlungswort**.
+- **Anforderungstext:** der verbindliche Text. Das Modalverb ist farbig hervorgehoben, Parameter sind durch ihre Werte ersetzt. Der Pfeil unten rechts blendet die Begriffe aus dem Text einzeln ein (siehe [Abbildung](#fig-detail-klappbereich)).
 - **Kenngrößen:**
   - **Schutzziele:** die Wirkung auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität, dargestellt mit zwei Punkten (●● im Zentrum, ●○ wirkt hin, ○○ keine).
   - **Aufwand:** fünfteiliger Farbbalken und Stufe nach BSI-Definition.
@@ -34,11 +32,24 @@ Darunter bündelt der Reiter **Übersicht** alle Angaben für die Umsetzung, von
 - **Einordnung:** Quellkatalog und Tags.
 - **UUID:** am Ende die eindeutige, unveränderliche Kennung der Anforderung im OSCAL-Datenbestand.
 
-Gestrichelt unterstrichene Angaben filtern mit einem Klick danach (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)).
+## Definitionen nachschlagen und Begriffe filtern
 
-### Definitionen nachschlagen
+Neben vielen Angaben steht ein blaues **Info-Symbol**. Ein Klick darauf blendet am unteren Rand der Detailansicht eine Erläuterung mit der Definition des BSI ein. Ein zweiter Klick auf das Info-Symbol, das Kreuz oder **Esc** schließt die Erläuterung.
 
-Neben vielen Angaben steht ein blaues **Info-Symbol**. Ein Klick darauf blendet am unteren Rand der Detailansicht eine Erläuterung mit der Definition des BSI ein, etwa zu einer Zielobjektkategorie, einer Aufwandsstufe, einer Dokumentationsvorgabe, einem Quellkatalog oder einem Tag. Bei Zielobjektkategorien nennt die Erläuterung zusätzlich die Oberkategorien. Ein zweiter Klick auf das Info-Symbol, das Kreuz oder **Esc** schließt die Erläuterung.
+Gestrichelt unterstrichene Angaben setzen Sie mit einem Klick als Filter, ein weiterer Klick hebt ihn wieder auf (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)).
+
+Zielobjektkategorie, Modalverb und Handlungswort können mit dem Pfeil unten rechts im Anforderungstext separat angezeigt und als Filter verwendet werden.
+
+![Aufgeklappte Begriffe unter dem Anforderungstext](bilder/detail-klappbereich.png){width=48%}
+
+/// figure-caption
+    attrs: {id: fig-detail-klappbereich}
+Aufgeklappte Begriffe unter dem Anforderungstext von SENS.11.3 Whaling
+///
+
+- **Zielobjektkategorie:** worauf sich die Anforderung bezieht, einschließlich der übergeordneten Kategorien, zu denen sie gehört, z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*.
+- **Modalverb:** der Grad der Verbindlichkeit (*MUSS*, *SOLLTE*, *KANN*).
+- **Handlungswort:** die geforderte Tätigkeit, z. B. *sensibilisieren*.
 
 ## Reiter „Hilfestellung“
 
