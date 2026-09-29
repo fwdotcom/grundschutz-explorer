@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/gsexplorer_logo.png" alt="Grundschutz++ Explorer" width="120" />
+  <img src="media/gse_logo.png" alt="Grundschutz++ Explorer" width="120" />
 </p>
 
 # Grundschutz++ Explorer

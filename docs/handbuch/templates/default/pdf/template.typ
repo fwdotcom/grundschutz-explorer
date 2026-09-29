@@ -82,7 +82,7 @@
 
 // --- Title & Divider Font Sizes (C1) ---
 // Grundschutz++ Explorer: Logo auf Deckblatt und in der Kopfzeile
-#let logo-file             = "assets/gsexplorer_logo.png"
+#let logo-file             = "assets/gse_logo.png"
 #let size-cover-logo       = 3.2cm
 #let size-header-logo      = 18pt
 #let size-cover-title      = 26pt
