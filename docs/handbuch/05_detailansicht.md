@@ -21,7 +21,7 @@ Der Kopfbereich steht über allen Reitern:
 
 Darunter bündelt der Reiter **Übersicht** alle Angaben für die Umsetzung, von oben nach unten:
 
-- **Anforderungstext:** der verbindliche Text. Das Modalverb ist farbig hervorgehoben, Parameter sind durch ihre Werte ersetzt.
+- **Anforderungstext:** der verbindliche Text. Das Modalverb ist farbig hervorgehoben, Parameter sind durch ihre Werte ersetzt. Der Pfeil unten rechts blendet darunter Modalverb und Handlungswort ein: Ein Klick darauf filtert die Liste danach, das (i) blendet die Definition ein.
 - **Kenngrößen:**
   - **Zielobjektkategorie:** worauf sich die Anforderung bezieht. Daneben stehen gedämpft die übergeordneten Kategorien, zu denen sie gehört, z. B. *Führungskräfte ‹ Mitarbeitende ‹ Nutzende*. Bei mehreren Kategorien steht jede in einer eigenen Zeile.
   - **Schutzziele:** die Wirkung auf Vertraulichkeit, Integrität, Verfügbarkeit und Authentizität, dargestellt mit zwei Punkten (●● im Zentrum, ●○ wirkt hin, ○○ keine).

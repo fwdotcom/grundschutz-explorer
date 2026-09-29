@@ -1929,7 +1929,67 @@
 
                 <!-- Übersicht -->
                 <div v-if="detailActiveTab === 'overview'" class="stack">
-                  <div class="card statement" :class="verbKey(selectedControl.modalVerb)" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></div>
+                  <div class="card">
+                    <!-- Wortlaut; der Klappbutton schwimmt ans Ende der letzten Zeile -->
+                    <div class="statement" :class="{ 'has-terms': statementTermsOpen && (verbKey(selectedControl.modalVerb) || selectedControl.actionWord) }">
+                      <span class="statement-text" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></span>
+                      <button
+                        v-if="verbKey(selectedControl.modalVerb) || selectedControl.actionWord"
+                        class="icon-btn btn-outline statement-toggle"
+                        :class="{ active: statementTermsOpen }"
+                        @click="statementTermsOpen = !statementTermsOpen"
+                        aria-controls="statement-terms"
+                        :aria-expanded="statementTermsOpen"
+                        :title="statementTermsOpen ? 'Modalverb und Handlungswort ausblenden' : 'Modalverb und Handlungswort einblenden'"
+                        aria-label="Modalverb und Handlungswort"
+                      >
+                        <svg class="icon-xs chev" :class="{ open: statementTermsOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                      </button>
+                    </div>
+                    <!-- Modalverb und Handlungswort: Klick filtert, (i) erläutert -->
+                    <dl v-if="verbKey(selectedControl.modalVerb) || selectedControl.actionWord" v-show="statementTermsOpen" id="statement-terms" class="kv-grid statement-terms">
+                      <div v-if="verbKey(selectedControl.modalVerb)" class="kv" :class="{ full: !selectedControl.actionWord }">
+                        <dt>Modalverb</dt>
+                        <dd>
+                          <span class="kv-value">
+                            <button class="kv-link kv-verb" :class="verbKey(selectedControl.modalVerb)" @click="toggleTag('modalVerb', selectedControl.modalVerb, 'include', selectedControl.modalVerb, 'Modalverb')" title="Nach diesem Modalverb filtern">{{ selectedControl.modalVerb }}</button>
+                            <button
+                              v-if="definition('modalVerbs', selectedControl.modalVerb)"
+                              class="info-btn"
+                              :class="{ on: activeHelpKey === 'modalVerb' }"
+                              @click="toggleHelp('modalVerb')"
+                              aria-controls="detail-help"
+                              :aria-expanded="activeHelpKey === 'modalVerb'"
+                              :title="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="activeHelpKey === 'modalVerb' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
+                        </dd>
+                      </div>
+                      <div v-if="selectedControl.actionWord" class="kv" :class="{ full: !verbKey(selectedControl.modalVerb) }">
+                        <dt>Handlungswort</dt>
+                        <dd>
+                          <span class="kv-value">
+                            <button class="kv-link" @click="toggleTag('actionWord', selectedControl.actionWord, 'include', facetItemLabel('actionWord', selectedControl.actionWord), 'Handlung')" title="Nach diesem Handlungswort filtern">{{ selectedControl.actionWord }}</button>
+                            <button
+                              v-if="definition('actionWords', selectedControl.actionWord)"
+                              class="info-btn"
+                              :class="{ on: activeHelpKey === 'actionWord' }"
+                              @click="toggleHelp('actionWord')"
+                              aria-controls="detail-help"
+                              :aria-expanded="activeHelpKey === 'actionWord'"
+                              :title="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              :aria-label="activeHelpKey === 'actionWord' ? 'Definition ausblenden' : 'Definition anzeigen'"
+                            >
+                              <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                            </button>
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
 
                   <!-- Kenngrößen: Zielobjekt, Schutzziele, Aufwand & Dokumentation (ohne Header) -->
                   <div class="card">
@@ -2271,7 +2331,7 @@
 
                 <!-- Hilfestellung des BSI -->
                 <div v-else-if="detailActiveTab === 'guidance'" class="stack">
-                  <div class="card card-pad">
+                  <div class="card card-pad guidance-card">
                     <div v-if="selectedControl.guidanceProse" class="prose">{{ selectedControl.guidanceProse }}</div>
                     <p v-else class="muted-note" style="margin: 0">Für diese Anforderung ist keine Hilfestellung hinterlegt.</p>
                   </div>

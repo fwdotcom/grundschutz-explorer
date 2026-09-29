@@ -2,6 +2,17 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Neu
+
+- Detailansicht: Über den Pfeil im Anforderungstext lassen sich Modalverb und Handlungswort einblenden; ein Klick filtert danach, das (i) zeigt die Definition.
+
+### Geändert
+
+- Anforderungstext als normale Card mit hervorgehobener Textfläche statt farbigem linken Rand.
+
+
 ## [1.1.6] – 2026-09-29
 
 ### Geändert

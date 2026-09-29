@@ -237,6 +237,8 @@ const app = createApp({
 
     // Aufklapp-Status der Rail-Sektionen
     const railCollapsed = ref({ ...RAIL_COLLAPSED_DEFAULT });
+    // Modalverb und Handlungswort unter dem Anforderungstext eingeblendet
+    const statementTermsOpen = ref(false);
 
     const tagRailSearch = ref('');
 
@@ -1159,6 +1161,7 @@ const app = createApp({
             expandedKeys: Array.from(expandedKeys.value),
             selectedControlId: selectedControlId.value,
             listViewMode: listViewMode.value,
+            statementTermsOpen: statementTermsOpen.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Einklappsituation:', err);
@@ -1276,6 +1279,7 @@ const app = createApp({
         railCollapsed.value.lists,
         selectedControlId.value,
         listViewMode.value,
+        statementTermsOpen.value,
       ],
       () => {
         scheduleSaveCollapse();
@@ -1366,6 +1370,9 @@ const app = createApp({
           }
           if (savedCollapseState.listViewMode === 'flat' || savedCollapseState.listViewMode === 'tree') {
             listViewMode.value = savedCollapseState.listViewMode;
+          }
+          if (typeof savedCollapseState.statementTermsOpen === 'boolean') {
+            statementTermsOpen.value = savedCollapseState.statementTermsOpen;
           }
         }
 
@@ -3218,6 +3225,7 @@ const app = createApp({
       displayedTagOptions,
       tagDefinition,
       railCollapsed,
+      statementTermsOpen,
       filteredControlIds,
       allActiveChips,
       hasActiveFilters,
