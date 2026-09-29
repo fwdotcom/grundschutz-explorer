@@ -1931,23 +1931,50 @@
                 <div v-if="detailActiveTab === 'overview'" class="stack">
                   <div class="card">
                     <!-- Wortlaut; der Klappbutton schwimmt ans Ende der letzten Zeile -->
-                    <div class="statement" :class="{ 'has-terms': statementTermsOpen && (verbKey(selectedControl.modalVerb) || selectedControl.actionWord) }">
+                    <div class="statement" :class="{ 'has-terms': statementTermsOpen && hasStatementTerms }">
                       <span class="statement-text" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></span>
                       <button
-                        v-if="verbKey(selectedControl.modalVerb) || selectedControl.actionWord"
+                        v-if="hasStatementTerms"
                         class="icon-btn btn-outline statement-toggle"
                         :class="{ active: statementTermsOpen }"
                         @click="statementTermsOpen = !statementTermsOpen"
                         aria-controls="statement-terms"
                         :aria-expanded="statementTermsOpen"
-                        :title="statementTermsOpen ? 'Modalverb und Handlungswort ausblenden' : 'Modalverb und Handlungswort einblenden'"
-                        aria-label="Modalverb und Handlungswort"
+                        :title="statementTermsOpen ? 'Zielobjektkategorie, Modalverb und Handlungswort ausblenden' : 'Zielobjektkategorie, Modalverb und Handlungswort einblenden'"
+                        aria-label="Zielobjektkategorie, Modalverb und Handlungswort"
                       >
                         <svg class="icon-xs chev" :class="{ open: statementTermsOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                       </button>
                     </div>
-                    <!-- Modalverb und Handlungswort: Klick filtert, (i) erläutert -->
-                    <dl v-if="verbKey(selectedControl.modalVerb) || selectedControl.actionWord" v-show="statementTermsOpen" id="statement-terms" class="kv-grid statement-terms">
+                    <!-- Zielobjektkategorie, Modalverb und Handlungswort aus dem Wortlaut: Klick filtert, (i) erläutert -->
+                    <dl v-if="hasStatementTerms" v-show="statementTermsOpen" id="statement-terms" class="kv-grid statement-terms">
+                      <div v-if="selectedControl.targetObjects.length" class="kv full">
+                        <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjektkategorien' : 'Zielobjektkategorie' }}</dt>
+                        <dd>
+                          <!-- Je Kategorie ihr Pfad nach oben: Führungskräfte ‹ Mitarbeitende ‹ Nutzende -->
+                          <div class="kv-value-list to-paths">
+                            <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
+                              <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjektkategorie')" title="Nach dieser Zielobjektkategorie filtern">{{ t }}</button>
+                              <button
+                                v-if="definition('targetObjects', t)"
+                                class="info-btn"
+                                :class="{ on: activeHelpKey === 'to:' + t }"
+                                @click="toggleHelp('to:' + t)"
+                                aria-controls="detail-help"
+                                :aria-expanded="activeHelpKey === 'to:' + t"
+                                :title="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
+                                :aria-label="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
+                              >
+                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
+                              </button>
+                              <span v-for="a in targetObjectAncestors(t)" :key="a" class="to-ancestor">
+                                <span class="to-sep" aria-hidden="true">‹</span><span class="sr-only">gehört zu</span>
+                                <button class="kv-link" @click="toggleTag('targetObject', a, 'include', a, 'Zielobjektkategorie')" :title="'Übergeordnete Kategorie – nach ' + a + ' filtern'">{{ a }}</button>
+                              </span>
+                            </span>
+                          </div>
+                        </dd>
+                      </div>
                       <div v-if="verbKey(selectedControl.modalVerb)" class="kv" :class="{ full: !selectedControl.actionWord }">
                         <dt>Modalverb</dt>
                         <dd>
@@ -1991,40 +2018,10 @@
                     </dl>
                   </div>
 
-                  <!-- Kenngrößen: Zielobjekt, Schutzziele, Aufwand & Dokumentation (ohne Header) -->
+                  <!-- Kenngrößen: Schutzziele, Aufwand & Dokumentation (ohne Header) -->
                   <div class="card">
                     <dl class="kv-grid" style="margin:0">
-                      <!-- Feld 1: Zielobjektkategorie -->
-                      <div class="kv full">
-                        <dt>{{ selectedControl.targetObjects.length > 1 ? 'Zielobjektkategorien' : 'Zielobjektkategorie' }}</dt>
-                        <dd v-if="selectedControl.targetObjects.length">
-                          <!-- Je Kategorie ihr Pfad nach oben: Führungskräfte ‹ Mitarbeitende ‹ Nutzende -->
-                          <div class="kv-value-list to-paths">
-                            <span v-for="t in selectedControl.targetObjects" :key="t" class="kv-value">
-                              <button class="kv-link" @click="toggleTag('targetObject', t, 'include', t, 'Zielobjektkategorie')" title="Nach dieser Zielobjektkategorie filtern">{{ t }}</button>
-                              <button
-                                v-if="definition('targetObjects', t)"
-                                class="info-btn"
-                                :class="{ on: activeHelpKey === 'to:' + t }"
-                                @click="toggleHelp('to:' + t)"
-                                aria-controls="detail-help"
-                                :aria-expanded="activeHelpKey === 'to:' + t"
-                                :title="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
-                                :aria-label="activeHelpKey === 'to:' + t ? 'Definition ausblenden' : 'Definition anzeigen'"
-                              >
-                                <svg class="info-glyph" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 0a12 12 0 1 0 0 24a12 12 0 1 0 0-24zM12.3 4.3a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM9.3 9.9h4.4v7.3h1.7v2.1H8.7v-2.1h1.9v-5.2H9.3z"/></svg>
-                              </button>
-                              <span v-for="a in targetObjectAncestors(t)" :key="a" class="to-ancestor">
-                                <span class="to-sep" aria-hidden="true">‹</span><span class="sr-only">gehört zu</span>
-                                <button class="kv-link" @click="toggleTag('targetObject', a, 'include', a, 'Zielobjektkategorie')" :title="'Übergeordnete Kategorie – nach ' + a + ' filtern'">{{ a }}</button>
-                              </span>
-                            </span>
-                          </div>
-                        </dd>
-                        <dd v-else class="muted">–</dd>
-                      </div>
-
-                      <!-- Feld 2: Schutzziele -->
+                      <!-- Feld 1: Schutzziele -->
                       <div class="kv full">
                         <dt>
                           <span class="st-head">
@@ -2065,7 +2062,7 @@
                         <dd v-else class="muted">–</dd>
                       </div>
 
-                      <!-- Feld 3: Aufwand -->
+                      <!-- Feld 2: Aufwand -->
                       <div class="kv">
                         <dt>Aufwand</dt>
                         <dd v-if="hasEffort(selectedControl.effortLevel)">
@@ -2106,7 +2103,7 @@
                         <dd v-else class="muted">–</dd>
                       </div>
 
-                      <!-- Feld 4: Dokumentation -->
+                      <!-- Feld 3: Dokumentation -->
                       <div class="kv">
                         <dt>Dokumentation</dt>
                         <dd v-if="selectedControl.documentation">

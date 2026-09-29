@@ -1058,6 +1058,12 @@ const app = createApp({
     });
 
     // Kennzahlen der gewählten Anforderung: Unteranforderungen, Gefährdungen und Verknüpfungen
+    // Begriffe aus dem Wortlaut, die sich unter dem Anforderungstext einblenden lassen
+    const hasStatementTerms = computed(() => {
+      const c = selectedControl.value;
+      return Boolean(c && (c.targetObjects?.length || verbKey(c.modalVerb) || c.actionWord));
+    });
+
     const selectedControlStats = computed(() => {
       const ctrl = selectedControl.value;
       if (!ctrl) return null;
@@ -3266,6 +3272,7 @@ const app = createApp({
       scopeSubgroup,
       overviewStats,
       selectedControlStats,
+      hasStatementTerms,
       overviewDescription,
       scopeDirectControls,
       summarizeControls,

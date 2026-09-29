@@ -6,11 +6,12 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
 ### Neu
 
-- Detailansicht: Über den Pfeil im Anforderungstext lassen sich Modalverb und Handlungswort einblenden; ein Klick filtert danach, das (i) zeigt die Definition.
+- Detailansicht: Über den Pfeil im Anforderungstext lassen sich Zielobjektkategorie, Modalverb und Handlungswort einblenden; ein Klick filtert danach, das (i) zeigt die Definition.
 
 ### Geändert
 
 - Anforderungstext als normale Card mit hervorgehobener Textfläche statt farbigem linken Rand.
+- Zielobjektkategorie steht nicht mehr bei den Kenngrößen, sondern im Klappbereich unter dem Anforderungstext.
 - Einträge in den Cards (z. B. verknüpfte Anforderungen) beim Überfahren nur noch dezent hinterlegt, damit sie sich von den Zwischenüberschriften unterscheiden.
 
 

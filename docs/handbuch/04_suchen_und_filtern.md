@@ -130,4 +130,4 @@ Findet sich keine passende Anforderung, zeigt die Liste einen Hinweis mit **Filt
 
 ## Filtern aus der Detailansicht
 
-Viele Angaben in der Detailansicht sind gestrichelt unterstrichen. Ein Klick darauf setzt den Wert als Filter, ein weiterer Klick hebt ihn wieder auf. Das gilt für Zielobjektkategorien (auch die übergeordneten), Schutzziele, Aufwand, Dokumentation, Gefährdungen, Quellkatalog und Tags. Die Hinweise im Kopfbereich (Art, Modalverb, Schutzbedarf, Anzahlen) dienen der Orientierung und sind nicht anklickbar; nach ihnen filtern Sie über die Filterleiste.
+Viele Angaben in der Detailansicht sind gestrichelt unterstrichen. Ein Klick darauf setzt den Wert als Filter, ein weiterer Klick hebt ihn wieder auf. Das gilt für Zielobjektkategorien (auch die übergeordneten), Modalverb und Handlungswort (im Klappbereich unter dem Anforderungstext), Schutzziele, Aufwand, Dokumentation, Gefährdungen, Quellkatalog und Tags. Die Hinweise im Kopfbereich (Art, Modalverb, Schutzbedarf, Anzahlen) dienen der Orientierung und sind nicht anklickbar; nach ihnen filtern Sie über die Filterleiste.
