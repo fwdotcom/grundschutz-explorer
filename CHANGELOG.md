@@ -11,6 +11,7 @@ Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 ### Geändert
 
 - Anforderungstext als normale Card mit hervorgehobener Textfläche statt farbigem linken Rand.
+- Einträge in den Cards (z. B. verknüpfte Anforderungen) beim Überfahren nur noch dezent hinterlegt, damit sie sich von den Zwischenüberschriften unterscheiden.
 
 
 ## [1.1.6] – 2026-09-29
