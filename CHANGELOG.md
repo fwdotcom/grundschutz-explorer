@@ -2,6 +2,18 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- Überschriften in der Detailansicht ohne übersprungene Ebene, damit Screenreader die Gliederung korrekt wiedergeben.
+- Vue wird verzögert geladen und blockiert den Seitenaufbau nicht mehr.
+
+### Behoben
+
+- Screenreader lesen dekorative Symbole und Trennstriche nicht mehr vor.
+- Dateiauswahl für den Listenimport und Bestätigungsdialog korrekt beschriftet.
+
 ## [1.1.8] – 2026-09-29
 
 ### Neu
