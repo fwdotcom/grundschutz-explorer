@@ -61,7 +61,9 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input
           ref="searchInput"
+          id="catalog-search"
           type="search"
+          autocomplete="off"
           v-model="filters.searchQuery"
           :disabled="!activeCatalog"
           placeholder="Kennung, Titel, Text, Gefährdung oder Tag suchen …"
@@ -540,7 +542,7 @@
                 </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
+                    <input :id="'facet-search-' + fs.cat" type="search" autocomplete="off" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <label class="rail-option" title="Gewählte Kategorien schließen ihre übergeordneten Kategorien ein, z. B. Führungskräfte auch Mitarbeitende und Nutzende">
                     <input type="checkbox" v-model="targetObjectInheritance" />
@@ -720,7 +722,7 @@
                 </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
+                    <input :id="'facet-search-' + fs.cat" type="search" autocomplete="off" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -849,7 +851,7 @@
                 </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
+                    <input :id="'facet-search-' + fs.cat" type="search" autocomplete="off" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -935,7 +937,7 @@
                 </button>
                 <div v-show="!railCollapsed[fs.rail]" class="rail-section-body">
                   <div v-if="fs.search" class="rail-threat-search">
-                    <input type="search" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
+                    <input :id="'facet-search-' + fs.cat" type="search" autocomplete="off" class="rail-search-input" v-model="facetSearch[fs.cat]" :placeholder="fs.placeholder" :aria-label="fs.placeholder" />
                   </div>
                   <div :class="{ 'rail-threats-scroll': fs.search }">
                     <div
@@ -1019,7 +1021,9 @@
               <div v-show="!railCollapsed.threats" class="rail-section-body">
                 <div class="rail-threat-search">
                   <input
+                    id="threat-rail-search"
                     type="search"
+                    autocomplete="off"
                     class="rail-search-input"
                     v-model="threatRailSearch"
                     placeholder="Gefährdung suchen (z.B. G 0.14)..."
@@ -1196,7 +1200,9 @@
               <div v-show="!railCollapsed.tags" class="rail-section-body">
                 <div class="rail-threat-search">
                   <input
+                    id="tag-rail-search"
                     type="search"
+                    autocomplete="off"
                     class="rail-search-input"
                     v-model="tagRailSearch"
                     placeholder="Tag suchen …"
