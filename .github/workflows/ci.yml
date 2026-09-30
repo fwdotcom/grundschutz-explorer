@@ -1,7 +1,9 @@
 name: CI
 
 on:
+  # Nur Branch-Pushs; reine Tag-Pushs lösen keine CI aus
   push:
+    branches: ['**']
   pull_request:
   # Wiederverwendung durch den Release-Workflow (Tests vor dem Deployment)
   workflow_call:
@@ -10,7 +12,7 @@ permissions:
   contents: read
 
 # github.workflow ist bei Aufruf aus dem Release-Workflow "Release" – so kollidiert dieser Lauf
-# nicht mit der CI des Tag-Pushs. Veraltete Läufe werden nur bei Push/PR abgebrochen.
+# nicht mit der CI eines Branch-Pushs. Veraltete Läufe werden nur bei Push/PR abgebrochen.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
