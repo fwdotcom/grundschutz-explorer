@@ -701,19 +701,28 @@ ul { margin: 0; padding: 0; list-style: none; }
 .note-dot-other { background: var(--list-other); }
 
 .notes-panel { display: grid; gap: 10px; }
-.notes-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.notes-select { width: auto; max-width: 100%; height: 32px; padding: 0 8px; }
-.notes-list-name { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--text); }
-.notes-meta { margin-left: auto; font-size: calc(12px * var(--font-scale)); color: var(--text-3); }
-.notes-text {
-  height: auto; min-height: 240px; padding: 10px 12px; resize: vertical; overflow: auto;
+.notes-head { display: flex; align-items: center; gap: 8px; }
+.icon-btn.notes-filter { width: 36px; height: 36px; flex-shrink: 0; }
+.notes-filter:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+/* Auswahlfeld im Stil des Suchfelds, mit eigenem Pfeil statt des Browser-Pfeils */
+.notes-select-label { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+.notes-select {
+  appearance: none; width: 100%; height: 36px; padding: 0 34px 0 12px;
+  border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-sm);
+  color: var(--text); font: inherit; font-size: calc(13px * var(--font-scale)); text-overflow: ellipsis; cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s, background 0.12s;
+}
+.notes-select:hover:not(:focus) { background: var(--surface-hover); border-color: var(--border-strong); }
+.notes-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.notes-select-chev { position: absolute; right: 11px; color: var(--text-3); pointer-events: none; }
+.notes-meta { margin: 0; text-align: right; font-size: calc(12px * var(--font-scale)); color: var(--text-3); }
+/* Innenabstand wie beim Wortlaut im Reiter Übersicht; .input steht weiter unten und setzt sonst eigene Abstände */
+.input.notes-text {
+  height: auto; min-height: 240px; padding: 14px 20px; resize: vertical; overflow: auto;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
   font-size: calc(13.5px * var(--font-scale)); line-height: 1.55;
 }
-.notes-text[contenteditable="false"] { cursor: default; background: var(--surface-2); color: var(--text-2); }
 .notes-text:empty::before { content: attr(data-placeholder); color: var(--text-3); pointer-events: none; }
-.notes-readonly { margin: 0; font-size: calc(12.5px * var(--font-scale)); color: var(--text-3); }
-.notes-readonly .link-btn { font-size: inherit; }
 
 /* Main split */
 .split { flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }

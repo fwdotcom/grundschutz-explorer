@@ -58,19 +58,19 @@ Notizen erfassen Sie in der Detailansicht im Reiter **Notizen**. Sie gehören im
 
 Ein farbiger Punkt am Reiter signalisiert den Notizen-Status:
 
-| Markierung am Reiter | Zustand | Bedeutung | Bearbeitbarkeit |
+| Markierung am Reiter | Zustand | Bedeutung | Textfeld |
 | :---: | :--- | :--- | :--- |
-| **Grüner Punkt** | Notiz in aktiver Liste | Zur Anforderung liegt eine Notiz in der derzeit aktiven Liste vor. | Im Textfeld bearbeitbar; der Zeitstempel unter dem Feld nennt die letzte Änderung. |
-| **Grauer Punkt** | Notiz in anderer Liste | In der aktiven Liste gibt es keine Notiz, jedoch in mindestens einer anderen Liste. | Schreibgeschützt angezeigt; mit *„[Listenname]“ aktivieren* umschaltbar. |
-| **Kein Punkt** | Keine Notiz vorhanden | In keiner Liste ist eine Notiz zu dieser Anforderung hinterlegt. | Das Textfeld ist leer; eine Eingabe legt die Notiz direkt in der aktiven Liste an. |
+| **Grüner Punkt** | Notiz in aktiver Liste | Zur Anforderung liegt eine Notiz in der derzeit aktiven Liste vor. | Zeigt die Notiz; der Zeitstempel darunter nennt die letzte Änderung. |
+| **Grauer Punkt** | Notiz in anderer Liste | In der aktiven Liste gibt es keine Notiz, jedoch in mindestens einer anderen Liste. | Leer; über das Auswahlfeld wechseln Sie zur Liste mit der Notiz. |
+| **Kein Punkt** | Keine Notiz vorhanden | In keiner Liste ist eine Notiz zu dieser Anforderung hinterlegt. | Leer; eine Eingabe legt die Notiz in der aktiven Liste an. |
 
-Gibt es Notizen in mehreren Listen, wechseln Sie über das Auswahlfeld über dem Textfeld zwischen diesen. Notizen inaktiver Listen sind schreibgeschützt, lassen sich aber über die Schaltfläche unter dem Hinweistext aktivieren und bearbeiten.
+Das Auswahlfeld über dem Textfeld zeigt die aktive Liste. Wählen Sie dort eine andere Liste, wird sie wie über die Filterleiste zur aktiven Liste, und ihre Notiz erscheint im Textfeld. Angeboten werden die im Filter verfügbaren Listen: die mit ✓ gewählten, sonst alle nicht ausgeschlossenen. Die Schaltfläche mit dem Filtersymbol daneben schaltet zwischen diesen und allen Listen um. Unter dem Textfeld steht, wann die Notiz zuletzt geändert wurde.
 
-![Reiter Notizen mit schreibgeschützter Notiz einer anderen Liste](bilder/detail-notizen-andere.png){width=48%}
+![Reiter Notizen ohne Notiz in der aktiven Liste](bilder/detail-notizen-andere.png){width=48%}
 
 /// figure-caption
     attrs: {id: fig-detail-notizen-andere}
-Notiz einer anderen Liste
+Notiz in anderer Liste
 ///
 
 In der Anforderungsliste weist ein kleines Notizsymbol (grün für die aktive Liste, grau für eine andere Liste) direkt auf vorhandene Notizen hin.

@@ -354,16 +354,14 @@ def detail_notizen(env):
         return _detail(s, bottom + 20)
 
 
-# Notiz der nicht aktiven Liste „Entwicklungsteam“ (DEV.4.3, nur lesbar)
+# DEV.4.3: keine Notiz in der aktiven Liste, aber in „Entwicklungsteam“ (grauer Punkt am Reiter)
 def detail_notizen_andere(env):
     with handbuch(env, height=1600) as s:
         s.show_control("DEV.4.3", "notes")
-        s.act("vm.notesViewListId = 'list-team'")
-        s.wait_for("document.querySelector('.notes-readonly')")
-        # Das hohe, fast leere Notizfeld auf den Text verkleinern, damit der Hinweis direkt darunter steht
+        # Das hohe, leere Notizfeld auf den Platzhalter verkleinern
         s.js("(() => { const el = document.querySelector('.notes-text'); el.style.minHeight = '0'; el.style.height = 'auto'; })()")
         s.wait(300)
-        return _detail(s, s.bottom_of("document.querySelector('.notes-readonly')") + 16)
+        return _detail(s, s.bottom_of("document.querySelector('.notes-text')") + 16)
 
 
 # Stern in der Titelzeile als kleines quadratisches Bild

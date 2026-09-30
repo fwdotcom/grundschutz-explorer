@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [1.1.11] – 2026-09-30
+
+### Geändert
+
+- Reiter „Notizen“: Das Auswahlfeld wählt direkt die aktive Liste, das Notizfeld ist damit immer beschreibbar.
+- Reiter „Notizen“: Ein Filterknopf neben dem Auswahlfeld bietet wahlweise alle Listen oder nur die im Filter verfügbaren an.
+
 ## [1.1.10] – 2026-09-30
 
 - Umstellung auf modulares Release-Script

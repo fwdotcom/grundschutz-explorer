@@ -73,7 +73,7 @@ Im Reiter **Notizen** halten Sie eigene Anmerkungen zur gewählten Anforderung f
 Reiter „Notizen“
 ///
 
-Ausführliche Erläuterungen zu Notizen, den Zuständen des Punkts am Reiter sowie dem Lesen und Aktivieren von Notizen anderer Listen finden Sie im [Kapitel „Listen und Notizen“](#kap-listen-notizen) (siehe [Abbildung](#fig-detail-notizen-andere)).
+Ausführliche Erläuterungen zu Notizen, den Zuständen des Punkts am Reiter sowie dem Wechsel zwischen den Listen finden Sie im [Kapitel „Listen und Notizen“](#kap-listen-notizen) (siehe [Abbildung](#fig-detail-notizen-andere)).
 
 ## Reiter „Änderungen“
 

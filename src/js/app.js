@@ -69,7 +69,7 @@ const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 // Handbuch: Weiterleitung auf die aktuelle PDF, vom Release-Schritt scripts/release/steps/80-redirect.py erzeugt
 const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.10';
+const APP_VERSION = '1.1.11';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -252,8 +252,8 @@ const app = createApp({
     const listEntries = ref({}); // entryKey → { key, listId, controlId, note, createdAt, updatedAt }
     // Nur eine Liste ist aktiv: in sie schreiben Stern und Notizfeld
     const activeListId = ref('');
-    // Im Reiter "Notizen" angezeigte Liste (aktive Liste oder eine andere, nur lesbar)
-    const notesViewListId = ref('');
+    // Auswahlfeld im Reiter "Notizen": alle Listen anbieten statt nur der im Filter verfügbaren
+    const notesAllLists = ref(false);
     // Inline-Eingabe in der Filterleiste: { id: '' (neue Liste) | Listen-ID (umbenennen), name }
     const listEdit = ref(null);
     const listImportInput = ref(null);
@@ -841,26 +841,31 @@ const app = createApp({
         : `${where}\n\nKlicken: in „${writeList.value.name}“ aufnehmen`;
     });
 
-    // Listen, deren Notiz im Reiter "Notizen" wählbar ist: die Zielliste und alle nicht ausgeschlossenen mit Notiz
-    const notesViewOptions = computed(() => {
+    // Nicht ausgeschlossene Listen außer der Zielliste, die eine Notiz zur gewählten Anforderung haben
+    const otherNoteListIds = computed(() => {
       const ctrl = selectedControl.value;
-      if (!ctrl) return [];
+      const ids = new Set();
+      if (!ctrl) return ids;
       const excluded = activeFilterSpec.value.exc.list;
-      const options = [writeList.value];
-      for (const list of sortedLists.value) {
+      for (const list of lists.value) {
         if (list.id === writeList.value.id || excluded.has(list.id)) continue;
-        if (listEntries.value[entryKey(list.id, ctrl.id)]?.note?.trim()) options.push(list);
+        if (listEntries.value[entryKey(list.id, ctrl.id)]?.note?.trim()) ids.add(list.id);
       }
-      return options;
+      return ids;
     });
 
-    const notesViewList = computed(
-      () => notesViewOptions.value.find((l) => l.id === notesViewListId.value) || notesViewOptions.value[0] || null
-    );
+    // Im Reiter "Notizen" wählbare Listen in der Reihenfolge der Filterleiste: die Zielliste und die im Filter
+    // verfügbaren (mit ✓ gewählte, sonst alle nicht ausgeschlossenen) bzw. alle; ohne Listen nur die Merkliste
+    const notesListOptions = computed(() => {
+      if (!activeList.value) return [writeList.value];
+      const { inc, exc } = activeFilterSpec.value;
+      const available = (id) => (inc.list.size ? inc.list.has(id) : !exc.list.has(id));
+      return sortedLists.value.filter((l) => l.id === writeList.value.id || notesAllLists.value || available(l.id));
+    });
 
-    const notesViewEntry = computed(() =>
-      notesViewList.value?.id && selectedControl.value
-        ? listEntries.value[entryKey(notesViewList.value.id, selectedControl.value.id)] || null
+    const notesEntry = computed(() =>
+      writeList.value.id && selectedControl.value
+        ? listEntries.value[entryKey(writeList.value.id, selectedControl.value.id)] || null
         : null
     );
 
@@ -888,7 +893,7 @@ const app = createApp({
       if (!ctrl) return '';
       const target = writeList.value.id;
       if (target && listEntries.value[entryKey(target, ctrl.id)]?.note?.trim()) return 'here';
-      return notesViewOptions.value.some((l) => l.id !== target) ? 'other' : '';
+      return otherNoteListIds.value.size ? 'other' : '';
     });
 
     // Selected Control
@@ -1339,11 +1344,8 @@ const app = createApp({
     watch([filters, () => activeTags.value], () => {
       previousControlId.value = null;
     }, { deep: true });
-    // Beim Wechsel der Anforderung ausstehende Notizen sofort speichern und wieder die aktive Liste zeigen
-    watch(selectedControlId, () => {
-      flushNoteSaves();
-      notesViewListId.value = '';
-    });
+    // Beim Wechsel der Anforderung ausstehende Notizen sofort speichern
+    watch(selectedControlId, flushNoteSaves);
 
     async function restorePersistedState() {
       try {
@@ -3182,10 +3184,9 @@ const app = createApp({
       activeList,
       writeList,
       listMarks,
-      notesViewListId,
-      notesViewOptions,
-      notesViewList,
-      notesViewEntry,
+      notesAllLists,
+      notesListOptions,
+      notesEntry,
       listEdit,
       listImportInput,
       listMenuId,

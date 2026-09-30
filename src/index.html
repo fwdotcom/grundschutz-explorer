@@ -2323,33 +2323,41 @@
 
                 <!-- Notizen: nur die aktive Liste ist beschreibbar, andere Listen nur lesbar -->
                 <div v-else-if="detailActiveTab === 'notes'" class="stack">
-                  <div v-if="notesViewList" class="notes-panel">
+                  <div class="notes-panel">
+                    <!-- Auswahl der aktiven Liste (wie in der Filterleiste); ohne Listen steht dort die Merkliste -->
                     <div class="notes-head">
-                      <label v-if="notesViewOptions.length > 1" class="notes-select-label">
-                        <span class="sr-only">Liste</span>
-                        <select class="input notes-select" :value="notesViewList.id" @change="notesViewListId = $event.target.value">
-                          <option v-for="l in notesViewOptions" :key="l.id" :value="l.id">
-                            {{ l.name }}{{ l.id === writeList.id ? ' (aktiv)' : ' (nur lesen)' }}
+                      <label class="notes-select-label">
+                        <span class="sr-only">Aktive Liste</span>
+                        <select class="notes-select" :value="writeList.id" title="Aktive Liste für Favoriten und Notizen" @change="setActiveList($event.target.value)">
+                          <option v-for="l in notesListOptions" :key="l.id" :value="l.id">
+                            {{ l.name }}
                           </option>
                         </select>
+                        <svg class="icon-xs notes-select-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                       </label>
-                      <span v-else class="notes-list-name">{{ notesViewList.name }}</span>
-                      <span v-if="notesViewEntry?.updatedAt && notesViewEntry.note" class="notes-meta">zuletzt geändert {{ formatDate(notesViewEntry.updatedAt) }}</span>
+                      <button
+                        class="icon-btn btn-outline notes-filter"
+                        :class="{ active: !notesAllLists }"
+                        :aria-pressed="!notesAllLists"
+                        @click="notesAllLists = !notesAllLists"
+                        :title="notesAllLists ? 'Nur im Filter verfügbare Listen anbieten' : 'Alle Listen anbieten'"
+                        aria-label="Nur im Filter verfügbare Listen anbieten"
+                      >
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+                      </button>
                     </div>
-                    <!-- Ein Element für beide Fälle: in der aktiven Liste beschreibbar, sonst reiner (nicht fokussierbarer) Text -->
                     <div
                       class="input notes-text"
-                      v-plain-text="notesViewEntry?.note || ''"
-                      :contenteditable="notesViewList.id === writeList.id ? 'plaintext-only' : 'false'"
-                      :role="notesViewList.id === writeList.id ? 'textbox' : null"
-                      :aria-multiline="notesViewList.id === writeList.id ? 'true' : null"
-                      :aria-label="'Notiz in Liste ' + notesViewList.name"
-                      :data-placeholder="notesViewList.id === writeList.id ? 'Notiz zu ' + selectedControl.id + ' in „' + notesViewList.name + '“ …' : 'Keine Notiz in dieser Liste.'"
+                      v-plain-text="notesEntry?.note || ''"
+                      contenteditable="plaintext-only"
+                      role="textbox"
+                      aria-multiline="true"
+                      :aria-label="'Notiz in Liste ' + writeList.name"
+                      :data-placeholder="'Notiz zu ' + selectedControl.id + ' in „' + writeList.name + '“ …'"
+                      :aria-placeholder="'Notiz zu ' + selectedControl.id + ' in „' + writeList.name + '“'"
                       @input="updateNote($event.target.innerText)"
                     ></div>
-                    <p v-if="notesViewList.id !== writeList.id" class="notes-readonly">
-                      <button class="link-btn" @click="setActiveList(notesViewList.id)">„{{ notesViewList.name }}“ aktivieren</button>, um die Notiz zu bearbeiten.
-                    </p>
+                    <p v-if="notesEntry?.updatedAt && notesEntry.note" class="notes-meta">zuletzt geändert <time :datetime="notesEntry.updatedAt">{{ formatDate(notesEntry.updatedAt) }}</time></p>
                   </div>
                 </div>
 
