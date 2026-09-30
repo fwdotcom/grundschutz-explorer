@@ -34,7 +34,6 @@ scenes = "project/scenes.py"
 serve = "src"
 jobs = [
   { name = "handbuch", out_dir = "docs/handbuch/bilder", manifest = "docs/handbuch/bilder/manifest.json" },
-  { name = "website", out_dir = "src/media/website", manifest = "https://www.grundschutz-explorer.de/media/screens/manifest.json" },
 ]
 
 [markpublish]

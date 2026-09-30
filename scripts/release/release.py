@@ -15,7 +15,7 @@ Committet, getaggt und veröffentlicht wird nicht; das bleibt Handarbeit.
 
 Aufruf:  python scripts/release/release.py 1.2.0
          python scripts/release/release.py 1.2.0 --skip "*screenshots"
-         python scripts/release/release.py --only website-screenshots
+         python scripts/release/release.py --only screenshots
          python scripts/release/release.py --list
 Voraussetzung:  pip install -r scripts/release/requirements.txt && python -m playwright install chromium
 """

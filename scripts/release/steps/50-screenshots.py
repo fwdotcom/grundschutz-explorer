@@ -5,7 +5,7 @@
 Nimmt Screenshots nach Manifesten auf. Allgemein verwendbar; die Szenen liefert das Projekt.
 
 Jeder Auftrag verbindet ein Manifest (was aufgenommen wird) mit einem Zielordner (wohin). Das Manifest kann im
-Projekt liegen oder von außen kommen, z. B. von der Projektwebsite:
+Projekt liegen oder von außen kommen (URL):
 
   { "schema": 1, "shots": [ { "file": "oberflaeche.webp", "scene": "oberflaeche", "width": 1920, "height": 1200 } ] }
 
@@ -25,13 +25,14 @@ env hat browser (Playwright), base_url (Startseite auf dem lokalen Server), data
 Konfiguration [screenshots]:
   scenes   Szenen-Modul, relativ zu release.toml
   serve    Ordner, den der lokale Server ausliefert (Standard: ".")
-  start    Startseite relativ dazu (Standard: "index.html")
+  url      statt serve: Adresse einer laufenden Instanz, z. B. der veröffentlichten App; dann kein lokaler Server
+  start    Startseite relativ zu serve bzw. url (Standard: "index.html")
   quality  WebP-Qualität (Standard: 90)
   jobs     Liste von {out_dir, manifest, name?}; manifest ist eine URL oder ein Pfad relativ zum Projektordner
   only     optional: nur die Aufträge mit diesen Namen (durch Komma getrennt)
 
-Per Umgebung: RELEASE_SCREENSHOTS_ONLY=website, RELEASE_SCREENSHOTS_<NAME>_MANIFEST=<Pfad>,
-RELEASE_SCREENSHOTS_<NAME>_OUT_DIR=<Ordner> (NAME = name des Auftrags).
+Per Umgebung: RELEASE_SCREENSHOTS_URL=<Adresse>, RELEASE_SCREENSHOTS_ONLY=handbuch,
+RELEASE_SCREENSHOTS_<NAME>_MANIFEST=<Pfad>, RELEASE_SCREENSHOTS_<NAME>_OUT_DIR=<Ordner> (NAME = name des Auftrags).
 
 Aufruf:  python scripts/release/steps/50-screenshots.py
 """
@@ -43,6 +44,7 @@ import json
 import re
 import sys
 import urllib.request
+from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -202,7 +204,11 @@ def main() -> None:
         jobs = [job for job in jobs if job.get("name") in only]
 
     data = module.setup(step) if hasattr(module, "setup") else None
-    with static_server(step.path(step.get("serve", "."))) as base, chromium() as browser:
+    url = step.get("url")
+    if url and not re.match(r"^https?://", url):
+        fail(f"url muss mit http:// oder https:// beginnen: {url}")
+    server = nullcontext(url.rstrip("/") + "/") if url else static_server(step.path(step.get("serve", ".")))
+    with server as base, chromium() as browser:
         env = SimpleNamespace(browser=browser, base_url=base + step.get("start", "index.html"), data=data, step=step)
         for job in jobs:
             run_job(step, env, module.SCENES, job, quality)

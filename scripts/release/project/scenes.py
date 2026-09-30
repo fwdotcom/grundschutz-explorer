@@ -6,10 +6,8 @@ Szenen für die Screenshots (projektspezifisch, für steps/50-screenshots.py).
 Eine Szene stellt einen Zustand der App her und liefert den Ausschnitt als PNG. Jede Szene beginnt in einem
 frischen Browserkontext, schreibt ihre Testdaten direkt in die IndexedDB der App (über js/storage.js), lädt neu
 und bringt die App dann – wo nötig – über ihre eigenen Funktionen (Wurzelkomponente an #app) in den gewünschten
-Zustand. Welche Szenen in welche Datei gehen, legen die Manifeste fest.
-
-  Handbuch  Szenen ohne Präfix, Ansicht 1440 × 900 bei doppelter Pixeldichte
-  Website   Szenen mit Präfix website-, eigene Ansichtsgrößen und Beispieldaten
+Zustand. Welche Szenen in welche Datei gehen, legt das Manifest fest. Ansicht 1440 × 900 bei doppelter
+Pixeldichte.
 
 Die Szenen nutzen Speicherstruktur, Einstellungsschlüssel, Funktionen der Wurzelkomponente und CSS-Selektoren
 der App. Ändern sich diese, müssen sie angepasst werden.
@@ -61,7 +59,7 @@ def setup(step) -> dict:
         {**CATALOG_RECORD, "catalogData": base},
         {**COMPARISON_RECORD, "catalogData": build_comparison_catalog(base)},
     ]
-    return {"handbuch": _handbuch_data(records), "website": _website_data(records)}
+    return {"handbuch": _handbuch_data(records)}
 
 
 def _handbuch_data(records) -> dict:
@@ -96,44 +94,6 @@ def _handbuch_data(records) -> dict:
             "font_scale": 1,
             # Breitere Detailansicht, damit Pfadleiste und Reiter in den Ausschnitten nicht umbrechen
             "detail_pane_width": 40,
-        },
-    }
-
-
-def _website_data(records) -> dict:
-    created = "2026-09-01T08:00:00.000Z"
-    note_time = "2026-09-25T15:30:00.000Z"  # 17:30 Uhr in Europe/Berlin
-    return {
-        "records": records,
-        "lists": [
-            {"id": LIST_AUDIT, "name": "Audit 2026", "createdAt": created, "updatedAt": created},
-            {"id": LIST_DEV, "name": "Entwicklungsteam", "createdAt": created, "updatedAt": created},
-        ],
-        "entries": [
-            {
-                "key": f"{LIST_AUDIT}|DEV.3.4",
-                "listId": LIST_AUDIT,
-                "controlId": "DEV.3.4",
-                "note": "Passwort-Hashing nach BSI TR-02102 auf Argon2id umstellen.\nSalt mindestens 128 Bit Zufallswert.",
-                "createdAt": created,
-                "updatedAt": note_time,
-            },
-            {
-                "key": f"{LIST_DEV}|DEV.4.3",
-                "listId": LIST_DEV,
-                "controlId": "DEV.4.3",
-                "note": "SBOM-Erzeugung in die CI-Pipeline aufnehmen.",
-                "createdAt": created,
-                "updatedAt": note_time,
-            },
-        ],
-        "settings": {
-            "last_active_catalog_id": CATALOG_ID,
-            "comparison_catalog_id": "",
-            "active_list_id": LIST_AUDIT,
-            "dark_mode": False,
-            "high_contrast": False,
-            "font_scale": 1,
         },
     }
 
@@ -237,7 +197,7 @@ class Page:
 
 
 @contextmanager
-def open_app(env, data, *, viewport, scale, settings=None, with_catalog=True, reduced_motion=None):
+def open_app(env, data, *, viewport, scale, settings=None, with_catalog=True):
     """Frischer Kontext; mit Katalog: Testdaten schreiben und neu laden. Liefert eine Page."""
     options = {
         "viewport": viewport,
@@ -247,8 +207,6 @@ def open_app(env, data, *, viewport, scale, settings=None, with_catalog=True, re
         "color_scheme": "light",
         "contrast": "no-preference",
     }
-    if reduced_motion:
-        options["reduced_motion"] = reduced_motion
     context = env.browser.new_context(**options)
     try:
         page = context.new_page()
@@ -609,145 +567,7 @@ def detail_aenderungen(env):
         return _detail(s, s.bottom_of("document.querySelectorAll('.detail-body > .stack > .card')[1]") + 16)
 
 
-# ---------- Website ----------
-
-# Breite der Detailsicht (%) für die Detail-Ausschnitte, damit alle Reiter nebeneinander passen
-DETAIL_PANE_WIDTH = 38
-
-# Sichtbarer Teil des Notizfelds (CSS-Pixel); das Feld selbst ist deutlich höher
-NOTE_VISIBLE_HEIGHT = 72
-
-# Alle Bereiche der Filterleiste zugeklappt; Schlüssel wie RAIL_COLLAPSED_DEFAULT der App
-# (fehlende ergänzt die App selbst)
-RAIL_ALL_COLLAPSED = dict.fromkeys(
-    [
-        "lists",
-        "practices",
-        "secLevels",
-        "targetObjects",
-        "modalVerbs",
-        "actionWords",
-        "documentation",
-        "tags",
-        "securityTargets",
-        "effort",
-        "threats",
-        "sourceCatalogs",
-        "diffs",
-    ],
-    True,
-)
-
-
-@contextmanager
-def website(env, *, viewport, scale, settings=None, with_catalog=True):
-    with open_app(
-        env, env.data["website"], viewport=viewport, scale=scale, settings=settings, with_catalog=with_catalog, reduced_motion="reduce"
-    ) as s:
-        s.page.wait_for_selector(".list-pane" if with_catalog else ".welcome-cta")
-        s.settle()
-        yield s
-
-
-def collapse_state(**overrides):
-    return {
-        "railCollapsed": {},
-        "expandedKeys": [],
-        "selectedControlId": "",
-        "listViewMode": "tree",
-        "statementTermsOpen": False,
-        **overrides,
-    }
-
-
-# Die Website-Ausschnitte werden ungerundet übergeben; die Bildmaße im Manifest der Website beruhen darauf
-def _region(x, y, width, height):
-    return {"x": x, "y": y, "width": width, "height": height}
-
-
-# Gesamtansicht: Filterleiste, Baum mit DEV.3 aufgeklappt, Detail von DEV.3.4
-def website_oberflaeche(env):
-    settings = {"saved_collapse_state": collapse_state(expandedKeys=["p_DEV", "sub_DEV.3"], selectedControlId="DEV.3.4")}
-    with website(env, viewport={"width": 1440, "height": 900}, scale=4 / 3, settings=settings) as s:
-        s.page.wait_for_selector('[id="row-DEV.3.4"].selected')
-        s.scroll_row("DEV.3.4", "center")
-        return s.page.screenshot()
-
-
-# Filter nach Zielobjektkategorie mit übergeordneten Kategorien, flache Liste
-def website_filter_zielobjekte(env):
-    settings = {
-        "saved_filter_state": {
-            "filters": {"searchQuery": "", "subgroupFilter": "", "controlFilter": ""},
-            "activeTags": [
-                {
-                    "key": "targetObject:Führungskräfte",
-                    "category": "targetObject",
-                    "value": "Führungskräfte",
-                    "mode": "include",
-                    "label": "Führungskräfte",
-                    "categoryLabel": "Zielobjektkategorie",
-                }
-            ],
-            "railOnlyMatching": False,
-            "targetObjectInheritance": True,
-        },
-        "saved_collapse_state": collapse_state(railCollapsed={**RAIL_ALL_COLLAPSED, "targetObjects": False}, listViewMode="flat"),
-    }
-    with website(env, viewport={"width": 1280, "height": 800}, scale=2, settings=settings) as s:
-        rail = s.box("aside.rail")
-        pane = s.box(".list-pane")
-        return s.page.screenshot(clip=_region(rail["x"], rail["y"], pane["x"] + pane["width"] - rail["x"], 517))
-
-
-# Reiter „Notizen“ von DEV.3.4
-def website_detail_notizen(env):
-    settings = {
-        "detail_pane_width": DETAIL_PANE_WIDTH,
-        "saved_collapse_state": collapse_state(expandedKeys=["p_DEV", "sub_DEV.3"], selectedControlId="DEV.3.4"),
-    }
-    with website(env, viewport={"width": 1280, "height": 800}, scale=2, settings=settings) as s:
-        s.page.click("#tab-notes")
-        s.page.wait_for_selector(".notes-panel")
-        s.settle()
-        detail = s.box("#detail-pane")
-        note = s.box(".notes-text")
-        return s.page.screenshot(
-            clip=_region(detail["x"], detail["y"], detail["width"], note["y"] + NOTE_VISIBLE_HEIGHT - detail["y"])
-        )
-
-
-# Reiter „Änderungen“ von DEV.4.3 im Vergleich mit der Vergleichsversion, bis unter den Textvergleich
-def website_detail_aenderungen(env):
-    settings = {
-        "comparison_catalog_id": COMPARISON_ID,
-        "detail_pane_width": DETAIL_PANE_WIDTH,
-        "saved_collapse_state": collapse_state(expandedKeys=["p_DEV", "sub_DEV.4"], selectedControlId="DEV.4.3"),
-    }
-    with website(env, viewport={"width": 1280, "height": 1200}, scale=2, settings=settings) as s:
-        s.page.click("#tab-diff")
-        s.page.wait_for_selector("#detail-tabpanel .stack > .card")
-        s.settle()
-        detail = s.box("#detail-pane")
-        card = s.box("#detail-tabpanel .stack > .card:nth-of-type(2)")
-        return s.page.screenshot(
-            clip=_region(detail["x"], detail["y"], detail["width"], card["y"] + card["height"] + 12 - detail["y"])
-        )
-
-
-# Dialog „Katalog laden“ auf der Startseite (ohne gespeicherten Katalog)
-def website_kataloge_laden(env):
-    with website(env, viewport={"width": 1280, "height": 800}, scale=2, with_catalog=False) as s:
-        s.page.click(".welcome-cta")
-        s.page.wait_for_selector("dialog.modal[open]")
-        s.settle()
-        dlg = s.box("dialog.modal[open]")
-        pad = 8
-        return s.page.screenshot(clip=_region(dlg["x"] - pad, dlg["y"] - pad, dlg["width"] + 2 * pad, dlg["height"] + 2 * pad))
-
-
 SCENES = {
-    # Handbuch
     "startseite": startseite,
     "kataloge-laden": kataloge_laden,
     "kopfzeile": kopfzeile,
@@ -771,10 +591,4 @@ SCENES = {
     "kataloge-versionen": kataloge_versionen,
     "vergleich": vergleich,
     "detail-aenderungen": detail_aenderungen,
-    # Website
-    "website-oberflaeche": website_oberflaeche,
-    "website-filter-zielobjekte": website_filter_zielobjekte,
-    "website-detail-notizen": website_detail_notizen,
-    "website-detail-aenderungen": website_detail_aenderungen,
-    "website-kataloge-laden": website_kataloge_laden,
 }

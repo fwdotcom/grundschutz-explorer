@@ -14,7 +14,7 @@ Woher die Werte kommen (jeweils das erste, das gesetzt ist):
   Abschnitt      Dateiname des Schritts ohne Nummer, Bindestriche als Unterstriche
                  (steps/30-security-txt.py → [security_txt])
   Einzelwerte    RELEASE_<ABSCHNITT>_<SCHLÜSSEL> überschreibt einen Wert des Abschnitts als Text,
-                 z. B. RELEASE_WEBSITE_SCREENSHOTS_MANIFEST=../website/manifest.json
+                 z. B. RELEASE_SCREENSHOTS_HANDBUCH_OUT_DIR=/tmp/bilder
 """
 
 from __future__ import annotations

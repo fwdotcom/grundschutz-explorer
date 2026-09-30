@@ -53,7 +53,7 @@ Wie `run-parts` unter Linux:
 - Der Runner übergibt die Version als Argument und setzt `RELEASE_VERSION`, `RELEASE_ROOT` und `RELEASE_CONFIG`.
 - Seine Parameter liest jeder Schritt aus dem Abschnitt von `release.toml`, der seinem Dateinamen ohne Nummer
   entspricht (`30-security-txt.py` → `[security_txt]`). Einzelne Werte lassen sich per Umgebung überschreiben:
-  `RELEASE_<ABSCHNITT>_<SCHLÜSSEL>`, z. B. `RELEASE_SCREENSHOTS_ONLY=website`.
+  `RELEASE_<ABSCHNITT>_<SCHLÜSSEL>`, z. B. `RELEASE_SCREENSHOTS_HANDBUCH_OUT_DIR=/tmp/bilder`.
 
 Ein neuer Schritt beginnt so:
 
@@ -110,35 +110,33 @@ Ein Auftrag verbindet ein Manifest (was aufgenommen wird) mit einem Zielordner (
 ```toml
 jobs = [
   { name = "handbuch", out_dir = "docs/handbuch/bilder", manifest = "docs/handbuch/bilder/manifest.json" },
-  { name = "website", out_dir = "src/media/website", manifest = "https://www.grundschutz-explorer.de/media/screens/manifest.json" },
 ]
 ```
 
 ```json
 {
   "schema": 1,
-  "shots": [{ "file": "oberflaeche.webp", "scene": "website-oberflaeche", "width": 1920, "height": 1200 }]
+  "shots": [{ "file": "oberflaeche.png", "scene": "oberflaeche", "width": 2880, "height": 1800 }]
 }
 ```
 
 - `file`: Dateiname im Zielordner; die Endung `.png` oder `.webp` bestimmt das Format.
 - `scene`: eine Szene aus `project/scenes.py`. Jede Szene beginnt in einem frischen Browserkontext, schreibt ihre
-  Testdaten in die IndexedDB der App, lädt neu und stellt den Zustand her. Szenen ohne Präfix sind für das
-  Handbuch (1440 × 900, doppelte Pixeldichte), Szenen mit `website-` für die Website.
+  Testdaten in die IndexedDB der App, lädt neu und stellt den Zustand her (1440 × 900, doppelte Pixeldichte).
 - `width`, `height`: optional; weicht ein Bild ab, bricht der Schritt ab, ohne etwas zu schreiben.
 - Das Manifest wird streng geprüft: nur bekannte Felder und Szenen, sichere Dateinamen.
 - Neben die Bilder kommt eine Kopie des Manifests (`manifest.json`). Bilder aus der vorigen Kopie, die im neuen
   Manifest fehlen, werden entfernt; andere Dateien bleiben unberührt. Liegt das Manifest selbst als
   `manifest.json` im Zielordner, entfällt die Kopie; Bilder ohne Eintrag werden dann nur gemeldet.
+- Aufgenommen wird `serve` (Standard `src`) über einen lokalen Server. Mit `url` (oder
+  `RELEASE_SCREENSHOTS_URL`) nimmt der Schritt stattdessen eine laufende Instanz auf, z. B. die veröffentlichte
+  App.
 
-Das Handbuch-Manifest liegt direkt bei den Bildern (`docs/handbuch/bilder/manifest.json`). Welche Bilder die Projektwebsite braucht, legt sie selbst fest, im
-Manifest `www/media/screens/manifest.json` ihres Repos. Die Website bindet die Bilder von
-`https://app.grundschutz-explorer.de/media/website/` ein und muss für neue Bilder nicht neu deployt werden.
+Das Handbuch-Manifest liegt direkt bei den Bildern (`docs/handbuch/bilder/manifest.json`).
 
-Einzelne Aufträge und andere Quellen per Umgebung:
+Andere Quellen per Umgebung:
 
 ```sh
-RELEASE_SCREENSHOTS_ONLY=website RELEASE_SCREENSHOTS_WEBSITE_MANIFEST=../grundschutz-explorer-website/www/media/screens/manifest.json   python scripts/release/release.py --only screenshots
 RELEASE_SCREENSHOTS_HANDBUCH_OUT_DIR=/tmp/bilder python scripts/release/steps/50-screenshots.py   # zum Vergleich
 ```
 
