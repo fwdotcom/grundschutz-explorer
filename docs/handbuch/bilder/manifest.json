@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "shots": [
+    { "file": "startseite.png", "scene": "startseite" },
+    { "file": "kataloge-laden.png", "scene": "kataloge-laden" },
+    { "file": "kopfzeile.png", "scene": "kopfzeile" },
+    { "file": "oberflaeche.png", "scene": "oberflaeche" },
+    { "file": "unteranforderungen.png", "scene": "unteranforderungen" },
+    { "file": "detailansicht.png", "scene": "detailansicht" },
+    { "file": "detail-klappbereich.png", "scene": "detail-klappbereich" },
+    { "file": "detail-kopf.png", "scene": "detail-kopf" },
+    { "file": "detail-hilfestellung.png", "scene": "detail-hilfestellung" },
+    { "file": "detail-notizen.png", "scene": "detail-notizen" },
+    { "file": "detail-notizen-andere.png", "scene": "detail-notizen-andere" },
+    { "file": "stern-aktiv.png", "scene": "stern-aktiv" },
+    { "file": "stern-andere.png", "scene": "stern-andere" },
+    { "file": "stern-keine.png", "scene": "stern-keine" },
+    { "file": "listen-markierungen.png", "scene": "listen-markierungen" },
+    { "file": "listen.png", "scene": "listen" },
+    { "file": "filter.png", "scene": "filter" },
+    { "file": "filterleiste.png", "scene": "filterleiste" },
+    { "file": "treffer-in-liste.png", "scene": "treffer-in-liste" },
+    { "file": "filter-zielobjekte.png", "scene": "filter-zielobjekte" },
+    { "file": "kataloge-versionen.png", "scene": "kataloge-versionen" },
+    { "file": "vergleich.png", "scene": "vergleich" },
+    { "file": "detail-aenderungen.png", "scene": "detail-aenderungen" }
+  ]
+}

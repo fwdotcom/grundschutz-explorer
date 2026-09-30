@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Frank Winter
+# SPDX-License-Identifier: MIT
+#
+# Projektkonfiguration der Release-Schritte (Grundschutz++ Explorer).
+# Jeder Schritt unter steps/ liest den Abschnitt, der seinem Dateinamen ohne Nummer entspricht
+# (steps/30-security-txt.py → [security_txt]). Pfade sind relativ zum Projektordner, Module relativ zu dieser Datei.
+
+# Projektordner, relativ zu dieser Datei
+root = "../.."
+
+[release]
+# Tag des Releases, Platzhalter {version}; erscheint in der Abschlussmeldung
+tag = "v{version}"
+
+[version]
+# Alle Stellen, an denen die Version steht; der erste Eintrag gilt als aktuelle Version des Projekts
+files = [
+  { file = "src/js/app.js", pattern = "^const APP_VERSION = '([^']+)';" },
+  { file = "package.json", pattern = '^  "version": "([^"]+)"' },
+  { file = "docs/handbuch/markpublish.yaml", pattern = '^[ \t]*version:[ \t]*"([^"]*)"' },
+]
+
+[changelog]
+file = "CHANGELOG.md"
+
+[security_txt]
+file = "src/.well-known/security.txt"
+
+[commands]
+run = [["npm", "run", "check"], ["npm", "test"]]
+
+[screenshots]
+scenes = "project/scenes.py"
+serve = "src"
+jobs = [
+  { name = "handbuch", out_dir = "docs/handbuch/bilder", manifest = "docs/handbuch/bilder/manifest.json" },
+  { name = "website", out_dir = "src/media/website", manifest = "https://www.grundschutz-explorer.de/media/screens/manifest.json" },
+]
+
+[markpublish]
+config = "docs/handbuch/markpublish.yaml"
+output_dir = "src/manual"
+file_prefix = "grundschutz-explorer-handbuch-v"
+
+[redirect]
+dir = "src/manual"
+target = "grundschutz-explorer-handbuch-v{version}.pdf"
+title = "Benutzerhandbuch – Grundschutz++ Explorer"
+link_text = "Zum aktuellen Benutzerhandbuch (PDF)"

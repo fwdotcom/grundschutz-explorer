@@ -1,0 +1,4 @@
+# Abhängigkeiten der Release-Schritte; nach der Installation einmalig: python -m playwright install chromium
+-r markpublish_requirements.txt
+playwright>=1.55,<2
+pillow>=11

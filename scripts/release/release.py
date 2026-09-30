@@ -2,157 +2,99 @@
 # SPDX-FileCopyrightText: 2026 Frank Winter
 # SPDX-License-Identifier: MIT
 """
-Bereitet ein Release vor: setzt die neue Version, prüft den Code, nimmt die
-Handbuch-Screenshots neu auf und baut das Handbuch.
+Bereitet ein Release vor, indem es die Schritte in steps/ nacheinander ausführt – wie run-parts unter Linux:
 
-Schritte:
-  1. Version eintragen in
-       src/js/app.js                  (APP_VERSION, maßgeblich)
-       package.json                   ("version")
-       docs/handbuch/markpublish.yaml (version: "…")
-       CHANGELOG.md                   ("## [Unveröffentlicht]" wird zu "## [<VERSION>] – <Datum>")
-  2. npm run check und npm test
-  3. Screenshots:  npm run screenshots im Ordner scripts (vorher npm install, falls node_modules fehlt)
-  4. Handbuch:     scripts/build_manual.py (PDF und Weiterleitung unter src/manual/)
+  - Ein Schritt ist eine Datei steps/NN-name.py (NN = Zahl, name aus Kleinbuchstaben, Ziffern, Bindestrichen).
+  - Die Reihenfolge ergibt sich aus der Zahl. Andere Dateien werden übergangen; zum Abschalten einen Schritt
+    umbenennen (z. B. in 50-handbuch-screenshots.py.off) oder löschen.
+  - Jeder Schritt läuft als eigener Prozess im Projektordner, mit der Version als Argument und in
+    RELEASE_VERSION, dazu RELEASE_ROOT und RELEASE_CONFIG. Endet einer mit Fehler, bricht das Release ab.
+  - Seine Parameter liest jeder Schritt aus release.toml (Abschnitt = Dateiname ohne Nummer).
 
 Committet, getaggt und veröffentlicht wird nicht; das bleibt Handarbeit.
 
-Aufruf:  python scripts/release.py 1.2.0
-         python scripts/release.py 1.2.0 --keine-screenshots
-Voraussetzung:  Node.js, pip install -r scripts/markpublish_requirements.txt
+Aufruf:  python scripts/release/release.py 1.2.0
+         python scripts/release/release.py 1.2.0 --skip "*screenshots"
+         python scripts/release/release.py --only website-screenshots
+         python scripts/release/release.py --list
+Voraussetzung:  pip install -r scripts/release/requirements.txt && python -m playwright install chromium
 """
 
 from __future__ import annotations
 
 import argparse
-import datetime
-import json
+import fnmatch
+import os
 import re
-import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
-import build_manual
+from lib.common import DEFAULT_CONFIG, fail, normalize_version, setup_console
 
-ROOT = Path(__file__).resolve().parent.parent
-APP_JS = ROOT / "src" / "js" / "app.js"
-PACKAGE_JSON = ROOT / "package.json"
-MANUAL_CONFIG = ROOT / "docs" / "handbuch" / "markpublish.yaml"
-CHANGELOG = ROOT / "CHANGELOG.md"
-SCRIPTS = ROOT / "scripts"
-
-VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
-UNRELEASED = "## [Unveröffentlicht]"
+STEPS_DIR = Path(__file__).resolve().parent / "steps"
+STEP_RE = re.compile(r"^(\d+)-([a-z0-9][a-z0-9-]*)\.py$")
 
 
-def fail(message: str) -> None:
-    print(f"Fehler: {message}", file=sys.stderr)
-    sys.exit(1)
-
-
-def rel(path: Path) -> str:
-    return path.relative_to(ROOT).as_posix()
-
-
-# Zeilenenden der Dateien (LF oder CRLF) bleiben erhalten
-def read(path: Path) -> str:
-    with path.open(encoding="utf-8", newline="") as f:
-        return f.read()
-
-
-def write(path: Path, text: str) -> None:
-    with path.open("w", encoding="utf-8", newline="") as f:
-        f.write(text)
-
-
-def replace_once(path: Path, pattern: str, replacement: str) -> None:
-    text, count = re.subn(pattern, replacement, read(path), count=1, flags=re.MULTILINE)
-    if count != 1:
-        fail(f"Versionseintrag nicht gefunden in {rel(path)}")
-    write(path, text)
-
-
-def version_key(version: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in version.split("."))
-
-
-def update_changelog(version: str) -> None:
-    text = read(CHANGELOG)
-    if f"## [{version}]" in text:
-        print(f"  {rel(CHANGELOG)}: Abschnitt [{version}] besteht bereits")
-        return
-    if UNRELEASED not in text:
-        fail(f'{rel(CHANGELOG)} hat keinen Abschnitt "{UNRELEASED}" mit den Änderungen dieser Version')
-    today = datetime.date.today().isoformat()
-    write(CHANGELOG, text.replace(UNRELEASED, f"## [{version}] – {today}", 1))
-    print(f"  {rel(CHANGELOG)}: [Unveröffentlicht] → [{version}] – {today}")
-
-
-def set_version(version: str) -> None:
-    replace_once(APP_JS, r"^(const APP_VERSION = ')[^']*(';)", rf"\g<1>{version}\g<2>")
-    print(f"  {rel(APP_JS)}: APP_VERSION = '{version}'")
-
-    replace_once(PACKAGE_JSON, r'^(  "version": ")[^"]*(",)', rf"\g<1>{version}\g<2>")
-    print(f"  {rel(PACKAGE_JSON)}: version {version}")
-
-    replace_once(MANUAL_CONFIG, r'^([ \t]*version:[ \t]*")[^"]*(")', rf"\g<1>{version}\g<2>")
-    print(f"  {rel(MANUAL_CONFIG)}: version {version}")
-
-    update_changelog(version)
-
-
-def run(*command: str, cwd: Path = ROOT) -> None:
-    executable = shutil.which(command[0])
-    if not executable:
-        fail(f"{command[0]} wurde nicht gefunden")
-    print(f"> {' '.join(command)}", flush=True)
-    result = subprocess.run([executable, *command[1:]], cwd=cwd)
-    if result.returncode != 0:
-        fail(f"{' '.join(command)} ist fehlgeschlagen (Exit-Code {result.returncode})")
+def discover() -> list[tuple[str, Path]]:
+    found = []
+    for path in STEPS_DIR.iterdir():
+        match = STEP_RE.match(path.name)
+        if path.is_file() and match:
+            found.append((int(match.group(1)), match.group(2), path))
+    return [(name, path) for _, name, path in sorted(found)]
 
 
 def main() -> None:
-    # Umlaute und Pfeile auch in der Windows-Konsole und bei umgeleiteter Ausgabe
-    sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
-    sys.stderr.reconfigure(encoding="utf-8")
-
-    parser = argparse.ArgumentParser(description="Neue Version setzen, prüfen, Screenshots aufnehmen und Handbuch bauen.")
-    parser.add_argument("version", help="neue Version, z. B. 1.2.0")
-    parser.add_argument("--keine-screenshots", action="store_true", help="Screenshots nicht neu aufnehmen")
+    setup_console()
+    parser = argparse.ArgumentParser(description="Release vorbereiten: Schritte aus steps/ der Reihe nach ausführen.")
+    parser.add_argument("version", nargs="?", help="neue Version, z. B. 1.2.0")
+    parser.add_argument("--skip", action="append", default=[], metavar="MUSTER", help="Schritte überspringen (Name oder Muster wie *screenshots, mehrfach möglich)")
+    parser.add_argument("--only", action="append", default=[], metavar="MUSTER", help="nur diese Schritte ausführen (mehrfach möglich)")
+    parser.add_argument("--list", action="store_true", help="Schritte nur auflisten")
     args = parser.parse_args()
 
-    version = args.version.removeprefix("v")
-    if not VERSION_RE.match(version):
-        fail(f"„{args.version}“ ist keine Version im Format X.Y.Z")
+    steps = discover()
+    if not steps:
+        fail(f"keine Schritte in {STEPS_DIR}")
+    selected = [
+        (name, path)
+        for name, path in steps
+        if (not args.only or any(fnmatch.fnmatch(name, p) for p in args.only))
+        and not any(fnmatch.fnmatch(name, p) for p in args.skip)
+    ]
 
-    current = build_manual.app_version()
-    if version_key(version) < version_key(current):
-        fail(f"{version} ist älter als die aktuelle Version {current}")
+    if args.list:
+        for name, path in steps:
+            print(f"  {'✓' if (name, path) in selected else '–'} {path.name}")
+        return
 
-    print(f"\n== 1/4 Version {current} → {version}")
-    set_version(version)
-    json.loads(read(PACKAGE_JSON))  # package.json muss gültig bleiben
+    version = normalize_version(args.version) if args.version else None
+    config_file = Path(os.environ.get("RELEASE_CONFIG") or DEFAULT_CONFIG).resolve()
+    with config_file.open("rb") as f:
+        project = tomllib.load(f)
+    root = Path(os.environ.get("RELEASE_ROOT") or (config_file.parent / project.get("root", "."))).resolve()
 
-    print("\n== 2/4 Prüfen und testen")
-    run("npm", "run", "check")
-    run("npm", "test")
+    env = {**os.environ, "RELEASE_ROOT": str(root), "RELEASE_CONFIG": str(config_file), "PYTHONUTF8": "1"}
+    if version:
+        env["RELEASE_VERSION"] = version
 
-    print("\n== 3/4 Screenshots")
-    if args.keine_screenshots:
-        print("  übersprungen (--keine-screenshots)")
-    else:
-        if not (SCRIPTS / "node_modules").is_dir():
-            run("npm", "install", cwd=SCRIPTS)
-        run("npm", "run", "screenshots", cwd=SCRIPTS)
+    for number, (name, path) in enumerate(selected, start=1):
+        print(f"\n== {number}/{len(selected)} {name}", flush=True)
+        result = subprocess.run([sys.executable, str(path), *([version] if version else [])], cwd=root, env=env)
+        if result.returncode != 0:
+            fail(f"Schritt {path.name} ist fehlgeschlagen (Exit-Code {result.returncode})")
 
-    print("\n== 4/4 Handbuch")
-    build_manual.main()
-
-    print(f"\nVersion {version} ist vorbereitet. Noch zu tun:")
-    print("  - Änderungen und neue Screenshots prüfen (git status, git diff)")
-    print(f'  - committen, z. B. git commit -am "update version to {version}"')
-    print(f"  - Release v{version} auf GitHub veröffentlichen (baut und deployt die Seite)")
+    skipped = [path.name for name, path in steps if (name, path) not in selected]
+    if skipped:
+        print(f"\nÜbersprungen: {', '.join(skipped)}")
+    if version:
+        tag = project.get("release", {}).get("tag", "v{version}").format(version=version)
+        print(f"\nVersion {version} ist vorbereitet. Noch zu tun:")
+        print("  - Änderungen prüfen (git status, git diff)")
+        print(f'  - committen, z. B. git commit -am "prepare for release {version}"')
+        print(f"  - Release {tag} veröffentlichen")
 
 
 if __name__ == "__main__":

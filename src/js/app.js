@@ -66,10 +66,10 @@ const PRESET_CATALOG_URL =
 // Projektseite (Fußzeile: Projektseite)
 const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 
-// Handbuch: Weiterleitung auf die aktuelle PDF, von scripts/build_manual.py erzeugt
+// Handbuch: Weiterleitung auf die aktuelle PDF, vom Release-Schritt scripts/release/steps/80-redirect.py erzeugt
 const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.9';
+const APP_VERSION = '1.1.10';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';

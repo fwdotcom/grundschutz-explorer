@@ -2,6 +2,10 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [1.1.10] – 2026-09-30
+
+- Umstellung auf modulares Release-Script
+
 ## [1.1.9] – 2026-09-30
 
 ### Geändert

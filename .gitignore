@@ -1,5 +1,5 @@
 *.pdf
-# Von scripts/build_manual.py erzeugte Weiterleitung auf das aktuelle Handbuch
+# Vom Release-Schritt scripts/release/steps/80-redirect.py erzeugte Weiterleitung auf das aktuelle Handbuch
 src/manual/index.html
 
 # Python

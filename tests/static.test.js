@@ -49,13 +49,14 @@ test('Metadaten: Titel, Beschreibung und Open Graph mit absoluten URLs', () => {
   assert.match(ogImage, /^https:\/\//, 'og:image muss eine absolute URL sein');
 });
 
-test('Handbuch-Pfad in app.js passt zu scripts/build_manual.py', async () => {
+test('Handbuch-Pfad in app.js passt zu [redirect] dir in scripts/release/release.toml', async () => {
   const app = await readFile(path.join(SRC, 'js/app.js'), 'utf8');
-  const script = await readFile(path.join(SRC, '..', 'scripts/build_manual.py'), 'utf8');
+  const config = await readFile(path.join(SRC, '..', 'scripts/release/release.toml'), 'utf8');
   const manualPath = app.match(/^const MANUAL_PATH = '([^']+)';/m)?.[1];
-  const outDir = script.match(/^OUT_DIR = ROOT((?: \/ "[^"]+")+)$/m)?.[1];
-  assert.ok(manualPath && outDir, 'MANUAL_PATH oder OUT_DIR nicht gefunden');
-  const parts = [...outDir.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+  const section = config.split(/^\[/m).find((s) => s.startsWith('redirect]'));
+  const outDir = section?.match(/^dir = "([^"]+)"/m)?.[1];
+  assert.ok(manualPath && outDir, 'MANUAL_PATH oder [redirect] dir nicht gefunden');
+  const parts = outDir.split('/');
   assert.equal(parts[0], 'src');
   assert.equal(manualPath, `${parts.slice(1).join('/')}/`);
 });

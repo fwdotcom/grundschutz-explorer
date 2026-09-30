@@ -31,12 +31,13 @@ jobs:
         with:
           python-version: '3.13'
           cache: pip
-          cache-dependency-path: scripts/markpublish_requirements.txt
+          cache-dependency-path: scripts/release/markpublish_requirements.txt
 
-      - name: Handbuch bauen (src/manual)
+      - name: Handbuch bauen und Weiterleitung anlegen (src/manual)
         run: |
-          pip install -r scripts/markpublish_requirements.txt
-          python scripts/build_manual.py
+          pip install -r scripts/release/markpublish_requirements.txt
+          python scripts/release/steps/70-markpublish.py
+          python scripts/release/steps/80-redirect.py
 
       - name: Seite zusammenstellen
         run: |
