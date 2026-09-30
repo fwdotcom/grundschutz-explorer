@@ -345,7 +345,7 @@
                       <button role="menuitem" :disabled="lists.length === 0" @click="exportAllLists">Alle Listen sichern</button>
                     </div>
                   </div>
-                  <input ref="listImportInput" type="file" accept=".json,application/json" hidden @change="onListImportFile" />
+                  <input ref="listImportInput" type="file" accept=".json,application/json" hidden aria-label="Listen importieren" @change="onListImportFile" />
                 </div>
               </div>
             </div>
@@ -2152,7 +2152,7 @@
                   <!-- 2. Kategorieblock: Elementare Gefährdungen (direkt unter den Kenngrößen, fast immer vorhanden und kurz) -->
                   <div v-if="selectedControl.elementareGefaehrdungen?.length" class="card">
                     <div class="card-head">
-                      <h4>Elementare Gefährdungen</h4>
+                      <h3>Elementare Gefährdungen</h3>
                     </div>
                     <ul class="threat-list">
                       <li v-for="threat in selectedControl.elementareGefaehrdungen" :key="threat">
@@ -2175,7 +2175,7 @@
                   <!-- 3. Kategorieblock: Unteranforderungen (falls vorhanden) -->
                   <div v-if="selectedControl.subcontrols?.length" class="card">
                     <div class="card-head">
-                      <h4>Unteranforderungen</h4>
+                      <h3>Unteranforderungen</h3>
                     </div>
                     <ul class="sub-list">
                       <li v-for="subc in selectedControl.subcontrols" :key="subc.id">
@@ -2191,7 +2191,7 @@
                   <!-- 4. Kategorieblock: Verknüpfte Anforderungen -->
                   <div v-if="linkedControls.total > 0" class="card">
                     <div class="card-head">
-                      <h4>Verknüpfte Anforderungen</h4>
+                      <h3>Verknüpfte Anforderungen</h3>
                     </div>
 
                     <!-- Sub-Block 1: Setzt voraus -->
@@ -2246,7 +2246,7 @@
                   <!-- 5. Kategorieblock: Einordnung -->
                   <div class="card">
                     <div class="card-head">
-                      <h4>Einordnung</h4>
+                      <h3>Einordnung</h3>
                     </div>
                     <dl class="kv-grid" style="margin:0">
                       <div class="kv full">
@@ -2360,7 +2360,7 @@
                   <!-- 1. Kategorieblock: Änderungsübersicht -->
                   <div v-if="selectedControl.diff" class="card">
                     <div class="card-head">
-                      <h4>Änderungsübersicht</h4>
+                      <h3>Änderungsübersicht</h3>
                     </div>
                     <div class="card-pad">
                       <div class="diff-status">
@@ -2392,7 +2392,7 @@
                   <!-- 2. Kategorieblock: Textvergleich Anforderungstext -->
                   <div v-if="statementDiffTokens.length" class="card">
                     <div class="card-head">
-                      <h4>Textvergleich: Anforderungstext</h4>
+                      <h3>Textvergleich: Anforderungstext</h3>
                     </div>
                     <div class="card-pad">
                       <div class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
@@ -2402,7 +2402,7 @@
                   <!-- 3. Kategorieblock: Textvergleich Hilfestellung -->
                   <div v-if="guidanceDiffTokens.length" class="card">
                     <div class="card-head">
-                      <h4>Textvergleich: Hilfestellung</h4>
+                      <h3>Textvergleich: Hilfestellung</h3>
                     </div>
                     <div class="card-pad">
                       <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
@@ -2420,7 +2420,7 @@
                   </div>
                   <div class="detail-callout-main">
                     <div class="detail-callout-head">
-                      <h5 class="detail-callout-title">{{ activeHelpInfo.title }}</h5>
+                      <h3 class="detail-callout-title">{{ activeHelpInfo.title }}</h3>
                       <button class="detail-callout-close" @click="closeHelp()" title="Erläuterung schließen (Esc)" aria-label="Erläuterung schließen">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
@@ -2453,18 +2453,18 @@
     <footer class="app-footer" :inert="isRailOpen || null">
       <div class="footer-left" ref="footerLeft">
         <span class="footer-brand footer-hide-1">Grundschutz++ Explorer</span>
-        <span class="footer-sep footer-hide-1">|</span>
+        <span class="footer-sep footer-hide-1" aria-hidden="true">|</span>
         <span class="footer-version footer-hide-2">Version {{ appVersion }}</span>
-        <span class="footer-sep footer-hide-2">|</span>
+        <span class="footer-sep footer-hide-2" aria-hidden="true">|</span>
         <a :href="PROJECT_URL" target="_blank" rel="noopener noreferrer" class="footer-link footer-hide-3">Projektseite</a>
       </div>
       <div class="footer-right">
         <a :href="manualUrl" target="_blank" rel="noopener" class="footer-link">Handbuch</a>
-        <span class="footer-sep">|</span>
+        <span class="footer-sep" aria-hidden="true">|</span>
         <button class="footer-link" @click="isLicenseModalOpen = true">Lizenz</button>
-        <span class="footer-sep">|</span>
+        <span class="footer-sep" aria-hidden="true">|</span>
         <button class="footer-link" @click="isImpressumModalOpen = true">Impressum</button>
-        <span class="footer-sep">|</span>
+        <span class="footer-sep" aria-hidden="true">|</span>
         <button class="footer-link" @click="isDatenschutzModalOpen = true">Datenschutz</button>
       </div>
     </footer>
@@ -2474,8 +2474,8 @@
       ref="confirmDialogEl"
       class="modal confirm-dialog"
       :class="{ 'has-alt': confirmState?.altLabel }"
-      aria-labelledby="confirm-title"
-      aria-describedby="confirm-message"
+      :aria-labelledby="confirmState ? 'confirm-title' : null"
+      :aria-describedby="confirmState ? 'confirm-message' : null"
       @close="onConfirmDialogClose"
       @click.self="$event.target.close('cancel')"
     >
@@ -2894,7 +2894,7 @@ SOFTWARE.</pre>
 
   </div>
 
-  <script src="vendor/vue.global.prod.js"></script>
+  <script src="vendor/vue.global.prod.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

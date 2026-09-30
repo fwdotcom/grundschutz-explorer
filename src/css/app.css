@@ -1595,10 +1595,13 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   color: var(--accent-text);
   text-decoration: underline;
 }
+/* Rein dekorativ (aria-hidden), daher nach WCAG 1.4.3 ohne Kontrastanforderung */
 .app-footer .footer-sep {
   color: var(--border-strong);
   user-select: none;
   opacity: 0.6;
+  /* "|" reicht in Open Sans bis in die Unterlänge und wirkt sonst zu tief */
+  transform: translateY(-0.1em);
 }
 
 /* ---------- Responsive ---------- */
