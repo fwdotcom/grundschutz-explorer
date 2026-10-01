@@ -2413,7 +2413,7 @@
                 <!-- Änderungen -->
                 <div v-else-if="detailActiveTab === 'diff'" class="stack">
                   <!-- 1. Kategorieblock: Änderungsübersicht, je geändertes Feld eine Zeile -->
-                  <div v-if="selectedControl.diff" class="card">
+                  <div v-if="selectedControl.diff && (selectedControl.diff.status !== 'modified' || overviewChanges.length)" class="card">
                     <div class="card-head">
                       <h3>Änderungsübersicht</h3>
                     </div>
@@ -2424,10 +2424,9 @@
                         <dd v-else-if="selectedControl.diff.status === 'deleted'">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</dd>
                         <dd v-else>Unverändert gegenüber dem Vergleichsstand.</dd>
                       </div>
-                      <div v-for="ch in selectedControl.diff.changes" :key="ch.field" class="kv full change-field">
+                      <div v-for="ch in overviewChanges" :key="ch.field" class="kv full change-field">
                         <dt>{{ ch.label }}</dt>
-                        <dd v-if="ch.kind === 'prose'" class="muted">geändert, siehe Textvergleich</dd>
-                        <dd v-else-if="ch.kind === 'list'">
+                        <dd v-if="ch.kind === 'list'">
                           <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
                           <span v-if="ch.removed.length && ch.added.length"> · </span>
                           <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>

@@ -61,7 +61,7 @@ Unterscheiden sich die beiden Stände, zeigt die Detailansicht den Reiter **Änd
 Reiter „Änderungen“
 ///
 
-1. **Änderungsübersicht:** alle geänderten Angaben mit den Bezeichnungen der Detailansicht, bei einzelnen Werten als *alt → neu*, z. B. ein Modalverb von `MUSS` auf `SOLLTE`. Bei Listen wie Tags oder Gefährdungen stehen entfallene Werte rot, hinzugekommene grün.
+1. **Änderungsübersicht:** alle geänderten Angaben außer den Texten mit den Bezeichnungen der Detailansicht, bei einzelnen Werten als *alt → neu*, z. B. ein Modalverb von `MUSS` auf `SOLLTE`. Bei Listen wie Tags oder Gefährdungen stehen entfallene Werte rot, hinzugekommene grün.
 2. **Textvergleich:** Für Anforderungstext und Hilfestellung zeigt ein Wortvergleich gestrichene Stellen rot durchgestrichen und neue Stellen grün hervorgehoben.
 
 ## Gespeicherte Daten löschen

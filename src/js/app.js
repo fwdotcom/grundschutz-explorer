@@ -1112,6 +1112,9 @@ const app = createApp({
       return comparisonCatalog.value.controlMap.get(selectedControlId.value) || null;
     });
 
+    // Zeilen der Änderungsübersicht; Textänderungen stehen im Textvergleich
+    const overviewChanges = computed(() => (selectedControl.value?.diff?.changes || []).filter((ch) => ch.kind !== 'prose'));
+
     // Word diffs
     const statementDiffTokens = computed(() => {
       if (selectedControl.value?.diff?.status !== 'modified') return [];
@@ -3237,6 +3240,7 @@ const app = createApp({
       previousControl,
       navigateBack,
       baseControlForDiff,
+      overviewChanges,
       statementDiffTokens,
       guidanceDiffTokens,
 
