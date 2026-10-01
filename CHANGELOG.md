@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [Unveröffentlicht]
+
+### Neu
+
+- Kopfbereich der Detailansicht einklappbar, auch in den Übersichten: Der Pfeil oben rechts blendet Pfadleiste und Hinweise aus, der Schutzbedarf steht dann neben der Kennung.
+
+### Geändert
+
+- Stern der Detailansicht steht jetzt oben rechts neben dem Klapppfeil.
+- Schutzbedarf in der Detailansicht mit dem Begriff aus dem BSI-Namensraum, die Bezeichnung steht im Tooltip.
+- Reiter „Änderungen“ im Stil der Übersicht: Felder mit Beschriftung und Trennlinien, Textvergleich in einer Karte.
+- Reiter „Notizen“ im Stil der Übersicht: Überschrift nennt die aktive Liste, darunter das Notizfeld und bei mehreren Listen ein schneller Listenwechsel.
+
 ## [1.1.11] – 2026-09-30
 
 ### Geändert

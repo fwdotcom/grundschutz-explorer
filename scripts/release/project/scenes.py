@@ -364,12 +364,12 @@ def detail_notizen_andere(env):
         return _detail(s, s.bottom_of("document.querySelector('.notes-text')") + 16)
 
 
-# Stern in der Titelzeile als kleines quadratisches Bild
+# Stern oben rechts im Kopfbereich als kleines quadratisches Bild
 def _stern(control_id):
     def scene(env):
         with handbuch(env) as s:
             s.show_control(control_id)
-            r = s.rect(".detail-titlebar .star-btn")
+            r = s.rect(".detail-head-actions .star-btn")
             size = max(r["width"], r["height"]) + 8
             return s.shot(
                 {"x": r["x"] + r["width"] / 2 - size / 2, "y": r["y"] + r["height"] / 2 - size / 2, "width": size, "height": size}

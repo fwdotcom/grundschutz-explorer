@@ -676,22 +676,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hits-menu { width: max-content; max-width: min(360px, 80vw); }
 .hits-menu button { overflow-wrap: anywhere; }
 
-/* Stern am Titel: leer = in keiner Liste, grau = in anderer Liste, gelb = in der aktiven Liste */
-.detail-title-row { display: flex; align-items: flex-start; gap: 12px; }
-.detail-title-row .detail-title { flex: 1; min-width: 0; }
-.star-btn {
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  /* mittig zur ersten Zeile der Überschrift (20px, Zeilenhöhe 1,3, 2px Abstand oben) */
-  width: 36px; height: 36px; margin: calc(2px + (26px * var(--font-scale) - 36px) / 2) -6px 0 0; border-radius: var(--radius);
-  /* was über die erste Zeile hinausragt, vergrößert nicht den Abstand zu den Tags */
-  margin-bottom: min(0px, calc(13px * var(--font-scale) - 18px));
-  transition: background 0.12s, transform 0.08s;
-}
-.star-btn svg { width: 24px; height: 24px; fill: none; stroke: var(--text-3); transition: fill 0.12s, stroke 0.12s; }
+/* Stern oben rechts im Kopfbereich, als Knopf wie in der Explorerleiste: leer = in keiner Liste, grau = in anderer Liste,
+   gelb = in der aktiven Liste */
 .star-btn.star-other svg { fill: var(--list-other); stroke: var(--list-other); }
 .star-btn.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
-.star-btn:not([aria-disabled="true"]):hover { background: var(--surface-hover); }
-.star-btn:not([aria-disabled="true"]):active { transform: scale(0.92); }
 .star-btn[aria-disabled="true"] { cursor: default; opacity: 0.8; }
 .star-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
@@ -700,12 +688,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .note-dot-here { background: var(--added); }
 .note-dot-other { background: var(--list-other); }
 
-.notes-panel { display: grid; gap: 10px; }
+/* Reiter "Notizen": Karte mit Kopfzeile, Notizfeld und (bei mehreren Listen) einem Feld (.kv) für den Listenwechsel */
 .notes-head { display: flex; align-items: center; gap: 8px; }
 .icon-btn.notes-filter { width: 36px; height: 36px; flex-shrink: 0; }
 .notes-filter:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 /* Auswahlfeld im Stil des Suchfelds, mit eigenem Pfeil statt des Browser-Pfeils */
-.notes-select-label { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+.notes-select-wrap { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
 .notes-select {
   appearance: none; width: 100%; height: 36px; padding: 0 34px 0 12px;
   border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-sm);
@@ -715,12 +703,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .notes-select:hover:not(:focus) { background: var(--surface-hover); border-color: var(--border-strong); }
 .notes-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .notes-select-chev { position: absolute; right: 11px; color: var(--text-3); pointer-events: none; }
-.notes-meta { margin: 0; text-align: right; font-size: calc(12px * var(--font-scale)); color: var(--text-3); }
-/* Innenabstand wie beim Wortlaut im Reiter Übersicht; .input steht weiter unten und setzt sonst eigene Abstände */
-.input.notes-text {
-  height: auto; min-height: 240px; padding: 14px 20px; resize: vertical; overflow: auto;
+/* Notizfeld mit Innenabstand wie der Wortlaut im Reiter Übersicht; ohne eigenen Rahmen, der Fokus markiert das ganze Feld */
+.notes-note { padding: 14px 20px; cursor: text; transition: box-shadow 0.12s; }
+.notes-note:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.notes-note:focus-within { box-shadow: inset 0 0 0 2px var(--accent); }
+.notes-switch { margin: 0; border-top: 1px solid var(--border); }
+.notes-meta { margin: 6px 0 0; text-align: right; font-size: calc(11.5px * var(--font-scale)); color: var(--text-3); }
+.notes-text {
+  min-height: 220px; resize: vertical; overflow: auto; outline: none;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
-  font-size: calc(13.5px * var(--font-scale)); line-height: 1.55;
+  font-size: calc(13.5px * var(--font-scale)); line-height: 1.55; color: var(--text);
 }
 .notes-text:empty::before { content: attr(data-placeholder); color: var(--text-3); pointer-events: none; }
 
@@ -1040,6 +1032,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .crumbs button:hover .crumb-home { color: var(--accent-text); }
 .crumbs .crumb-current { display: inline-flex; align-items: center; }
 .detail-head.scope-head { padding-bottom: 18px; }
+/* Aktionen oben rechts (Stern nur bei Anforderungen, Klappknopf; Größe wie die Knöpfe der Explorerleiste): fest beim Ein- und Ausklappen, mittig zur ersten Zeile (Pfadleiste bzw. Kennung).
+   Pfadleiste und Kennung lassen rechts Platz für sie; eingeklappt rückt der Titel unter sie */
+.detail-head { position: relative; }
+.detail-head-actions { position: absolute; top: 13px; right: 28px; display: flex; align-items: center; gap: 6px; }
+/* Pfeil nach oben = eingeklappt, nach unten = aufgeklappt (wie am Anforderungstext) */
+.detail-head-toggle .chev { color: inherit; }
+.detail-head-toggle .chev.open { transform: rotate(180deg); }
+.detail-head .crumbs { padding-right: 64px; }
+.detail-id-row { display: flex; align-items: center; gap: 8px; }
+.detail-head.head-closed .detail-id-row, .detail-head.head-closed .titles > .detail-id { min-height: 24px; padding-right: 64px; }
 .crumbs .sep { opacity: 0.5; font-size: calc(13px * var(--font-scale)); line-height: 1; margin: 0 2px; user-select: none; }
 .detail-titlebar { display: flex; align-items: flex-start; gap: 12px; }
 .detail-titlebar .titles { flex: 1; min-width: 0; }
@@ -1092,14 +1094,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .statement.has-terms { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 .statement-text { white-space: pre-line; }
 /* Klappbutton rechts am Ende der letzten Textzeile (bzw. darunter, wenn die Zeile voll ist) */
-/* Größe wie die Buttons im Filter; relativ verschoben auf je 10px Abstand zum rechten und unteren Rand der Fläche,
-   ohne den Textfluss zu ändern (unten: Innenabstand 14px + Zeilenhöhe − Buttonhöhe 22px − 10px). Der untere Außenabstand
-   gibt dem Button eine volle Zeilenhöhe, damit der Abstand auch stimmt, wenn er in eine eigene Zeile rutscht */
+/* Größe wie die Knöpfe der Explorerleiste (icon-btn sm, 26px); relativ verschoben auf je 10px Abstand zum rechten und
+   unteren Rand der Fläche, ohne den Textfluss zu ändern (unten: Innenabstand 14px + Zeilenhöhe − Buttonhöhe 26px − 10px).
+   Der untere Außenabstand gibt dem Button eine volle Zeilenhöhe, damit der Abstand auch stimmt, wenn er in eine eigene
+   Zeile rutscht */
 .icon-btn.statement-toggle {
   --line: calc(15.5px * var(--font-scale) * 1.7);
-  float: right; position: relative; left: 10px; top: calc(var(--line) - 18px);
-  width: 22px; height: 22px; margin: 0 0 calc(var(--line) - 22px) 8px; border-radius: 4px;
+  float: right; position: relative; left: 10px; top: calc(var(--line) - 22px);
+  margin: 0 0 calc(var(--line) - 26px) 8px;
 }
+/* Pfeil nach oben = eingeklappt, nach unten = aufgeklappt (wie beim Kopfbereich) */
 .statement-toggle .chev { color: inherit; }
 .statement-toggle .chev.open { transform: rotate(180deg); }
 .statement-terms { margin: 0; border-top: 1px solid var(--border); }
@@ -1251,15 +1255,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .prose { font-size: calc(14.5px * var(--font-scale)); line-height: 1.75; color: var(--text); white-space: pre-line; }
 .muted-note { font-size: calc(13px * var(--font-scale)); color: var(--text-3); font-style: italic; }
 
-.diff-status { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.change-list { display: grid; gap: 8px; font-size: calc(13px * var(--font-scale)); }
-.change-list li { display: grid; gap: 2px; }
-.change-list .old { color: var(--muss); text-decoration: line-through; }
-.change-list .new { color: var(--added); }
-.change-list .muted { color: var(--text-3); }
-.diff-note { margin: 0 0 12px; font-size: calc(13px * var(--font-scale)); color: var(--text-2); }
-.diff-text { padding: 14px 16px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); font-size: calc(14px * var(--font-scale)); line-height: 1.7; }
-.diff-text.scroll { max-height: 320px; overflow-y: auto; font-size: calc(13px * var(--font-scale)); }
+/* Änderungsübersicht: alte Werte durchgestrichen, neue grün */
+.change-field .old { color: var(--muss); text-decoration: line-through; }
+.change-field .new { color: var(--added); }
+.diff-text { line-height: 1.7; }
 .tok-add { background: var(--added-soft); color: var(--added); border-radius: 3px; padding: 0 2px; }
 .tok-del { background: var(--muss-soft); color: var(--muss); text-decoration: line-through; border-radius: 3px; padding: 0 2px; }
 

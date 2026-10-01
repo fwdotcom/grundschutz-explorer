@@ -241,6 +241,9 @@ const app = createApp({
     const railCollapsed = ref({ ...RAIL_COLLAPSED_DEFAULT });
     // Modalverb und Handlungswort unter dem Anforderungstext eingeblendet
     const statementTermsOpen = ref(false);
+    // Kopfbereich der Detailansicht (Anforderung und Übersichten): zugeklappt ohne Pfadleiste und Hinweiszeile;
+    // der Schutzbedarf steht dann neben der Kennung
+    const detailHeadOpen = ref(true);
 
     const tagRailSearch = ref('');
 
@@ -1184,6 +1187,7 @@ const app = createApp({
             selectedControlId: selectedControlId.value,
             listViewMode: listViewMode.value,
             statementTermsOpen: statementTermsOpen.value,
+            detailHeadOpen: detailHeadOpen.value,
           });
         } catch (err) {
           console.warn('Fehler beim Speichern der Einklappsituation:', err);
@@ -1302,6 +1306,7 @@ const app = createApp({
         selectedControlId.value,
         listViewMode.value,
         statementTermsOpen.value,
+        detailHeadOpen.value,
       ],
       () => {
         scheduleSaveCollapse();
@@ -1392,6 +1397,9 @@ const app = createApp({
           }
           if (typeof savedCollapseState.statementTermsOpen === 'boolean') {
             statementTermsOpen.value = savedCollapseState.statementTermsOpen;
+          }
+          if (typeof savedCollapseState.detailHeadOpen === 'boolean') {
+            detailHeadOpen.value = savedCollapseState.detailHeadOpen;
           }
         }
 
@@ -3327,6 +3335,7 @@ const app = createApp({
       tagDefinition,
       railCollapsed,
       statementTermsOpen,
+      detailHeadOpen,
       filteredControlIds,
       allActiveChips,
       hasActiveFilters,

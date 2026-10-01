@@ -1675,8 +1675,21 @@
                 </div>
               </div>
 
-              <div class="detail-head scope-head">
-                <nav class="crumbs" aria-label="Hierarchie">
+              <div class="detail-head scope-head" :class="{ 'head-closed': !detailHeadOpen }">
+                <!-- Klappknopf oben rechts wie bei Anforderungen (gemeinsamer Zustand), hier ohne Stern -->
+                <div class="detail-head-actions">
+                  <button
+                    class="icon-btn sm btn-outline detail-head-toggle"
+                    @click="detailHeadOpen = !detailHeadOpen"
+                    aria-controls="detail-crumbs detail-tags"
+                    :aria-expanded="detailHeadOpen"
+                    :title="detailHeadOpen ? 'Pfadleiste und weitere Hinweise ausblenden' : 'Pfadleiste und weitere Hinweise einblenden'"
+                    aria-label="Pfadleiste und weitere Hinweise"
+                  >
+                    <svg class="icon-sm chev" :class="{ open: detailHeadOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+                  </button>
+                </div>
+                <nav v-show="detailHeadOpen" id="detail-crumbs" class="crumbs" aria-label="Hierarchie">
                   <span v-if="!scopePractice" class="crumb-current" aria-current="page" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M10 2v8l3-3 3 3V2"/></svg><span class="sr-only">Katalog</span></span>
                   <button v-else @click="showCatalogOverview" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="sr-only">Katalog</span></button>
                   <template v-if="scopeSubgroup">
@@ -1695,7 +1708,7 @@
                 </div>
 
                 <!-- Umfang über alle Ebenen darunter; die Zahlen stehen nur hier -->
-                <div class="detail-tags">
+                <div v-show="detailHeadOpen" id="detail-tags" class="detail-tags">
                   <span class="tag tag-lg tag-accent">{{ scopeSubgroup ? 'Thema' : scopePractice ? 'Praktik' : 'Katalog' }}</span>
                   <span v-if="!scopePractice" class="tag tag-lg tag-outline">{{ overviewStats.practices }} {{ overviewStats.practices === 1 ? 'Praktik' : 'Praktiken' }}</span>
                   <span v-if="!scopeSubgroup && overviewStats.subgroups" class="tag tag-lg tag-outline">{{ overviewStats.subgroups }} {{ overviewStats.subgroups === 1 ? 'Thema' : 'Themen' }}</span>
@@ -1856,8 +1869,32 @@
                 </div>
               </div>
 
-              <div class="detail-head">
-                <nav class="crumbs" aria-label="Hierarchie">
+              <div class="detail-head" :class="{ 'head-closed': !detailHeadOpen }">
+                <!-- Aktionen oben rechts, fest beim Ein- und Ausklappen: Stern und Klappknopf (blendet Pfadleiste und
+                     weitere Hinweise aus und ein, wie der Knopf am Anforderungstext) -->
+                <div class="detail-head-actions">
+                  <button
+                    class="icon-btn sm btn-outline star-btn"
+                    :class="'star-' + selectedStarState"
+                    :aria-pressed="selectedStarState === 'here'"
+                    :aria-label="'In Liste „' + writeList.name + '“ merken'"
+                    :title="selectedStarTitle"
+                    @click="toggleStar"
+                  >
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
+                  </button>
+                  <button
+                    class="icon-btn sm btn-outline detail-head-toggle"
+                    @click="detailHeadOpen = !detailHeadOpen"
+                    aria-controls="detail-crumbs detail-tags"
+                    :aria-expanded="detailHeadOpen"
+                    :title="detailHeadOpen ? 'Pfadleiste und weitere Hinweise ausblenden' : 'Pfadleiste und weitere Hinweise einblenden'"
+                    aria-label="Pfadleiste und weitere Hinweise"
+                  >
+                    <svg class="icon-sm chev" :class="{ open: detailHeadOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
+                  </button>
+                </div>
+                <nav v-show="detailHeadOpen" id="detail-crumbs" class="crumbs" aria-label="Hierarchie">
                   <button @click="showCatalogOverview" title="Übersicht über den Katalog"><svg class="crumb-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="sr-only">Katalog</span></button>
                   <span class="sep">&raquo;</span>
                   <!-- Ebene 1: Praktik -->
@@ -1893,24 +1930,21 @@
 
                 <div class="detail-titlebar">
                   <div class="titles">
-                    <div class="detail-id">{{ selectedControl.id }}</div>
-                    <div class="detail-title-row">
-                      <h2 class="detail-title">{{ selectedControl.title }}</h2>
-                      <button
-                        class="star-btn"
-                        :class="'star-' + selectedStarState"
-                        :aria-pressed="selectedStarState === 'here'"
-                        :aria-label="'In Liste „' + writeList.name + '“ merken'"
-                        :title="selectedStarTitle"
-                        @click="toggleStar"
-                      >
-                        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
-                      </button>
+                    <!-- Eingeklappt steht der Schutzbedarf als Chip neben der Kennung (statt der Hinweiszeile) -->
+                    <div class="detail-id-row">
+                      <div class="detail-id">{{ selectedControl.id }}</div>
+                      <span
+                        v-if="!detailHeadOpen && selectedControl.secLevel"
+                        class="tag"
+                        :class="selectedControl.secLevel === 'erhöht' ? 'tag-sec-erhoeht' : 'tag-outline'"
+                        :title="secLevelDisplayLabel(selectedControl.secLevel)"
+                      >{{ selectedControl.secLevel }}</span>
                     </div>
+                    <h2 class="detail-title">{{ selectedControl.title }}</h2>
                   </div>
                 </div>
 
-                <div class="detail-tags">
+                <div v-show="detailHeadOpen" id="detail-tags" class="detail-tags">
                   <span class="tag tag-lg tag-accent">{{ selectedControl.isSubcontrol ? 'Unteranforderung' : 'Anforderung' }}</span>
                   <span
                     v-if="verbKey(selectedControl.modalVerb)"
@@ -1922,8 +1956,8 @@
                     v-if="selectedControl.secLevel"
                     class="tag tag-lg"
                     :class="selectedControl.secLevel === 'erhöht' ? 'tag-sec-erhoeht' : 'tag-outline'"
-                    :title="'Schutzbedarf: ' + secLevelDisplayLabel(selectedControl.secLevel)"
-                  >{{ secLevelDisplayLabel(selectedControl.secLevel) }}</span>
+                    :title="secLevelDisplayLabel(selectedControl.secLevel)"
+                  >{{ selectedControl.secLevel }}</span>
                   <span v-if="selectedControlStats.sub" class="tag tag-lg tag-outline">{{ selectedControlStats.sub }} {{ selectedControlStats.sub === 1 ? 'Unteranforderung' : 'Unteranforderungen' }}</span>
                   <span
                     v-if="selectedControlStats.threats"
@@ -1962,15 +1996,14 @@
                       <span class="statement-text" v-html="highlightProse(selectedControl.statementProse, selectedControl.modalVerb)"></span>
                       <button
                         v-if="hasStatementTerms"
-                        class="icon-btn btn-outline statement-toggle"
-                        :class="{ active: statementTermsOpen }"
+                        class="icon-btn sm btn-outline statement-toggle"
                         @click="statementTermsOpen = !statementTermsOpen"
                         aria-controls="statement-terms"
                         :aria-expanded="statementTermsOpen"
                         :title="statementTermsOpen ? 'Zielobjektkategorie, Modalverb und Handlungswort ausblenden' : 'Zielobjektkategorie, Modalverb und Handlungswort einblenden'"
                         aria-label="Zielobjektkategorie, Modalverb und Handlungswort"
                       >
-                        <svg class="icon-xs chev" :class="{ open: statementTermsOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        <svg class="icon-sm chev" :class="{ open: statementTermsOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>
                       </button>
                     </div>
                     <!-- Zielobjektkategorie, Modalverb und Handlungswort aus dem Wortlaut: Klick filtert, (i) erläutert -->
@@ -2323,41 +2356,51 @@
 
                 <!-- Notizen: nur die aktive Liste ist beschreibbar, andere Listen nur lesbar -->
                 <div v-else-if="detailActiveTab === 'notes'" class="stack">
-                  <div class="notes-panel">
-                    <!-- Auswahl der aktiven Liste (wie in der Filterleiste); ohne Listen steht dort die Merkliste -->
-                    <div class="notes-head">
-                      <label class="notes-select-label">
-                        <span class="sr-only">Aktive Liste</span>
-                        <select class="notes-select" :value="writeList.id" title="Aktive Liste für Favoriten und Notizen" @change="setActiveList($event.target.value)">
-                          <option v-for="l in notesListOptions" :key="l.id" :value="l.id">
-                            {{ l.name }}
-                          </option>
-                        </select>
-                        <svg class="icon-xs notes-select-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                      </label>
-                      <button
-                        class="icon-btn btn-outline notes-filter"
-                        :class="{ active: !notesAllLists }"
-                        :aria-pressed="!notesAllLists"
-                        @click="notesAllLists = !notesAllLists"
-                        :title="notesAllLists ? 'Nur im Filter verfügbare Listen anbieten' : 'Alle Listen anbieten'"
-                        aria-label="Nur im Filter verfügbare Listen anbieten"
-                      >
-                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
-                      </button>
+                  <!-- Karte: Notiz der aktiven Liste, darunter der Listenwechsel -->
+                  <div class="card">
+                    <div class="card-head">
+                      <h3>Notiz in „{{ writeList.name }}“</h3>
                     </div>
-                    <div
-                      class="input notes-text"
-                      v-plain-text="notesEntry?.note || ''"
-                      contenteditable="plaintext-only"
-                      role="textbox"
-                      aria-multiline="true"
-                      :aria-label="'Notiz in Liste ' + writeList.name"
-                      :data-placeholder="'Notiz zu ' + selectedControl.id + ' in „' + writeList.name + '“ …'"
-                      :aria-placeholder="'Notiz zu ' + selectedControl.id + ' in „' + writeList.name + '“'"
-                      @input="updateNote($event.target.innerText)"
-                    ></div>
-                    <p v-if="notesEntry?.updatedAt && notesEntry.note" class="notes-meta">zuletzt geändert <time :datetime="notesEntry.updatedAt">{{ formatDate(notesEntry.updatedAt) }}</time></p>
+                    <div class="notes-note">
+                      <div
+                        class="notes-text"
+                        v-plain-text="notesEntry?.note || ''"
+                        contenteditable="plaintext-only"
+                        role="textbox"
+                        aria-multiline="true"
+                        :aria-label="'Notiz in Liste ' + writeList.name"
+                        :data-placeholder="'Notiz zu ' + selectedControl.id + ' …'"
+                        :aria-placeholder="'Notiz zu ' + selectedControl.id"
+                        @input="updateNote($event.target.innerText)"
+                      ></div>
+                      <p v-if="notesEntry?.updatedAt && notesEntry.note" class="notes-meta">zuletzt geändert <time :datetime="notesEntry.updatedAt">{{ formatDate(notesEntry.updatedAt) }}</time></p>
+                    </div>
+                    <!-- Wechsel der aktiven Liste (wie in der Filterleiste), nur bei mehreren Listen -->
+                    <dl v-if="sortedLists.length > 1" class="kv-grid notes-switch">
+                      <div class="kv full">
+                        <dt><label for="notes-list">Schneller Listenwechsel</label></dt>
+                        <dd class="notes-head">
+                          <span class="notes-select-wrap">
+                            <select id="notes-list" class="notes-select" :value="writeList.id" title="Aktive Liste für Favoriten und Notizen" @change="setActiveList($event.target.value)">
+                              <option v-for="l in notesListOptions" :key="l.id" :value="l.id">
+                                {{ l.name }}
+                              </option>
+                            </select>
+                            <svg class="icon-xs notes-select-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                          </span>
+                          <button
+                            class="icon-btn btn-outline notes-filter"
+                            :class="{ active: !notesAllLists }"
+                            :aria-pressed="!notesAllLists"
+                            @click="notesAllLists = !notesAllLists"
+                            :title="notesAllLists ? 'Nur im Filter verfügbare Listen anbieten' : 'Alle Listen anbieten'"
+                            aria-label="Nur im Filter verfügbare Listen anbieten"
+                          >
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+                          </button>
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
                 </div>
 
@@ -2371,56 +2414,50 @@
 
                 <!-- Änderungen -->
                 <div v-else-if="detailActiveTab === 'diff'" class="stack">
-                  <!-- 1. Kategorieblock: Änderungsübersicht -->
+                  <!-- 1. Kategorieblock: Änderungsübersicht, je geändertes Feld eine Zeile -->
                   <div v-if="selectedControl.diff" class="card">
                     <div class="card-head">
                       <h3>Änderungsübersicht</h3>
                     </div>
-                    <div class="card-pad">
-                      <div class="diff-status">
-                        <span class="tag tag-lg" :class="selectedControl.diff.status === 'unchanged' ? '' : 'diff-' + selectedControl.diff.status">
-                          {{ selectedControl.diff.status === 'unchanged' ? 'Unverändert' : diffLabel(selectedControl.diff.status, true) }}
-                        </span>
+                    <dl class="kv-grid" style="margin:0">
+                      <div v-if="selectedControl.diff.status !== 'modified'" class="kv full">
+                        <dt>Status</dt>
+                        <dd v-if="selectedControl.diff.status === 'added'">Im Vergleichsstand noch nicht enthalten.</dd>
+                        <dd v-else-if="selectedControl.diff.status === 'deleted'">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</dd>
+                        <dd v-else>Unverändert gegenüber dem Vergleichsstand.</dd>
                       </div>
-                      <p v-if="selectedControl.diff.status === 'added'" class="diff-note">Im Vergleichsstand noch nicht enthalten.</p>
-                      <p v-else-if="selectedControl.diff.status === 'deleted'" class="diff-note">Nur im Vergleichsstand enthalten, im angezeigten Katalog entfallen.</p>
-                      <ul v-if="selectedControl.diff.changes.length" class="change-list">
-                        <li v-for="ch in selectedControl.diff.changes" :key="ch.field">
-                          <strong>{{ ch.label }}</strong>
-                          <span v-if="ch.kind === 'prose'" class="muted">geändert, siehe unten</span>
-                          <span v-else-if="ch.kind === 'list'">
-                            <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
-                            <span v-if="ch.removed.length && ch.added.length"> · </span>
-                            <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
-                          </span>
-                          <span v-else>
-                            <span class="old">{{ formatChangeValue(ch.field, ch.oldValue) }}</span>
-                            <span> → </span>
-                            <span class="new">{{ formatChangeValue(ch.field, ch.newValue) }}</span>
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
+                      <div v-for="ch in selectedControl.diff.changes" :key="ch.field" class="kv full change-field">
+                        <dt>{{ ch.label }}</dt>
+                        <dd v-if="ch.kind === 'prose'" class="muted">geändert, siehe Textvergleich</dd>
+                        <dd v-else-if="ch.kind === 'list'">
+                          <span v-if="ch.removed.length" class="old">{{ ch.removed.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                          <span v-if="ch.removed.length && ch.added.length"> · </span>
+                          <span v-if="ch.added.length" class="new">{{ ch.added.map((v) => formatChangeValue(ch.field, v)).join(', ') }}</span>
+                        </dd>
+                        <dd v-else>
+                          <span class="old">{{ formatChangeValue(ch.field, ch.oldValue) }}</span>
+                          <span> → </span>
+                          <span class="new">{{ formatChangeValue(ch.field, ch.newValue) }}</span>
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
 
-                  <!-- 2. Kategorieblock: Textvergleich Anforderungstext -->
-                  <div v-if="statementDiffTokens.length" class="card">
+                  <!-- 2. Kategorieblock: Textvergleich von Anforderungstext und Hilfestellung -->
+                  <div v-if="statementDiffTokens.length || guidanceDiffTokens.length" class="card">
                     <div class="card-head">
-                      <h3>Textvergleich: Anforderungstext</h3>
+                      <h3>Textvergleich</h3>
                     </div>
-                    <div class="card-pad">
-                      <div class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
-                    </div>
-                  </div>
-
-                  <!-- 3. Kategorieblock: Textvergleich Hilfestellung -->
-                  <div v-if="guidanceDiffTokens.length" class="card">
-                    <div class="card-head">
-                      <h3>Textvergleich: Hilfestellung</h3>
-                    </div>
-                    <div class="card-pad">
-                      <div class="diff-text scroll"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></div>
-                    </div>
+                    <dl class="kv-grid" style="margin:0">
+                      <div v-if="statementDiffTokens.length" class="kv full">
+                        <dt>Anforderungstext</dt>
+                        <dd class="diff-text"><span v-for="(tok, idx) in statementDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></dd>
+                      </div>
+                      <div v-if="guidanceDiffTokens.length" class="kv full">
+                        <dt>Hilfestellung</dt>
+                        <dd class="diff-text"><span v-for="(tok, idx) in guidanceDiffTokens" :key="idx" :class="{ 'tok-add': tok.added, 'tok-del': tok.removed }">{{ tok.value }}</span></dd>
+                      </div>
+                    </dl>
                   </div>
                 </div>
               </div>

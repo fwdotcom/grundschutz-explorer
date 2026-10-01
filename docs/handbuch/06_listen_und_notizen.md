@@ -23,7 +23,7 @@ Der Bereich **Listen** steht ganz oben in der Filterleiste:
 
 ## Anforderungen aufnehmen: der Stern
 
-Rechts neben dem Titel jeder Anforderung steht in der Detailansicht eine Stern-Schaltfläche. Ihre Farbgebung zeigt den aktuellen Status:
+Oben rechts im Kopfbereich der Detailansicht steht eine Stern-Schaltfläche. Ihre Farbgebung zeigt den aktuellen Status:
 
 | Stern | Farbgebung | Bedeutung | Klick auf den Stern |
 | :---: | :--- | :--- | :--- |
@@ -64,7 +64,7 @@ Ein farbiger Punkt am Reiter signalisiert den Notizen-Status:
 | **Grauer Punkt** | Notiz in anderer Liste | In der aktiven Liste gibt es keine Notiz, jedoch in mindestens einer anderen Liste. | Leer; über das Auswahlfeld wechseln Sie zur Liste mit der Notiz. |
 | **Kein Punkt** | Keine Notiz vorhanden | In keiner Liste ist eine Notiz zu dieser Anforderung hinterlegt. | Leer; eine Eingabe legt die Notiz in der aktiven Liste an. |
 
-Das Auswahlfeld über dem Textfeld zeigt die aktive Liste. Wählen Sie dort eine andere Liste, wird sie wie über die Filterleiste zur aktiven Liste, und ihre Notiz erscheint im Textfeld. Angeboten werden die im Filter verfügbaren Listen: die mit ✓ gewählten, sonst alle nicht ausgeschlossenen. Die Schaltfläche mit dem Filtersymbol daneben schaltet zwischen diesen und allen Listen um. Unter dem Textfeld steht, wann die Notiz zuletzt geändert wurde.
+Die Überschrift über dem Notizfeld nennt die aktive Liste. Bestehen mehrere Listen, steht darunter das Auswahlfeld **Schneller Listenwechsel**. Wählen Sie dort eine andere Liste, wird sie wie über die Filterleiste zur aktiven Liste, und ihre Notiz erscheint im Textfeld. Angeboten werden die im Filter verfügbaren Listen: die mit ✓ gewählten, sonst alle nicht ausgeschlossenen. Die Schaltfläche mit dem Filtersymbol daneben schaltet zwischen diesen und allen Listen um. Unter der Notiz steht, wann sie zuletzt geändert wurde.
 
 ![Reiter Notizen ohne Notiz in der aktiven Liste](bilder/detail-notizen-andere.png){width=48%}
 

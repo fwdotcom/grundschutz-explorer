@@ -15,9 +15,11 @@ Der Kopfbereich steht über allen Reitern:
 
 - **Pfadleiste:** vom Buch-Symbol (Katalogübersicht) über Praktik und Thema bis zu übergeordneten Anforderungen. Jeder Eintrag ist anklickbar.
 - **Kennung und Titel,** z. B. `SENS.11.3` *Whaling*.
-- **Stern:** nimmt die Anforderung in die aktive Liste auf oder entfernt sie wieder. Seine Farbe signalisiert, ob die Anforderung bereits in einer Liste steht; der Tooltip nennt alle zugehörigen Listen (ausführlich in [Kapitel „Listen und Notizen“](#kap-listen-notizen)).
+- **Stern** (oben rechts): nimmt die Anforderung in die aktive Liste auf oder entfernt sie wieder. Seine Farbe signalisiert, ob die Anforderung bereits in einer Liste steht; der Tooltip nennt alle zugehörigen Listen (ausführlich in [Kapitel „Listen und Notizen“](#kap-listen-notizen)).
 - **Hinweise:** Art (*Anforderung* oder *Unteranforderung*), Modalverb, Schutzbedarf, die Zahl der Unteranforderungen und der elementaren Gefährdungen (jeweils einschließlich aller Unteranforderungen) und im Vergleichsmodus der Änderungsstatus (*Neu*, *Geändert*, *Gelöscht*).
 - **Reiter:** Mit der Maus oder, bei fokussierter Reiterleiste, mit **←** und **→** wechseln Sie zwischen den Reitern.
+
+Der Pfeil oben rechts neben dem Stern blendet Pfadleiste und Hinweise aus, sodass mehr Platz für den Inhalt bleibt; der Schutzbedarf steht dann neben der Kennung. Ein erneuter Klick blendet sie wieder ein; die Einstellung bleibt beim Wechsel der Anforderung erhalten. Derselbe Pfeil steht auch in den Übersichten von Katalog, Praktik und Thema.
 
 Darunter bündelt der Reiter **Übersicht** alle Angaben für die Umsetzung, von oben nach unten:
 
