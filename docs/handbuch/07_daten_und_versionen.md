@@ -44,7 +44,7 @@ Vergleichsmodus
 
 Im Vergleichsmodus stehen zusätzliche Hilfen bereit:
 
-1. **Hinweisbalken:** nennt beide Stände und die Zahl der Änderungen: **neu** (grün) sind Anforderungen, die im angezeigten Stand hinzugekommen sind, **geändert** (gelb) solche mit geänderten Angaben, **gelöscht** (rot) solche, die im angezeigten Stand entfallen sind. Der Balken erscheint auch, wenn es keine Unterschiede gibt. **Kataloge …** öffnet den Dialog, um den Vergleich zu ändern oder zu beenden.
+1. **Hinweisbalken:** nennt beide Stände und die Zahl der Änderungen: **neu** (grün) sind Anforderungen, die im angezeigten Stand hinzugekommen sind, **geändert** (gelb) solche mit geänderten Angaben, **gelöscht** (rot) solche, die im angezeigten Stand entfallen sind. Der Balken erscheint auch, wenn es keine Unterschiede gibt. Ändern oder beenden lässt sich der Vergleich über **Kataloge** in der Kopfzeile.
 2. **Kennzeichnung in der Liste:** Betroffene Anforderungen tragen die Hinweise *Neu*, *Geändert* oder *Gelöscht*. Gelöschte Anforderungen bleiben sichtbar, damit Sie nachvollziehen können, was entfallen ist.
 3. **Filterbereich „Änderungen“:** Mit ihm grenzen Sie die Liste z. B. auf die geänderten Anforderungen ein.
 4. **Übersichten:** Katalog-, Praktik- und Themenübersicht nennen die Zahl der neuen, geänderten und gelöschten Anforderungen.
@@ -52,7 +52,7 @@ Im Vergleichsmodus stehen zusätzliche Hilfen bereit:
 
 ### Reiter „Änderungen“
 
-Unterscheiden sich die beiden Stände, zeigt die Detailansicht den Reiter **Änderungen**. Er nennt den Status der gewählten Anforderung (*Neu*, *Geändert*, *Gelöscht* oder *Unverändert*) und darunter die Unterschiede:
+Unterscheiden sich die beiden Stände, zeigt die Detailansicht den Reiter **Änderungen** mit den Unterschieden der gewählten Anforderung (in der Abbildung mit eingeklapptem Kopfbereich). Ist sie neu, gelöscht oder unverändert, nennt ein Feld **Status** dies zuerst:
 
 ![Reiter Änderungen mit Änderungsübersicht und Wortvergleich](bilder/detail-aenderungen.png){width=48%}
 

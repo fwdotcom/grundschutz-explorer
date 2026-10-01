@@ -36,7 +36,7 @@ Darunter bündelt der Reiter **Übersicht** alle Angaben für die Umsetzung, von
 
 ## Definitionen nachschlagen und Begriffe filtern
 
-Neben vielen Angaben steht ein blaues **Info-Symbol**. Ein Klick darauf blendet am unteren Rand der Detailansicht eine Erläuterung mit der Definition des BSI ein. Ein zweiter Klick auf das Info-Symbol, das Kreuz oder **Esc** schließt die Erläuterung.
+Neben vielen Angaben steht ein blaues **Info-Symbol**. Ein Klick darauf blendet am unteren Rand der Detailansicht eine Erläuterung mit der Definition des BSI ein. Bei Zielobjektkategorien nennt sie zusätzlich Beispiele, Kategorie und übergeordnete Kategorien. Ein zweiter Klick auf das Info-Symbol, das Kreuz oder **Esc** schließt die Erläuterung.
 
 Gestrichelt unterstrichene Angaben setzen Sie mit einem Klick als Filter, ein weiterer Klick hebt ihn wieder auf (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)).
 

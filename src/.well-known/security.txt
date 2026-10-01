@@ -6,6 +6,6 @@
 
 Contact: https://github.com/fwdotcom/grundschutz-explorer/security/advisories/new
 Contact: mailto:studio@frankwinter.com
-Expires: 2027-09-30T00:00:00.000Z
+Expires: 2027-10-01T00:00:00.000Z
 Preferred-Languages: de, en
 Canonical: https://app.grundschutz-explorer.de/.well-known/security.txt

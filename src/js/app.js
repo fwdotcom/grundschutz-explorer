@@ -69,7 +69,7 @@ const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 // Handbuch: Weiterleitung auf die aktuelle PDF, vom Release-Schritt scripts/release/steps/80-redirect.py erzeugt
 const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.11';
+const APP_VERSION = '1.1.12';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -3148,6 +3148,7 @@ const app = createApp({
           type: 'text',
           title: `Zielobjektkategorie · ${t}`,
           text: definition('targetObjects', t),
+          examples: entry?.Beispiel ? `Beispiele: ${entry.Beispiel}` : '',
           meta: [
             entry?.Kategorie ? `Kategorie: ${entry.Kategorie}` : '',
             targetObjectAncestors(t).length ? `Gehört zu: ${targetObjectAncestors(t).join(' ‹ ')}` : '',

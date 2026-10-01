@@ -2,18 +2,18 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
-## [Unveröffentlicht]
+## [1.1.12] – 2026-10-01
 
 ### Neu
 
-- Kopfbereich der Detailansicht einklappbar, auch in den Übersichten: Der Pfeil oben rechts blendet Pfadleiste und Hinweise aus, der Schutzbedarf steht dann neben der Kennung.
+- Info-Symbol an Zielobjektkategorien zeigt jetzt auch Beispiele, etwa „Server, Router, Core-Switch, Firewall“ bei Hostsystemen.
+- Kopfbereich der Detailansicht kann zu einer kompakteren Ansicht eingeklappt werden
 
 ### Geändert
 
 - Stern der Detailansicht steht jetzt oben rechts neben dem Klapppfeil.
-- Schutzbedarf in der Detailansicht mit dem Begriff aus dem BSI-Namensraum, die Bezeichnung steht im Tooltip.
-- Reiter „Änderungen“ im Stil der Übersicht: Felder mit Beschriftung und Trennlinien, Textvergleich in einer Karte.
-- Reiter „Notizen“ im Stil der Übersicht: Überschrift nennt die aktive Liste, darunter das Notizfeld und bei mehreren Listen ein schneller Listenwechsel.
+- Zielobjektkategorien auf dem aktuellen Stand des BSI (u. a. „Archiv“, „Faxanwendungen“, „Mobile Endgeräte“).
+- Reiter „Änderungen“ und „Notizen“ layoutmäßig verbessert
 
 ## [1.1.11] – 2026-09-30
 

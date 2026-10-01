@@ -123,8 +123,6 @@
         <span class="tag diff-deleted">−{{ diffSummary.deletedCount }} gelöscht</span>
       </template>
       <span v-else>– keine Unterschiede</span>
-      <span class="spacer"></span>
-      <button class="link-btn" @click="openCatalogDialog()">Kataloge …</button>
     </div>
 
     <!-- ============ Workspace ============ -->
@@ -2488,6 +2486,7 @@
                       </template>
                       <template v-else>
                         <p v-if="activeHelpInfo.text">{{ activeHelpInfo.text }}</p>
+                        <p v-if="activeHelpInfo.examples" class="callout-meta">{{ activeHelpInfo.examples }}</p>
                         <p v-if="activeHelpInfo.meta" class="callout-meta">{{ activeHelpInfo.meta }}</p>
                       </template>
                     </div>

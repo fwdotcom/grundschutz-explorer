@@ -395,7 +395,6 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: var(--accent-soft); border-bottom: 1px solid var(--accent-border); color: var(--text);
 }
 .diff-banner strong { font-weight: 600; }
-.diff-banner .spacer { flex: 1; }
 
 /* ---------- Workspace ---------- */
 .workspace { flex: 1; display: flex; min-height: 0; }
@@ -676,9 +675,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hits-menu { width: max-content; max-width: min(360px, 80vw); }
 .hits-menu button { overflow-wrap: anywhere; }
 
-/* Stern oben rechts im Kopfbereich, als Knopf wie in der Explorerleiste: leer = in keiner Liste, grau = in anderer Liste,
-   gelb = in der aktiven Liste */
-.star-btn.star-other svg { fill: var(--list-other); stroke: var(--list-other); }
+/* Stern oben rechts im Kopfbereich, als Knopf wie in der Explorerleiste: Umriss = in keiner Liste, gefüllt in der Farbe des
+   Umrisses = in anderer Liste, gelb = in der aktiven Liste */
+.star-btn.star-other svg { fill: currentColor; }
 .star-btn.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
 .star-btn[aria-disabled="true"] { cursor: default; opacity: 0.8; }
 .star-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

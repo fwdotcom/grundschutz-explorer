@@ -562,6 +562,9 @@ def detail_aenderungen(env):
         _comparison_mode(s)
         s.set_viewport(VIEW_W, 1600)
         s.show_control("DEV.4.3", "diff")
+        # Kopfbereich eingeklappt: mehr Platz für die Änderungen
+        s.act("vm.detailHeadOpen = false")
+        s.wait(300)
         return _detail(s, s.bottom_of("document.querySelectorAll('.detail-body > .stack > .card')[1]") + 16)
 
 
