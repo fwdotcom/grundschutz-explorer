@@ -395,6 +395,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   background: var(--accent-soft); border-bottom: 1px solid var(--accent-border); color: var(--text);
 }
 .diff-banner strong { font-weight: 600; }
+.diff-banner-end { margin-left: auto; }
 
 /* ---------- Workspace ---------- */
 .workspace { flex: 1; display: flex; min-height: 0; }
@@ -654,6 +655,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .list-row.is-active-list .rail-row-label { font-weight: 600; color: var(--text); }
 .list-row.is-included.is-active-list .rail-row-label { color: inherit; }
 .rail-row-actions > .list-menu-btn { margin-left: 4px; border-radius: 4px; }
+/* Zeile "Einträge mit Notiz": Platzhalter für das Listenmenü, damit ✓ und ✕ unter denen der Listen stehen */
+.rail-row-actions > .list-menu-spacer { margin-left: 4px; visibility: hidden; }
+/* ohne Auswahlknopf: Text in der Flucht der übrigen Filterzeilen */
+.list-row.note-filter-row { padding-left: 8px; }
 .list-edit { padding: 2px 4px; }
 .list-tools { gap: 6px; padding: 4px 4px 2px; }
 .list-tools .spacer { flex: 1; }
@@ -813,7 +818,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .practice-head.active { background: var(--accent-soft); }
 .practice-head .code { font-family: var(--mono); font-size: calc(12px * var(--font-scale)); color: var(--accent-text); font-weight: 600; }
 .practice-head .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.practice-head .count, .subgroup-head .count { font-size: calc(12px * var(--font-scale)); font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums; }
+/* So breit wie die Sternspalte der Anforderungen und darin zentriert (längere Zahlen ragen beidseitig hinaus):
+   der Stern steht genau unter der Zahl */
+.practice-head .count, .subgroup-head .count {
+  width: calc(14px * var(--font-scale)); flex-shrink: 0; display: flex; justify-content: center; white-space: nowrap;
+  font-size: calc(12px * var(--font-scale)); font-weight: 500; color: var(--text-3); font-variant-numeric: tabular-nums;
+}
 
 .chev { color: var(--text-3); transition: transform 0.15s; }
 .chev.open { transform: rotate(90deg); }
@@ -852,14 +862,49 @@ ul { margin: 0; padding: 0; list-style: none; }
 .ctrl-id { font-family: var(--mono); font-size: calc(12px * var(--font-scale)); font-weight: 500; color: var(--text-2); min-width: 78px; flex-shrink: 0; }
 .ctrl-row.selected .ctrl-id { color: var(--accent-text); font-weight: 600; }
 .ctrl-title { flex: 1; min-width: 0; font-size: calc(13px * var(--font-scale)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
-.ctrl-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* Merkmale in festen Spalten, damit gleiche Symbole untereinander stehen; fehlt eines, bleibt seine Spalte leer.
+   Jede Spalte ist so breit wie ihr größter Inhalt, dazwischen liegt ein einheitlicher Abstand. Schriftgröße wie
+   .meta-num, damit ch der Ziffernbreite entspricht. */
+.ctrl-meta {
+  --mark-w: calc(14px * var(--font-scale));
+  --threat-w: calc(15px + 1ch);  /* Symbol + Abstand + eine Ziffer */
+  --st-w: calc(3 * 18px + 21px); /* bis zu vier Badges: C, I, A, Au */
+  display: grid; align-items: center; column-gap: calc(15px * var(--font-scale)); flex-shrink: 0;
+  font-size: calc(11.5px * var(--font-scale));
+  grid-template-columns: [st] var(--st-w) [threat] var(--threat-w) [verb] auto [star] var(--mark-w);
+}
+/* Spalten per Name, unabhängig von der Reihenfolge im Markup */
+.ctrl-meta > * { grid-row: 1; }
+.ctrl-meta .star-mark { grid-column: star; }
+.ctrl-meta .meta-num.threat { grid-column: threat; }
+.ctrl-meta .st-badges { grid-column: st; justify-self: end; }
+.ctrl-meta .verb-label { grid-column: verb; display: inline-block; width: auto; text-align: center; }
+/* Das längste Modalverb gibt die Breite vor: unsichtbar, ohne Höhe, in jeder Zeile gleich */
+.ctrl-meta .verb-label::after { content: 'SOLLTE'; display: block; height: 0; overflow: hidden; visibility: hidden; }
+/* Vergleich: Zeile in der hellen Statusfarbe, linker Rand kräftig. Hover und Auswahl behalten ihren Hintergrund,
+   den Rand überdeckt bei der Auswahl deren Balken. */
+.ctrl-row.diff-mark-added { --diff-soft: var(--added-soft); --diff-bar: var(--added); }
+.ctrl-row.diff-mark-modified { --diff-soft: var(--sollte-soft); --diff-bar: var(--sollte); }
+.ctrl-row.diff-mark-deleted { --diff-soft: var(--muss-soft); --diff-bar: var(--muss); }
+.ctrl-row[class*="diff-mark-"] { box-shadow: inset 3px 0 0 var(--diff-bar); }
+.ctrl-row[class*="diff-mark-"]:not(:hover):not(.selected) { background: var(--diff-soft); }
 /* Listen-Markierungen in der Explorerliste: gleiche Farben wie Stern und Notizen-Punkt in der Detailansicht */
 .list-mark { display: inline-flex; flex-shrink: 0; }
 .list-mark svg { width: calc(14px * var(--font-scale)); height: calc(14px * var(--font-scale)); }
 .star-mark svg { fill: var(--list-other); stroke: var(--list-other); }
 .star-mark.star-here svg { fill: var(--star); stroke: var(--star-stroke); }
-.note-mark { color: var(--list-other); }
-.note-mark.note-here { color: var(--added); }
+/* Notiz zum Eintrag: Punkt oben rechts am Stern, Farben wie am Reiter „Notizen“; der Ring in der Zeilenfarbe
+   setzt ihn vom Stern ab. Rechte Kante an der rechten Sternspitze (optisch abgestimmt), in Prozent, damit es bei
+   jeder Schriftgröße passt. */
+.star-mark { position: relative; }
+.star-dot {
+  position: absolute; top: -1px; right: calc(100% / 24); width: 5px; height: 5px; border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--row-bg, var(--surface));
+}
+.ctrl-row.sub { --row-bg: var(--surface-2); }
+.ctrl-row:hover { --row-bg: var(--surface-hover); }
+.ctrl-row[class*="diff-mark-"]:not(:hover):not(.selected) { --row-bg: var(--diff-soft); }
+.ctrl-row.selected { --row-bg: var(--accent-soft); }
 
 /* Aufwand als horizontaler, segmentierter Balken (Farbe per Inline-Style: grün = 0 … rot = Maximum) */
 .effort-group { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; max-width: 100%; }
@@ -1642,6 +1687,7 @@ dialog.modal::backdrop { background: rgba(16, 24, 40, 0.45); background: var(--o
   .kv-grid > .kv { border-right: 0 !important; border-top: 1px solid var(--border) !important; }
   .kv-grid > .kv:first-child { border-top: 0 !important; }
   .ctrl-meta .meta-num { display: none; }
+  .ctrl-meta { --threat-w: 0px; }
   .app-footer { padding: 4px 10px; }
   .app-footer .footer-right { gap: 8px; }
 }

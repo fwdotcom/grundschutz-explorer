@@ -14,7 +14,7 @@ Die Baumansicht bildet diese Gliederung ab:
 - **Aufklappen:** Ein Klick auf den Pfeil am Zeilenanfang klappt eine Praktik, ein Thema oder eine Anforderung mit Unteranforderungen auf oder zu, ohne die Detailansicht zu ändern.
 - **Übersicht einer Praktik oder eines Themas:** Ein Klick auf den Namen klappt die Ebene auf und zeigt rechts ihre Übersicht. Ein weiterer Klick auf dieselbe Zeile klappt sie wieder zu.
 - **Anforderung auswählen:** Ein Klick auf eine Anforderung öffnet ihre Detailansicht. Hat sie Unteranforderungen, klappen diese automatisch auf.
-- **Tiefere Ebenen:** Unteranforderungen sind eingerückt, senkrechte Linien zeigen die Zugehörigkeit. Die Zahl neben dem Pfeilsymbol rechts nennt die direkten Unteranforderungen.
+- **Tiefere Ebenen:** Unteranforderungen sind eingerückt, senkrechte Linien zeigen die Zugehörigkeit.
 - **Alle auf- oder zuklappen:** Die beiden Schaltflächen über der Liste klappen alle Ebenen auf einmal auf oder zu.
 - **Mitlaufende Kopfzeilen:** Beim Blättern bleibt die Zeile der aktuellen Praktik oben stehen, sodass Sie immer sehen, wo Sie sich befinden.
 

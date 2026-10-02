@@ -123,6 +123,7 @@
         <span class="tag diff-deleted">−{{ diffSummary.deletedCount }} gelöscht</span>
       </template>
       <span v-else>– keine Unterschiede</span>
+      <button class="link-btn diff-banner-end" @click="endComparison()">Vergleich beenden</button>
     </div>
 
     <!-- ============ Workspace ============ -->
@@ -246,7 +247,7 @@
                 title="Listen ein-/ausklappen"
               >
                 <span class="rail-heading-title">Listen</span>
-                <span v-if="activeTagCountFor('list')" class="rail-active-badge">{{ activeTagCountFor('list') }}</span>
+                <span v-if="activeTagCountFor('list') + activeTagCountFor('note')" class="rail-active-badge">{{ activeTagCountFor('list') + activeTagCountFor('note') }}</span>
                 <span class="spacer"></span>
                 <svg class="icon-xs chev" :class="{ open: !railCollapsed.lists }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
               </button>
@@ -346,6 +347,49 @@
                     </div>
                   </div>
                   <input ref="listImportInput" type="file" accept=".json,application/json" hidden aria-label="Listen importieren" @change="onListImportFile" />
+                </div>
+
+                <div class="list-rows">
+                  <!-- Filter auf Anforderungen mit Notiz in den gefilterten Listen -->
+                  <div
+                    v-if="lists.length"
+                    class="rail-row list-row note-filter-row"
+                    :class="{
+                      'is-included': getTagMode('note', NOTE_FACET_VALUE) === 'include',
+                      'is-excluded': getTagMode('note', NOTE_FACET_VALUE) === 'exclude',
+                      'is-empty': !noteCount
+                    }"
+                  >
+                    <div
+                      class="rail-row-main"
+                      @click="getTagMode('note', NOTE_FACET_VALUE) ? removeTag('note', NOTE_FACET_VALUE) : toggleNoteFilter('include')"
+                      :title="getTagMode('note', NOTE_FACET_VALUE) ? 'Klicken zum Aufheben des Filters' : 'Nur Einträge mit Notiz'"
+                    >
+                      <span class="rail-row-label">Einträge mit Notiz</span>
+                      <span class="rail-row-count">{{ noteCount }}</span>
+                    </div>
+                    <div class="rail-row-actions">
+                      <button
+                        v-if="getTagMode('note', NOTE_FACET_VALUE)"
+                        class="rail-btn btn-trash"
+                        :class="{ 'is-exclude-trash': getTagMode('note', NOTE_FACET_VALUE) === 'exclude' }"
+                        @click.stop="removeTag('note', NOTE_FACET_VALUE)"
+                        :title="getTagMode('note', NOTE_FACET_VALUE) === 'include' ? 'Filter aufheben (löschen)' : 'Ausschluss aufheben (löschen)'"
+                        :aria-label="getTagMode('note', NOTE_FACET_VALUE) === 'include' ? 'Filter „Einträge mit Notiz“ aufheben (löschen)' : 'Ausschluss „Einträge mit Notiz“ aufheben (löschen)'"
+                      >
+                        <svg class="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                      </button>
+                      <template v-else>
+                        <button class="rail-btn btn-check" @click.stop="toggleNoteFilter('include')" title="Nur Einträge mit Notiz (✓)" aria-label="Nur Einträge mit Notiz einschließen (✓)">
+                          <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                        <button class="rail-btn btn-cross" @click.stop="toggleNoteFilter('exclude')" title="Einträge mit Notiz ausschließen (✕)" aria-label="Einträge mit Notiz ausschließen (✕)">
+                          <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                      </template>
+                      <span class="rail-btn list-menu-spacer" aria-hidden="true"></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1522,7 +1566,7 @@
                   v-for="ctrl in flatFilteredControls"
                   :key="ctrl.id"
                   class="ctrl-row"
-                  :class="{ selected: !scopePractice && selectedControlId === ctrl.id, sub: ctrl.isSubcontrol, deleted: ctrl.diff?.status === 'deleted' }"
+                  :class="[{ selected: !scopePractice && selectedControlId === ctrl.id, sub: ctrl.isSubcontrol, deleted: ctrl.diff?.status === 'deleted' }, ctrl.diff && ctrl.diff.status !== 'unchanged' ? 'diff-mark-' + ctrl.diff.status : '']"
                   :id="'row-' + ctrl.id"
                   role="option"
                   :aria-selected="!scopePractice && selectedControlId === ctrl.id"
@@ -1531,13 +1575,9 @@
                 >
                   <span class="ctrl-id">{{ ctrl.id }}</span>
                   <span class="ctrl-title" :title="ctrl.title">{{ ctrl.title }}</span>
-<span class="ctrl-meta">
-                    <span v-if="listMarks.get(ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(ctrl.id).star" role="img" :aria-label="listMarks.get(ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'" :title="listMarks.get(ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></span>
-                    <span v-if="listMarks.get(ctrl.id)?.note" class="list-mark note-mark" :class="'note-' + listMarks.get(ctrl.id).note" role="img" :aria-label="listMarks.get(ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'" :title="listMarks.get(ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
-                    <span v-if="ctrl.diff && ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + ctrl.diff.status">{{ diffLabel(ctrl.diff.status) }}</span>
-                    <span v-if="ctrl.subcontrols?.length" class="meta-num" :title="ctrl.subcontrols.length + ' Unteranforderungen'">
-                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ ctrl.subcontrols.length }}
-                    </span>
+                  <span class="ctrl-meta">
+                    <span v-if="listMarks.get(ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(ctrl.id).star" role="img" :aria-label="listMarkLabel(listMarks.get(ctrl.id))" :title="listMarkLabel(listMarks.get(ctrl.id))"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg><span v-if="listMarks.get(ctrl.id).note" class="star-dot" :class="'note-dot-' + listMarks.get(ctrl.id).note"></span></span>
+                    <span v-if="ctrl.diff && ctrl.diff.status !== 'unchanged'" class="sr-only">{{ diffLabel(ctrl.diff.status) }}</span>
                     <span v-if="ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
                       <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ ctrl.elementareGefaehrdungen.length }}
                     </span>
@@ -1597,7 +1637,7 @@
                             v-for="row in visibleControlRows(sub.controls)"
                             :key="row.ctrl.id"
                             class="ctrl-row"
-                            :class="{ sub: row.depth > 0, selected: !scopePractice && selectedControlId === row.ctrl.id, dimmed: !filteredControlIds.has(row.ctrl.id), deleted: row.ctrl.diff?.status === 'deleted' }"
+                            :class="[{ sub: row.depth > 0, selected: !scopePractice && selectedControlId === row.ctrl.id, dimmed: !filteredControlIds.has(row.ctrl.id), deleted: row.ctrl.diff?.status === 'deleted' }, row.ctrl.diff && row.ctrl.diff.status !== 'unchanged' ? 'diff-mark-' + row.ctrl.diff.status : '']"
                             :style="row.depth > 0 ? { '--depth': row.depth } : null"
                             :id="'row-' + row.ctrl.id"
                             role="treeitem"
@@ -1614,12 +1654,8 @@
                             <span class="ctrl-id">{{ row.ctrl.id }}</span>
                             <span class="ctrl-title" :title="row.ctrl.title">{{ row.ctrl.title }}</span>
                             <span class="ctrl-meta">
-                              <span v-if="listMarks.get(row.ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(row.ctrl.id).star" role="img" :aria-label="listMarks.get(row.ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'" :title="listMarks.get(row.ctrl.id).star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste'"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg></span>
-                              <span v-if="listMarks.get(row.ctrl.id)?.note" class="list-mark note-mark" :class="'note-' + listMarks.get(row.ctrl.id).note" role="img" :aria-label="listMarks.get(row.ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'" :title="listMarks.get(row.ctrl.id).note === 'here' ? 'Notiz in der aktiven Liste' : 'Notiz in einer anderen Liste'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
-                              <span v-if="row.ctrl.diff && row.ctrl.diff.status !== 'unchanged'" class="tag" :class="'diff-' + row.ctrl.diff.status">{{ diffLabel(row.ctrl.diff.status) }}</span>
-                              <span v-if="row.ctrl.subcontrols?.length" class="meta-num" :title="row.ctrl.subcontrols.length + ' Unteranforderungen'">
-                                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v12a3 3 0 0 0 3 3h9"/><path d="m15 15 3 3-3 3"/></svg>{{ row.ctrl.subcontrols.length }}
-                              </span>
+                              <span v-if="listMarks.get(row.ctrl.id)?.star" class="list-mark star-mark" :class="'star-' + listMarks.get(row.ctrl.id).star" role="img" :aria-label="listMarkLabel(listMarks.get(row.ctrl.id))" :title="listMarkLabel(listMarks.get(row.ctrl.id))"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg><span v-if="listMarks.get(row.ctrl.id).note" class="star-dot" :class="'note-dot-' + listMarks.get(row.ctrl.id).note"></span></span>
+                              <span v-if="row.ctrl.diff && row.ctrl.diff.status !== 'unchanged'" class="sr-only">{{ diffLabel(row.ctrl.diff.status) }}</span>
                               <span v-if="row.ctrl.elementareGefaehrdungen?.length" class="meta-num threat" :title="row.ctrl.elementareGefaehrdungen.length + ' Elementare Gefährdungen'">
                                 <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>{{ row.ctrl.elementareGefaehrdungen.length }}
                               </span>

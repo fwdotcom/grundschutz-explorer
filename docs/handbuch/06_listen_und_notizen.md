@@ -73,7 +73,7 @@ Die Überschrift über dem Notizfeld nennt die aktive Liste. Bestehen mehrere Li
 Notiz in anderer Liste
 ///
 
-In der Anforderungsliste weist ein kleines Notizsymbol (grün für die aktive Liste, grau für eine andere Liste) direkt auf vorhandene Notizen hin.
+In der Anforderungsliste weist ein kleiner Punkt am Stern (grün für die aktive Liste, grau für eine andere Liste) direkt auf vorhandene Notizen hin. Der Tooltip des Sterns nennt die Notiz mit.
 
 ## Listen als Filter
 
@@ -83,6 +83,7 @@ Listen wirken in der Filterleiste wie jeder andere Filterbereich:
 - **✕ (Liste ausschließen):** blendet alle Anforderungen dieser Liste aus.
 - **Mehrere Listen mit ✓:** zeigt alle Anforderungen, die in mindestens einer dieser Listen stehen (ODER-Verknüpfung).
 - **Aktive Liste ausschließen:** Schließen Sie die aktive Liste mit ✕ aus, wird eine andere, nicht ausgeschlossene Liste aktiv. Sind alle Listen ausgeschlossen, bleibt die bisherige aktiv.
+- **Einträge mit Notiz:** Die letzte Zeile im Bereich „Listen“ zeigt mit ✓ nur Anforderungen mit Notiz, mit ✕ nur solche ohne. Es zählen Notizen in den Listen, die der Listenfilter zulässt, z. B. mit ✓ bei „Audit 2026“ nur dessen Notizen.
 
 ## Listen sichern und austauschen
 

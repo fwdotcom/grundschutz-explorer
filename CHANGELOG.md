@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen am Grundschutz++ Explorer.
 
+## [1.1.13] – 2026-10-02
+
+### Neu
+
+- Vergleichsleiste: Ein Link „Vergleich beenden“ rechts hebt den Vergleich direkt auf.
+- Filterleiste: Unter den Listen filtert „Einträge mit Notiz“ (✓/✕) Anforderungen mit oder ohne Notiz.
+
+### Geändert
+
+- Explorer: Symbole rechts stehen in festen Spalten, der Stern ganz rechts unter der Summenzahl; im Vergleich ist die Zeile in der Farbe des Änderungsstatus hinterlegt.
+- Explorer: Notizen zeigt ein Punkt am Stern statt eines eigenen Symbols.
+- Explorer: Die Zahl der Unteranforderungen entfällt.
+
 ## [1.1.12] – 2026-10-01
 
 ### Neu

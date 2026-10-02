@@ -44,8 +44,8 @@ Vergleichsmodus
 
 Im Vergleichsmodus stehen zusätzliche Hilfen bereit:
 
-1. **Hinweisbalken:** nennt beide Stände und die Zahl der Änderungen: **neu** (grün) sind Anforderungen, die im angezeigten Stand hinzugekommen sind, **geändert** (gelb) solche mit geänderten Angaben, **gelöscht** (rot) solche, die im angezeigten Stand entfallen sind. Der Balken erscheint auch, wenn es keine Unterschiede gibt. Ändern oder beenden lässt sich der Vergleich über **Kataloge** in der Kopfzeile.
-2. **Kennzeichnung in der Liste:** Betroffene Anforderungen tragen die Hinweise *Neu*, *Geändert* oder *Gelöscht*. Gelöschte Anforderungen bleiben sichtbar, damit Sie nachvollziehen können, was entfallen ist.
+1. **Hinweisbalken:** nennt beide Stände und die Zahl der Änderungen: **neu** (grün) sind Anforderungen, die im angezeigten Stand hinzugekommen sind, **geändert** (gelb) solche mit geänderten Angaben, **gelöscht** (rot) solche, die im angezeigten Stand entfallen sind. Der Balken erscheint auch, wenn es keine Unterschiede gibt. **Vergleich beenden** rechts im Balken hebt den Vergleich auf, ändern lässt er sich über **Kataloge** in der Kopfzeile.
+2. **Kennzeichnung in der Liste:** Betroffene Anforderungen sind in derselben Farbe hinterlegt und links kräftiger gerandet, gelöschte sind zudem durchgestrichen. Gelöschte Anforderungen bleiben sichtbar, damit Sie nachvollziehen können, was entfallen ist.
 3. **Filterbereich „Änderungen“:** Mit ihm grenzen Sie die Liste z. B. auf die geänderten Anforderungen ein.
 4. **Übersichten:** Katalog-, Praktik- und Themenübersicht nennen die Zahl der neuen, geänderten und gelöschten Anforderungen.
 5. **Reiter „Änderungen“** in der Detailansicht (siehe unten).

@@ -43,6 +43,9 @@ const SECURITY_TARGETS = [
   { key: 'authenticity', short: 'Au', label: 'Authentizität', nsKey: 'Authentizität (Authenticity)' },
 ];
 
+// Wert der Facette "note": Anforderung hat eine Notiz in einer der gefilterten Listen
+const NOTE_FACET_VALUE = 'yes';
+
 // Kurzbezeichnung der Wirkungsstufen (Definition in security_targets_levels.csv)
 const SECURITY_TARGET_LEVEL_LABELS = { 0: 'keine', 1: 'wirkt hin', 2: 'im Zentrum' };
 
@@ -69,7 +72,7 @@ const PROJECT_URL = 'https://www.grundschutz-explorer.de';
 // Handbuch: Weiterleitung auf die aktuelle PDF, vom Release-Schritt scripts/release/steps/80-redirect.py erzeugt
 const MANUAL_PATH = 'manual/';
 
-const APP_VERSION = '1.1.12';
+const APP_VERSION = '1.1.13';
 
 // Standardliste: nimmt Stern und Notizen auf, solange keine andere Liste aktiv ist (wird bei Bedarf angelegt)
 const DEFAULT_LIST_NAME = 'Merkliste';
@@ -398,8 +401,8 @@ const app = createApp({
     // Computed: Active filter specification grouped by category and mode
     const activeFilterSpec = computed(() => {
       const spec = {
-        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set() },
-        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set() },
+        inc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set(), note: new Set() },
+        exc: { practice: new Set(), modalVerb: new Set(), threat: new Set(), diff: new Set(), tags: new Set(), list: new Set(), note: new Set() },
       };
       for (const category of Object.keys(VALUE_FACETS)) {
         spec.inc[category] = new Set();
@@ -494,11 +497,21 @@ const app = createApp({
           return ctrl.tags || [];
         case 'list':
           return (entriesByControl.value.get(ctrl.id) || []).map((e) => e.listId);
+        case 'note':
+          return hasNoteInFilteredLists(ctrl.id) ? [NOTE_FACET_VALUE] : [];
         case 'diff':
           return [ctrl.diff?.status || 'unchanged'];
         default:
           return [];
       }
+    }
+
+    // Notiz in einer der Listen, die der Listenfilter zulässt (mit ✓ gewählte, sonst alle nicht ausgeschlossenen)
+    function hasNoteInFilteredLists(controlId) {
+      const { inc, exc } = activeFilterSpec.value;
+      return (entriesByControl.value.get(controlId) || []).some(
+        (e) => (inc.list.size ? inc.list.has(e.listId) : !exc.list.has(e.listId)) && e.note?.trim()
+      );
     }
 
     function matchesFilters(ctrl) {
@@ -827,6 +840,23 @@ const app = createApp({
       return counts;
     });
 
+    // Anforderungen mit Notiz, die zu den übrigen Filtern passen (Zeile "Einträge mit Notiz" unter den Listen)
+    const noteCount = computed(() => {
+      const map = activeCatalog.value?.controlMap;
+      if (!map) return 0;
+      let count = 0;
+      for (const controlId of entriesByControl.value.keys()) {
+        const ctrl = map.get(controlId);
+        if (ctrl && hasNoteInFilteredLists(controlId) && matchesFilterCategory(ctrl, 'note')) count++;
+      }
+      return count;
+    });
+
+    // Filter "Einträge mit Notiz" (✓ / ✕)
+    function toggleNoteFilter(mode) {
+      toggleTag('note', NOTE_FACET_VALUE, mode, 'Einträge mit Notiz', 'Liste');
+    }
+
     // Stern der gewählten Anforderung: 'none' | 'other' (in einer anderen Liste) | 'here' (in der Zielliste)
     const selectedStarState = computed(() => {
       const entries = selectedControl.value ? entriesByControl.value.get(selectedControl.value.id) || [] : [];
@@ -889,6 +919,13 @@ const app = createApp({
       }
       return marks;
     });
+
+    // Tooltip und Screenreader-Text des Sterns in der Anforderungsliste, samt Notiz (Punkt am Stern)
+    function listMarkLabel(mark) {
+      const star = mark.star === 'here' ? 'In der aktiven Liste' : 'In einer anderen Liste';
+      if (!mark.note) return star;
+      return star + (mark.note === 'other' && mark.star === 'here' ? ', Notiz in einer anderen Liste' : ', mit Notiz');
+    }
 
     // Punkt am Reiter "Notizen": 'here' = Notiz in der Zielliste, 'other' = nur in anderen Listen
     const selectedNoteState = computed(() => {
@@ -1879,6 +1916,12 @@ const app = createApp({
     function chooseComparisonCatalog(id) {
       if (id === activeRecordId.value || !activeCatalog.value) return;
       return runCatalogChange(activeRecordId.value, comparisonRecordId.value === id ? '' : id);
+    }
+
+    // Vergleich beenden (Hinweisbalken); der angezeigte Katalog bleibt
+    function endComparison() {
+      if (!comparisonRecordId.value) return;
+      return runCatalogChange(activeRecordId.value, '');
     }
 
     // Katalog über eine URL laden (Dialog "Katalog laden")
@@ -3196,6 +3239,7 @@ const app = createApp({
       activeList,
       writeList,
       listMarks,
+      listMarkLabel,
       notesAllLists,
       notesListOptions,
       notesEntry,
@@ -3203,6 +3247,9 @@ const app = createApp({
       listImportInput,
       listMenuId,
       listCounts,
+      noteCount,
+      toggleNoteFilter,
+      NOTE_FACET_VALUE,
       selectedStarState,
       selectedStarTitle,
       selectedNoteState,
@@ -3368,6 +3415,7 @@ const app = createApp({
       showCatalogOverview,
       formatChangeValue,
       chooseComparisonCatalog,
+      endComparison,
       startupError,
       catalogError,
       fetchFromUrl,

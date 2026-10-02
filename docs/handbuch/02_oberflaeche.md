@@ -75,16 +75,19 @@ Die mittlere Spalte zeigt die Anforderungen als **Baumansicht** oder als **flach
 Markierungen in der Anforderungsliste
 ///
 
-Darüber stehen die Trefferzahl, ein Stern, mit dem Sie alle Treffer in die aktive Liste aufnehmen oder daraus entfernen (siehe [Kapitel „Listen und Notizen“](#kap-listen-notizen)), im Baum die Schaltflächen **Alle aufklappen** und **Alle zuklappen** sowie die beiden Umschalter für Baum und flache Liste. Sind Filter gesetzt, fassen **Filter-Chips** über der Liste sie zusammen (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)). Jede Zeile zeigt Kennung, Titel und rechts das Modalverb. Dazwischen stehen, wenn zutreffend, diese Markierungen:
+Darüber stehen die Trefferzahl, ein Stern, mit dem Sie alle Treffer in die aktive Liste aufnehmen oder daraus entfernen (siehe [Kapitel „Listen und Notizen“](#kap-listen-notizen)), im Baum die Schaltflächen **Alle aufklappen** und **Alle zuklappen** sowie die beiden Umschalter für Baum und flache Liste. Sind Filter gesetzt, fassen **Filter-Chips** über der Liste sie zusammen (siehe [Kapitel „Suchen und filtern“](#kap-suchen-filtern)). Jede Zeile zeigt Kennung und Titel, rechts davon in festen Spalten diese Markierungen, wenn zutreffend:
 
 | Markierung | Bedeutung |
 | :--- | :--- |
-| **Stern** | Gelb: in der aktiven Liste. Grau: nur in einer anderen Liste. Ohne Stern: in keiner Liste. |
-| **Notizsymbol** | Grün: Notiz in der aktiven Liste. Grau: Notiz nur in einer anderen Liste. |
-| **Pfeil mit Zahl** | Anzahl der direkten Unteranforderungen. |
-| **Warndreieck mit Zahl** | Anzahl der zugeordneten elementaren Gefährdungen. |
 | **C, I, A, Au** | Schutzziele, die im Zentrum der Anforderung stehen (Vertraulichkeit, Integrität, Verfügbarkeit, Authentizität). |
-| **Neu, Geändert, Gelöscht** | Nur im Vergleichsmodus: Änderungsstatus gegenüber dem Vergleichsstand. |
+| **Warndreieck mit Zahl** | Anzahl der zugeordneten elementaren Gefährdungen. |
+| **MUSS, SOLLTE, KANN** | Modalverb der Anforderung. |
+| **Stern** | Gelb: in der aktiven Liste. Grau: nur in einer anderen Liste. Ohne Stern: in keiner Liste. |
+| **Punkt am Stern** | Grün: Notiz in der aktiven Liste. Grau: Notiz nur in einer anderen Liste. |
+
+In der Baumansicht nennen die Zeilen der Praktiken und Themen rechts die Zahl der passenden Anforderungen darunter. Sie steht in der Spalte der Sterne.
+
+Im Vergleichsmodus ist die Zeile zudem in der Farbe ihres Änderungsstatus hinterlegt (siehe [Kapitel „Kataloge laden und vergleichen“](#kap-kataloge)).
 
 ## Detailansicht
 
